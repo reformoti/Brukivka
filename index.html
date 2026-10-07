@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Бруківка — Prototype</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">BRUKIVKA PROTOTYPE</div>
+        <h1>Бруківка</h1>
+      </div>
+      <div class="balance-card">
+        <span class="balance-label">Баланс</span>
+        <strong><span id="balance">0</span> UAH</strong>
+      </div>
+    </header>
+
+    <main>
+      <section class="game-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Достав Бруківку в Карман</h2>
+            <p>Затисни кубик мишкою або пальцем і проведи через лазери.</p>
+          </div>
+          <button id="phoneButton" class="phone-btn" type="button">📱 Телефон</button>
+        </div>
+
+        <div id="gameBoard" class="game-board">
+          <div class="start-zone"><span>СТАРТ</span></div>
+
+          <div id="pocket" class="pocket">
+            <div class="pocket-slot"></div>
+            <span>КАРМАН</span>
+          </div>
+
+          <div class="laser laser-a"></div>
+          <div class="laser laser-b"></div>
+          <div class="laser laser-c"></div>
+          <div class="laser laser-d"></div>
+          <div class="laser laser-e"></div>
+
+          <div id="brukivka" class="brukivka" role="button" aria-label="Бруківка">
+            <div class="brick-face"></div>
+            <span>БРУКІВКА</span>
+          </div>
+
+          <div id="statusMessage" class="status-message">Перетягни Бруківку →</div>
+        </div>
+
+        <div class="game-info">
+          <div><span>Рівень</span><strong id="levelText">1</strong></div>
+          <div><span>Нагорода</span><strong><span id="rewardText">10</span> UAH</strong></div>
+          <div><span>Лазер</span><strong>повернення на старт</strong></div>
+        </div>
+      </section>
+
+      <section class="future-games">
+        <button class="future-card active" type="button"><span>01</span><strong>Бруківка</strong><small>доступно</small></button>
+        <button class="future-card locked" type="button" disabled><span>02</span><strong>???</strong><small>пізніше</small></button>
+        <button class="future-card locked" type="button" disabled><span>03</span><strong>???</strong><small>пізніше</small></button>
+      </section>
+    </main>
+  </div>
+
+  <div id="phoneOverlay" class="phone-overlay hidden">
+    <div class="phone" role="dialog" aria-modal="true">
+      <div class="phone-top">
+        <span id="phoneTime">17:07</span>
+        <div class="camera"></div>
+        <span>82% ▰</span>
+      </div>
+
+      <div id="phoneHome" class="phone-screen">
+        <div class="phone-wallpaper">
+          <div class="phone-date">Ігровий телефон</div>
+          <div class="app-grid">
+            <button id="bankApp" class="app-icon" type="button">
+              <span class="app-square bank-square">₴</span>
+              <small>BrukBank</small>
+            </button>
+            <button class="app-icon" type="button">
+              <span class="app-square game-square">■</span>
+              <small>Бруківка</small>
+            </button>
+            <button class="app-icon muted" type="button" disabled>
+              <span class="app-square">?</span>
+              <small>Скоро</small>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="bankScreen" class="phone-screen bank-screen hidden">
+        <div class="bank-header">
+          <button id="bankBack" class="icon-button" type="button">‹</button>
+          <span>BrukBank</span>
+          <span class="bank-dot">●</span>
+        </div>
+
+        <div class="bank-balance">
+          <span>Ігровий баланс</span>
+          <strong><span id="bankBalance">0</span> UAH</strong>
+          <small>Внутрішньоігрова валюта</small>
+        </div>
+
+        <div class="upgrade-card">
+          <div class="upgrade-title">
+            <div>
+              <small>ПРОКАЧКА</small>
+              <h3>Бруківка Lv.<span id="bankLevel">1</span></h3>
+            </div>
+            <div class="mini-brick">■</div>
+          </div>
+
+          <div class="upgrade-row">
+            <span>Нагорода за доставку</span>
+            <strong><span id="bankReward">10</span> UAH</strong>
+          </div>
+          <div class="upgrade-row">
+            <span>Наступний рівень</span>
+            <strong>+5 UAH</strong>
+          </div>
+
+          <button id="upgradeButton" class="upgrade-button" type="button">
+            Прокачати — <span id="upgradeCost">100</span> UAH
+          </button>
+          <div id="upgradeHint" class="upgrade-hint"></div>
+        </div>
+      </div>
+
+      <div class="phone-nav"><button id="phoneHomeButton" type="button">●</button></div>
+      <button id="closePhone" class="close-phone" type="button" aria-label="Закрити телефон">×</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
