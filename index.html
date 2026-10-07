@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Бруківка — Prototype</title>
+  <title>Бруківка — Prototype v2</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <div class="eyebrow">BRUKIVKA PROTOTYPE</div>
+        <div class="eyebrow">BRUKIVKA PROTOTYPE v2</div>
         <h1>Бруківка</h1>
       </div>
-      <div class="balance-card">
+      <div id="topBalanceCard" class="balance-card positive">
         <span class="balance-label">Баланс</span>
         <strong><span id="balance">0</span> UAH</strong>
       </div>
@@ -24,12 +24,13 @@
         <div class="panel-head">
           <div>
             <h2>Достав Бруківку в Карман</h2>
-            <p>Затисни кубик мишкою або пальцем і проведи через лазери.</p>
+            <p>Лазери змінюють позицію після кожної помилки та доставки.</p>
           </div>
           <button id="phoneButton" class="phone-btn" type="button">📱 Телефон</button>
         </div>
 
-        <div id="gameBoard" class="game-board">
+        <div id="gameBoard" class="game-board" aria-label="Ігрове поле">
+          <div class="grid-overlay"></div>
           <div class="start-zone"><span>СТАРТ</span></div>
 
           <div id="pocket" class="pocket">
@@ -37,71 +38,96 @@
             <span>КАРМАН</span>
           </div>
 
-          <div class="laser laser-a"></div>
-          <div class="laser laser-b"></div>
-          <div class="laser laser-c"></div>
-          <div class="laser laser-d"></div>
-          <div class="laser laser-e"></div>
+          <div class="laser"></div>
+          <div class="laser"></div>
+          <div class="laser"></div>
+          <div class="laser"></div>
+          <div class="laser"></div>
 
           <div id="brukivka" class="brukivka" role="button" aria-label="Бруківка">
             <div class="brick-face"></div>
-            <span>БРУКІВКА</span>
+            <span id="brickBoardName">Звичайна Бруківка</span>
           </div>
 
+          <div id="taunt" class="taunt hidden"></div>
           <div id="statusMessage" class="status-message">Перетягни Бруківку →</div>
         </div>
 
         <div class="game-info">
-          <div><span>Рівень</span><strong id="levelText">1</strong></div>
-          <div><span>Нагорода</span><strong><span id="rewardText">10</span> UAH</strong></div>
-          <div><span>Лазер</span><strong>повернення на старт</strong></div>
+          <div>
+            <span>Бруківка</span>
+            <strong id="brickNameText">Звичайна</strong>
+          </div>
+          <div>
+            <span>Базова нагорода</span>
+            <strong><span id="baseRewardText">100</span> UAH</strong>
+          </div>
+          <div>
+            <span>NMT множник</span>
+            <strong id="multiplierText">×1.0</strong>
+          </div>
+          <div>
+            <span>За доставку зараз</span>
+            <strong><span id="finalRewardText">100</span> UAH</strong>
+          </div>
         </div>
       </section>
 
       <section class="future-games">
-        <button class="future-card active" type="button"><span>01</span><strong>Бруківка</strong><small>доступно</small></button>
-        <button class="future-card locked" type="button" disabled><span>02</span><strong>???</strong><small>пізніше</small></button>
-        <button class="future-card locked" type="button" disabled><span>03</span><strong>???</strong><small>пізніше</small></button>
+        <button class="future-card active" type="button">
+          <span>01</span><strong>Бруківка</strong><small>доступно</small>
+        </button>
+        <button class="future-card locked" type="button" disabled>
+          <span>02</span><strong>???</strong><small>пізніше</small>
+        </button>
+        <button class="future-card locked" type="button" disabled>
+          <span>03</span><strong>???</strong><small>пізніше</small>
+        </button>
       </section>
     </main>
   </div>
 
   <div id="phoneOverlay" class="phone-overlay hidden">
-    <div class="phone" role="dialog" aria-modal="true">
+    <div class="phone" role="dialog" aria-modal="true" aria-label="Ігровий телефон">
       <div class="phone-top">
         <span id="phoneTime">17:07</span>
         <div class="camera"></div>
         <span>82% ▰</span>
       </div>
 
-      <div id="phoneHome" class="phone-screen">
+      <section id="phoneHome" class="phone-screen phone-home-screen">
         <div class="phone-wallpaper">
           <div class="phone-date">Ігровий телефон</div>
+          <div class="home-widget">
+            <span>NMT бонус</span>
+            <strong id="homeNmtScore">—</strong>
+            <small id="homeMultiplier">×1.0 до Бруківки</small>
+          </div>
           <div class="app-grid">
             <button id="bankApp" class="app-icon" type="button">
-              <span class="app-square bank-square">₴</span>
-              <small>BrukBank</small>
+              <span class="app-square bank-square">₴</span><small>BrukBank</small>
+            </button>
+            <button id="znoApp" class="app-icon" type="button">
+              <span class="app-square zno-square">Z</span><small>ЗНО Хаб</small>
             </button>
             <button class="app-icon" type="button">
-              <span class="app-square game-square">■</span>
-              <small>Бруківка</small>
+              <span class="app-square game-square">■</span><small>Бруківка</small>
             </button>
             <button class="app-icon muted" type="button" disabled>
-              <span class="app-square">?</span>
-              <small>Скоро</small>
+              <span class="app-square">?</span><small>Скоро</small>
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div id="bankScreen" class="phone-screen bank-screen hidden">
-        <div class="bank-header">
-          <button id="bankBack" class="icon-button" type="button">‹</button>
+      <section id="bankScreen" class="phone-screen bank-screen hidden">
+        <div class="screen-header">
+          <button class="icon-button bankBack" type="button">‹</button>
           <span>BrukBank</span>
-          <span class="bank-dot">●</span>
+          <span class="header-dot">●</span>
         </div>
 
-        <div class="bank-balance">
+        <div id="bankBalanceCard" class="bank-balance positive">
           <span>Ігровий баланс</span>
           <strong><span id="bankBalance">0</span> UAH</strong>
           <small>Внутрішньоігрова валюта</small>
@@ -110,27 +136,100 @@
         <div class="upgrade-card">
           <div class="upgrade-title">
             <div>
-              <small>ПРОКАЧКА</small>
-              <h3>Бруківка Lv.<span id="bankLevel">1</span></h3>
+              <small>БРУКІВКА</small>
+              <h3 id="bankBrickName">Звичайна</h3>
+              <p id="phoneModelName">BrukPhone 3</p>
             </div>
             <div class="mini-brick">■</div>
           </div>
 
-          <div class="upgrade-row">
-            <span>Нагорода за доставку</span>
-            <strong><span id="bankReward">10</span> UAH</strong>
-          </div>
-          <div class="upgrade-row">
-            <span>Наступний рівень</span>
-            <strong>+5 UAH</strong>
-          </div>
+          <div class="upgrade-row"><span>Рівень прокачки</span><strong><span id="upgradeLevel">0</span>/15</strong></div>
+          <div class="upgrade-row"><span>Базовий дохід</span><strong><span id="bankReward">100</span> UAH</strong></div>
+          <div class="upgrade-row"><span>NMT множник</span><strong id="bankMultiplier">×1.0</strong></div>
+          <div class="upgrade-row"><span>Наступна Бруківка</span><strong id="nextBrickName">Кам'яна</strong></div>
 
           <button id="upgradeButton" class="upgrade-button" type="button">
-            Прокачати — <span id="upgradeCost">100</span> UAH
+            Прокачати — <span id="upgradeCost">1200</span> UAH
           </button>
           <div id="upgradeHint" class="upgrade-hint"></div>
         </div>
-      </div>
+      </section>
+
+      <section id="znoScreen" class="phone-screen zno-screen hidden">
+        <div class="screen-header">
+          <button class="icon-button znoBack" type="button">‹</button>
+          <span>ЗНО Хаб</span>
+          <span class="header-dot zno-dot">●</span>
+        </div>
+
+        <div class="zno-hero">
+          <small>ТВІЙ ІГРОВИЙ NMT РЕЙТИНГ</small>
+          <strong id="znoBestScore">—</strong>
+          <span id="znoBonusText">Множник Бруківки ×1.0</span>
+        </div>
+
+        <div class="subject-card">
+          <div>
+            <span class="subject-icon math-icon">∑</span>
+            <div>
+              <strong>Математика</strong>
+              <small>Пробник на 32 питання</small>
+            </div>
+          </div>
+          <div class="subject-score"><span id="mathRaw">0/32</span><strong id="mathNmt">—</strong></div>
+          <button class="subject-start" data-subject="math" type="button">Почати</button>
+        </div>
+
+        <div class="subject-card">
+          <div>
+            <span class="subject-icon english-icon">A</span>
+            <div>
+              <strong>Англійська мова</strong>
+              <small>Пробник на 32 питання</small>
+            </div>
+          </div>
+          <div class="subject-score"><span id="englishRaw">0/32</span><strong id="englishNmt">—</strong></div>
+          <button class="subject-start" data-subject="english" type="button">Почати</button>
+        </div>
+
+        <p class="zno-note">Шкала 100–200 використана з твоїх таблиць. У бонус іде кращий результат із двох предметів.</p>
+      </section>
+
+      <section id="quizScreen" class="phone-screen quiz-screen hidden">
+        <div class="screen-header">
+          <button id="quizBack" class="icon-button" type="button">‹</button>
+          <span id="quizSubjectTitle">Математика</span>
+          <span id="quizProgress">1/32</span>
+        </div>
+
+        <div class="quiz-scorebar">
+          <div><span>Тестові</span><strong id="quizRawScore">0</strong></div>
+          <div><span>NMT</span><strong id="quizNmtScore">—</strong></div>
+        </div>
+
+        <div class="question-card">
+          <small id="questionLabel">ПИТАННЯ 1</small>
+          <h3 id="questionText">...</h3>
+          <div id="answers" class="answers"></div>
+          <button id="nextQuestion" class="next-question hidden" type="button">Далі</button>
+        </div>
+      </section>
+
+      <section id="quizResultScreen" class="phone-screen quiz-result-screen hidden">
+        <div class="screen-header">
+          <button class="icon-button resultBack" type="button">‹</button>
+          <span>Результат</span>
+          <span class="header-dot zno-dot">●</span>
+        </div>
+        <div class="result-card">
+          <small id="resultSubject">Математика</small>
+          <strong id="resultNmt">—</strong>
+          <span>NMT бал</span>
+          <p><b id="resultRaw">0</b> правильних із 32</p>
+          <p id="resultMultiplier">Бонус до Бруківки: ×1.0</p>
+          <button id="resultHome" class="upgrade-button" type="button">Назад у ЗНО Хаб</button>
+        </div>
+      </section>
 
       <div class="phone-nav"><button id="phoneHomeButton" type="button">●</button></div>
       <button id="closePhone" class="close-phone" type="button" aria-label="Закрити телефон">×</button>
