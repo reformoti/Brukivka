@@ -93,6 +93,20 @@
   const MARKET_REFRESH_COOLDOWN_MS = 30 * 1000;
   const ITEM_SALE_DELAY_MS = 60 * 1000;
   const MAX_BALANCE = Number.MAX_SAFE_INTEGER;
+  const PC_PRICE = 12500;
+  const PC_UPGRADE_LIMIT = 5;
+  const PC_UPGRADE_BASE = {cpu:1100, gpu:1500, ram:900};
+  const CS_MODES = {easy:{label:'Легкий',target:10}, medium:{label:'Середній',target:30}, hardcore:{label:'Хардкор',target:60}};
+  const CS_ROUND_MS = 30000;
+  const MUSIC_TRACKS = ['Тікі Тікі', 'Манго', 'Аура Фонк', 'Наполеон', '?????'];
+const MUSIC_COVERS = [
+  'https://miyzvuk.net/uploads/posts/2026-01/cover-of-tiki-tiki-slowed-by-qmiir.webp',
+  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQxz9CKitE2lpdmRYUJpThdQgkeenhIG7S890QPPNXKg&s=10',
+  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQt-9Ky-JUv0Wvj_6sflJAEa_HqGNibkj-dcbRI5UAAJQ&s=10',
+  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_vz5JJI5lCiSNC2qlOadr_CkBIkAfKb5JnTFqW7D6ow&s=10',
+  'https://i.ytimg.com/vi/-Ueui3XiyUU/sddefault.jpg?v=60705db7'
+];
+
   let saveNotice = '';
 
   function showSaveNotice(message) {
@@ -129,7 +143,12 @@
       inventory:[],
       market:null,
       marketSerial:1,
-      marketRefreshedAt:0
+      marketRefreshedAt:0,
+      pcOwned:false,
+      pcUpgrades:{cpu:0,gpu:0,ram:0},
+      csHardcoreBest:0,
+      csHardcoreBestTimeMs:0,
+      audio:{track:0,volume:70,muted:false,shuffle:false}
     };
   }
 
@@ -229,6 +248,18 @@
       if (serials.length) result.marketSerial = Math.max(result.marketSerial, Math.max(...serials) + 1);
     }
     result.marketRefreshedAt = safeInt(source.marketRefreshedAt, 0, 0, Date.now());
+    result.pcOwned = source.pcOwned === true;
+    const upgrades = record(source.pcUpgrades);
+    for (const part of Object.keys(PC_UPGRADE_BASE)) {
+      result.pcUpgrades[part] = result.pcOwned ? safeInt(upgrades[part], 0, 0, PC_UPGRADE_LIMIT) : 0;
+    }
+    result.csHardcoreBest = safeInt(source.csHardcoreBest, 0, 0, 60);
+    result.csHardcoreBestTimeMs = safeInt(source.csHardcoreBestTimeMs, 0, 0, CS_ROUND_MS);
+    const audio = record(source.audio);
+    result.audio.track = safeInt(audio.track, 0, 0, MUSIC_TRACKS.length - 1);
+    result.audio.volume = safeInt(audio.volume, 70, 0, 100);
+    result.audio.muted = audio.muted === true;
+    result.audio.shuffle = audio.shuffle === true;
     return result;
   }
 
@@ -396,6 +427,7 @@
     renderSubjects();
     renderInventory();
     renderOrderPreview();
+    renderPcShop();
   }
 
   function buyUpgrade(type) {
@@ -428,7 +460,7 @@
   // Phone navigation.
   const screenIds = [
     'phoneHome','bankScreen','brukivkaScreen','znoScreen','quizScreen','quizResultScreen',
-    'legitScreen','telegramScreen','reformotiChatScreen'
+    'legitScreen','telegramScreen','reformotiChatScreen','pcShopScreen'
   ];
   function showScreen(id) {
     screenIds.forEach((screenId) => $(screenId).classList.add('hidden'));
@@ -453,6 +485,7 @@
   $('znoApp').addEventListener('click', () => showScreen('znoScreen'));
   $('legitApp').addEventListener('click', () => { showScreen('legitScreen'); startLegitRound(); });
   $('telegramApp').addEventListener('click', () => showScreen('telegramScreen'));
+  $('pcShopApp').addEventListener('click', () => showScreen('pcShopScreen'));
   $('resultBack').addEventListener('click', () => showScreen('znoScreen'));
   $('resultHome').addEventListener('click', () => showScreen('znoScreen'));
 
@@ -1232,6 +1265,398 @@
     updateUI();
   });
 
+  // ========================================================
+  // PC Market: an owned PC unlocks a separate desktop UI.
+  // ========================================================
+  function pcUpgradeCost(part) {
+    return Math.round(PC_UPGRADE_BASE[part] * Math.pow(1.85, save.pcUpgrades[part]) / 50) * 50;
+  }
+
+  function pcAimBonus() {
+    return (save.pcUpgrades.cpu + save.pcUpgrades.gpu + save.pcUpgrades.ram) * 3;
+  }
+
+  function renderPcShop() {
+    $('pcShopBalance').textContent = `${money(save.balance)} UAH`;
+    $('pcShopBalance').classList.toggle('debt', save.balance < 0);
+    $('pcOwnership').textContent = save.pcOwned ? 'ПК Коса · встановлено ✓' : 'ПК не придбано';
+    $('pcBuyButton').classList.toggle('hidden', save.pcOwned);
+    $('pcBuyButton').disabled = save.balance < PC_PRICE;
+    $('pcBuyButton').textContent = `Купити ПК — ${money(PC_PRICE)} UAH`;
+    $('pcShopOpen').classList.toggle('hidden', !save.pcOwned);
+    $('pcUpgradeArea').classList.toggle('hidden', !save.pcOwned);
+    $('pcOpenButton').classList.toggle('hidden', !save.pcOwned);
+    $('pcPowerSummary').textContent = `+${pcAimBonus()} px до цілі`;
+    $('pcSpecsLabel').textContent = `CPU ${save.pcUpgrades.cpu} · GPU ${save.pcUpgrades.gpu} · RAM ${save.pcUpgrades.ram}`;
+    $('pcDesktopPower').textContent = `+${pcAimBonus()} px до цілі`;
+    for (const part of Object.keys(PC_UPGRADE_BASE)) {
+      const level = save.pcUpgrades[part];
+      $(`pc${part[0].toUpperCase() + part.slice(1)}Level`).textContent = `${level}/${PC_UPGRADE_LIMIT}`;
+      const btn = $(`pc${part[0].toUpperCase() + part.slice(1)}Upgrade`);
+      btn.disabled = !save.pcOwned || level >= PC_UPGRADE_LIMIT || save.balance < pcUpgradeCost(part);
+      btn.textContent = level >= PC_UPGRADE_LIMIT ? 'Максимум ✓' : `Прокачати — ${money(pcUpgradeCost(part))} UAH`;
+    }
+  }
+
+  function buyPC() {
+    if (save.pcOwned) return;
+    if (save.balance < PC_PRICE) {
+      $('pcShopMessage').textContent = 'Недостатньо UAH. Зароби ще на доставках!';
+      return;
+    }
+    save.balance -= PC_PRICE;
+    save.pcOwned = true;
+    persist();
+    updateUI();
+    $('pcShopMessage').textContent = 'ПК придбано! Кнопка «ПК Коса» вже доступна.';
+  }
+
+  function upgradePC(part) {
+    if (!save.pcOwned || save.pcUpgrades[part] >= PC_UPGRADE_LIMIT) return;
+    const cost = pcUpgradeCost(part);
+    if (save.balance < cost) {
+      $('pcShopMessage').textContent = 'Недостатньо UAH для покращення.';
+      return;
+    }
+    save.balance -= cost;
+    save.pcUpgrades[part]++;
+    persist();
+    updateUI();
+    $('pcShopMessage').textContent = `${part.toUpperCase()} покращено! Цілі в КС2 стають трохи більшими.`;
+  }
+
+  $('pcBuyButton').addEventListener('click', buyPC);
+  for (const part of Object.keys(PC_UPGRADE_BASE)) {
+    $(`pc${part[0].toUpperCase() + part.slice(1)}Upgrade`).addEventListener('click', () => upgradePC(part));
+  }
+
+  function openPC() {
+    if (!save.pcOwned) return;
+    $('phoneOverlay').classList.add('hidden');
+    $('pcOverlay').classList.remove('hidden');
+    showPCProgram('desktop');
+    updatePcClock();
+    renderPcShop();
+  }
+
+  function closePC() {
+    if (csRun) finishCsRun(false, true);
+    $('pcOverlay').classList.add('hidden');
+  }
+
+  function showPCProgram(name) {
+    if (csRun && name !== 'steam') finishCsRun(false, true);
+    $('pcDesktop').classList.toggle('hidden', name !== 'desktop');
+    $('steamPanel').classList.toggle('hidden', name !== 'steam');
+    $('soundcloudPanel').classList.toggle('hidden', name !== 'soundcloud');
+    if (name === 'steam') renderCsRecord();
+    if (name === 'soundcloud') renderSoundcloud();
+  }
+
+  $('pcOpenButton').addEventListener('click', openPC);
+  $('pcShopOpen').addEventListener('click', openPC);
+  $('pcCloseButton').addEventListener('click', closePC);
+  $('steamApp').addEventListener('click', () => showPCProgram('steam'));
+  $('soundcloudApp').addEventListener('click', () => showPCProgram('soundcloud'));
+  $('pcTaskHome').addEventListener('click', () => showPCProgram('desktop'));
+  $$('[data-pc-home]').forEach((button) => button.addEventListener('click', () => showPCProgram('desktop')));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !$('pcOverlay').classList.contains('hidden')) closePC();
+  });
+
+  function updatePcClock() {
+    const now = new Date().toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+    $('pcClock').textContent = now;
+    $('pcTaskTime').textContent = now;
+  }
+
+  // ========================================================
+  // Steam / CS2: sequential targets, genuine elapsed-time
+  // scoring, one fixed 30-second limit in every difficulty.
+  // ========================================================
+  let csRun = null;
+  let csTickInterval = null;
+  let csLastMode = 'easy';
+
+  function renderCsRecord() {
+    $('csRecord').textContent = `${save.csHardcoreBest} / 60`;
+    $('csBestTime').textContent = save.csHardcoreBestTimeMs > 0
+      ? `Найшвидше 60/60: ${(save.csHardcoreBestTimeMs / 1000).toFixed(2)} с`
+      : 'Поки немає повного проходження';
+  }
+
+  function setCsTargetPosition() {
+    // Percentages keep the target within the play area on mobile too.
+    const x = randInt(13,87);
+    const y = randInt(18,82);
+    const size = 36 + pcAimBonus();
+    const target = $('csTarget');
+    target.style.left = `${x}%`;
+    target.style.top = `${y}%`;
+    target.style.width = `${size}px`;
+    target.style.height = `${size}px`;
+  }
+
+  function startCsRun(mode) {
+    if (!save.pcOwned || !CS_MODES[mode]) return;
+    if (csRun) finishCsRun(false, true);
+    csLastMode = mode;
+    csRun = {mode, hits:0, target:CS_MODES[mode].target, start:performance.now()};
+    $('csMenu').classList.add('hidden');
+    $('csResult').classList.add('hidden');
+    $('csGame').classList.remove('hidden');
+    $('csModeText').textContent = CS_MODES[mode].label;
+    $('csHitCount').textContent = `0 / ${csRun.target}`;
+    $('csTimerFill').style.width = '100%';
+    $('csTimer').textContent = '30.0';
+    setCsTargetPosition();
+    if (csTickInterval !== null) clearInterval(csTickInterval);
+    csTickInterval = setInterval(tickCsRun, 40);
+  }
+
+  function tickCsRun() {
+    if (!csRun) return;
+    const remaining = Math.max(0, CS_ROUND_MS - (performance.now() - csRun.start));
+    $('csTimer').textContent = (remaining / 1000).toFixed(1);
+    $('csTimerFill').style.width = `${(remaining / CS_ROUND_MS) * 100}%`;
+    if (remaining <= 0) finishCsRun(false);
+  }
+
+  function hitCsTarget() {
+    if (!csRun) return;
+    const elapsed = performance.now() - csRun.start;
+    if (elapsed >= CS_ROUND_MS) {
+      finishCsRun(false);
+      return;
+    }
+    csRun.hits++;
+    $('csHitCount').textContent = `${csRun.hits} / ${csRun.target}`;
+    if (csRun.hits >= csRun.target) {
+      finishCsRun(true);
+    } else {
+      setCsTargetPosition();
+    }
+  }
+
+  function finishCsRun(completed, silent = false) {
+    if (!csRun) return;
+    const run = csRun;
+    const elapsed = Math.min(CS_ROUND_MS, Math.max(0, performance.now() - run.start));
+    csRun = null;
+    if (csTickInterval !== null) {
+      clearInterval(csTickInterval);
+      csTickInterval = null;
+    }
+    $('csGame').classList.add('hidden');
+    if (run.mode === 'hardcore' && !silent) {
+      let changed = false;
+      if (run.hits > save.csHardcoreBest) {
+        save.csHardcoreBest = run.hits;
+        changed = true;
+      }
+      if (completed && (save.csHardcoreBestTimeMs === 0 || elapsed < save.csHardcoreBestTimeMs)) {
+        save.csHardcoreBestTimeMs = Math.max(1, Math.round(elapsed));
+        changed = true;
+      }
+      if (changed) persist();
+    }
+    renderCsRecord();
+    if (silent) {
+      $('csMenu').classList.remove('hidden');
+      $('csResult').classList.add('hidden');
+      return;
+    }
+    $('csResult').classList.remove('hidden');
+    $('csResultTitle').textContent = completed ? 'Є влучання! Раунд пройдено' : 'Час вийшов!';
+    $('csResultText').textContent = `${CS_MODES[run.mode].label}: ${run.hits}/${run.target} кульок за ${(elapsed/1000).toFixed(2)} с. ${run.mode === 'hardcore' ? 'Хардкор оновлює рекорд.' : 'Рекорд рахується тільки на хардкорі.'}`;
+  }
+
+  $$('[data-cs-mode]').forEach((button) => button.addEventListener('click', () => startCsRun(button.dataset.csMode)));
+  $('csTarget').addEventListener('click', hitCsTarget);
+  $('csAbort').addEventListener('click', () => finishCsRun(false));
+  $('csPlayAgain').addEventListener('click', () => startCsRun(csLastMode));
+  $('csResultMenu').addEventListener('click', () => { $('csResult').classList.add('hidden');$('csMenu').classList.remove('hidden'); });
+
+  // ========================================================
+  // SoundCloud: local music files, saved settings, no autoplay.
+  // ========================================================
+  const scAudio = new Audio();
+  scAudio.preload = 'metadata';
+  let scCurrentTrack = -1;
+  // Requested filenames are music/mp3(1).mp3 through music/mp3(5).mp3.
+  // Existing folder-based URLs remain supported for older GitHub uploads.
+  let scFallbackIndex = 0;
+  let scUserPaused = true;
+
+  function scPaths(index) {
+    const num = index + 1;
+    return [
+      `music/mp3(${num}).mp3`,
+      `music/mp3(${num})`,
+      `music/mp3/${num}.mp3`,
+      `music/${num}.mp3`,
+      `mp3/${num}.mp3`
+    ];
+  }
+
+  function scPath(index, fallbackIndex = 0) {
+    return scPaths(index)[fallbackIndex];
+  }
+
+  function createTrackCover(index, className = 'sc-cover') {
+    const cover = document.createElement('span');
+    cover.className = className;
+    const fallback = document.createElement('span');
+    fallback.className = 'sc-cover-fallback';
+    fallback.textContent = '♫';
+    fallback.setAttribute('aria-hidden', 'true');
+    const img = document.createElement('img');
+    img.src = MUSIC_COVERS[index];
+    img.alt = `Обкладинка: ${MUSIC_TRACKS[index]}`;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.addEventListener('error', () => {
+      img.remove();
+      cover.classList.add('sc-cover-missing');
+    });
+    cover.append(fallback, img);
+    return cover;
+  }
+
+  function scTime(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+    const whole = Math.floor(seconds);
+    return `${Math.floor(whole/60)}:${String(whole%60).padStart(2,'0')}`;
+  }
+
+  function renderSoundcloud() {
+    const container = $('scTracks');
+    container.replaceChildren();
+    MUSIC_TRACKS.forEach((name, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `sc-track${index === save.audio.track ? ' selected' : ''}`;
+      const cover = createTrackCover(index);
+      const meta = document.createElement('span');
+      meta.className = 'sc-track-meta';
+      const title = document.createElement('strong');
+      title.textContent = name;
+      const subtitle = document.createElement('small');
+      subtitle.textContent = `mp3(${index+1}).mp3`;
+      meta.append(title,subtitle);
+      const icon = document.createElement('span');
+      icon.className = 'sc-track-play';
+      icon.textContent = index === save.audio.track && !scAudio.paused ? 'Ⅱ' : '▶';
+      button.append(cover, meta, icon);
+      button.addEventListener('click', () => selectScTrack(index, true));
+      container.append(button);
+    });
+    $('scCurrentTitle').textContent = MUSIC_TRACKS[save.audio.track];
+    const art = $('scCurrentArt');
+    if (art.dataset.track !== String(save.audio.track)) {
+      art.replaceChildren(createTrackCover(save.audio.track, 'sc-current-cover'));
+      art.dataset.track = String(save.audio.track);
+    }
+    $('scVolume').value = save.audio.volume;
+    $('scVolumeLabel').textContent = `${save.audio.volume}%`;
+    $('scMute').textContent = save.audio.muted || save.audio.volume === 0 ? '🔇' : '🔊';
+    $('scMute').classList.toggle('active', save.audio.muted);
+    $('scShuffle').classList.toggle('active', save.audio.shuffle);
+    $('scShuffle').setAttribute('aria-pressed', String(save.audio.shuffle));
+    $('scMute').setAttribute('aria-pressed', String(save.audio.muted));
+    $('scPlay').textContent = scAudio.paused ? '▶' : 'Ⅱ';
+    $('scPlay').setAttribute('aria-label', scAudio.paused ? 'Відтворити' : 'Пауза');
+    scAudio.volume = save.audio.volume / 100;
+    scAudio.muted = save.audio.muted;
+    updateScProgress();
+  }
+
+  function updateScProgress() {
+    $('scElapsed').textContent = scTime(scAudio.currentTime);
+    $('scDuration').textContent = scTime(scAudio.duration);
+    const valid = Number.isFinite(scAudio.duration) && scAudio.duration > 0;
+    $('scSeek').disabled = !valid;
+    $('scSeek').value = valid ? String((scAudio.currentTime / scAudio.duration) * 100) : '0';
+  }
+
+  function selectScTrack(index, play = false) {
+    if (index < 0 || index >= MUSIC_TRACKS.length) return;
+    save.audio.track = index;
+    scFallbackIndex = 0;
+    scCurrentTrack = index;
+    scUserPaused = !play;
+    scAudio.src = scPath(index);
+    scAudio.load();
+    persist();
+    $('scStatus').textContent = 'Завантаження треку…';
+    renderSoundcloud();
+    if (play) playScAudio();
+  }
+
+  function playScAudio() {
+    if (scCurrentTrack !== save.audio.track) selectScTrack(save.audio.track, false);
+    scUserPaused = false;
+    const request = scAudio.play();
+    if (request && typeof request.catch === 'function') {
+      request.catch(() => {
+        // src can change during rapid track switching; error event handles missing files.
+        if (scAudio.error) $('scStatus').textContent = 'Не вдається відтворити файл. Перевір папку music/ та назви mp3(1).mp3 … mp3(5).mp3';
+        renderSoundcloud();
+      });
+    }
+  }
+
+  function scAdvance(direction) {
+    const last = save.audio.track;
+    const next = save.audio.shuffle && MUSIC_TRACKS.length > 1
+      ? pick(MUSIC_TRACKS.map((_, i) => i).filter(i => i !== last))
+      : (last + direction + MUSIC_TRACKS.length) % MUSIC_TRACKS.length;
+    selectScTrack(next, true);
+  }
+
+  $('scPlay').addEventListener('click', () => {
+    if (!scAudio.paused) {
+      scUserPaused = true;
+      scAudio.pause();
+    } else playScAudio();
+  });
+  $('scPrevious').addEventListener('click', () => {
+    if (scAudio.currentTime > 3) {scAudio.currentTime=0;return;}
+    scAdvance(-1);
+  });
+  $('scNext').addEventListener('click', () => scAdvance(1));
+  $('scShuffle').addEventListener('click', () => {save.audio.shuffle = !save.audio.shuffle; persist(); renderSoundcloud();});
+  $('scMute').addEventListener('click', () => {save.audio.muted = !save.audio.muted; persist(); renderSoundcloud();});
+  $('scVolume').addEventListener('input', (event) => {
+    save.audio.volume = clamp(Number(event.target.value) || 0,0,100);
+    scAudio.volume = save.audio.volume/100;
+    $('scVolumeLabel').textContent = `${save.audio.volume}%`;
+    renderSoundcloud();
+  });
+  $('scVolume').addEventListener('change', persist);
+  $('scSeek').addEventListener('input', (event) => {
+    if (Number.isFinite(scAudio.duration) && scAudio.duration > 0)
+      scAudio.currentTime = scAudio.duration * Number(event.target.value) / 100;
+  });
+  scAudio.addEventListener('timeupdate', updateScProgress);
+  scAudio.addEventListener('loadedmetadata', updateScProgress);
+  scAudio.addEventListener('play', () => {$('scStatus').textContent='Відтворення';renderSoundcloud();});
+  scAudio.addEventListener('pause', () => {if(scUserPaused) $('scStatus').textContent='Пауза';renderSoundcloud();});
+  scAudio.addEventListener('ended', () => scAdvance(1));
+  scAudio.addEventListener('error', () => {
+    if (scCurrentTrack < 0) return;
+    if (scFallbackIndex < scPaths(scCurrentTrack).length - 1) {
+      scFallbackIndex++;
+      scAudio.src = scPath(scCurrentTrack, scFallbackIndex);
+      scAudio.load();
+      if (!scUserPaused) scAudio.play().catch(() => {});
+    } else {
+      scUserPaused = true;
+      $('scStatus').textContent = `Файл music/mp3(${scCurrentTrack + 1}).mp3 не знайдено`;
+      renderSoundcloud();
+    }
+  });
+
   function updatePhoneTime() {
     $('phoneTime').textContent = new Date().toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
   }
@@ -1246,7 +1671,10 @@
     randomizeLasers();
     updateUI();
     updatePhoneTime();
+    updatePcClock();
+    renderSoundcloud();
     setInterval(() => {
+      updatePcClock();
       updatePhoneTime();
       if (!$('tgMarketPanel').classList.contains('hidden')) updateMarketRefreshButton();
       if (!$('tgInventoryPanel').classList.contains('hidden')) renderInventory();

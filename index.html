@@ -14,7 +14,10 @@
         <div class="eyebrow">KOS BRUKIVKA</div>
         <h1>Бруківка Коса</h1>
       </div>
-      <button id="phoneButton" class="phone-button" type="button">📱 Телефон Коса</button>
+      <div class="main-actions">
+        <button id="pcOpenButton" class="pc-open-button hidden" type="button">💻 ПК Коса</button>
+        <button id="phoneButton" class="phone-button" type="button">📱 Телефон Коса</button>
+      </div>
     </header>
 
     <div id="saveWarning" class="save-warning hidden" role="alert"></div>
@@ -85,7 +88,49 @@
           <button id="brukivkaApp" class="app-icon" type="button">
             <span class="app-square bruk-icon">■</span><small>Бруківка</small>
           </button>
+          <button id="pcShopApp" class="app-icon" type="button">
+            <span class="app-square pc-shop-icon">⌘</span><small>PC Market</small>
+          </button>
         </div>
+      </section>
+
+      <section id="pcShopScreen" class="phone-screen pc-shop-screen hidden">
+        <div class="screen-header">
+          <button class="icon-button" data-home type="button">‹</button>
+          <span>PC Market Коса</span><span class="header-dot">●</span>
+        </div>
+        <div class="pc-shop-hero">
+          <span class="pc-shop-monitor">▣</span>
+          <div><small>МАГАЗИН КОМП'ЮТЕРІВ</small><h3>Твій ігровий ПК</h3>
+          <p>Купи комп'ютер, щоб відкрити Steam, КС2 і SoundCloud.</p></div>
+        </div>
+        <div class="pc-wallet">Баланс: <strong id="pcShopBalance">0 UAH</strong></div>
+        <div class="upgrade-card">
+          <div class="upgrade-title"><div><small>КОМПЛЕКТ ПК</small><h3 id="pcOwnership">ПК не придбано</h3></div><div class="mini-phone">💻</div></div>
+          <p class="pc-shop-desc">ПК коштує <b id="pcPriceLabel">12 500</b> UAH. Після покупки з'явиться кнопка «ПК Коса».</p>
+          <button id="pcBuyButton" type="button" class="upgrade-button">Купити ПК</button>
+          <button id="pcShopOpen" type="button" class="pc-store-open hidden">Відкрити ПК ↗</button>
+        </div>
+        <div id="pcUpgradeArea" class="hidden">
+          <div class="pc-shop-heading">ПРОКАЧКА ПК <span id="pcPowerSummary">0 бонус</span></div>
+          <div class="upgrade-card">
+            <div class="upgrade-title"><div><small>ПРОЦЕСОР</small><h3>CPU · швидкість</h3></div><div class="pc-chip-icon">⚡</div></div>
+            <div class="upgrade-row"><span>Рівень</span><strong id="pcCpuLevel">0/5</strong></div>
+            <button id="pcCpuUpgrade" class="upgrade-button" type="button">Прокачати CPU</button>
+          </div>
+          <div class="upgrade-card">
+            <div class="upgrade-title"><div><small>ВІДЕОКАРТА</small><h3>GPU · графіка</h3></div><div class="pc-chip-icon">◈</div></div>
+            <div class="upgrade-row"><span>Рівень</span><strong id="pcGpuLevel">0/5</strong></div>
+            <button id="pcGpuUpgrade" class="upgrade-button" type="button">Прокачати GPU</button>
+          </div>
+          <div class="upgrade-card">
+            <div class="upgrade-title"><div><small>ОПЕРАТИВНА ПАМ'ЯТЬ</small><h3>RAM · відгук</h3></div><div class="pc-chip-icon">▥</div></div>
+            <div class="upgrade-row"><span>Рівень</span><strong id="pcRamLevel">0/5</strong></div>
+            <button id="pcRamUpgrade" class="upgrade-button" type="button">Прокачати RAM</button>
+          </div>
+          <p class="pc-shop-desc">Кожен рівень трохи збільшує розмір кульок у КС2. Час раунду завжди 30 секунд, кількість цілей не змінюється.</p>
+        </div>
+        <p id="pcShopMessage" class="pc-shop-message" aria-live="polite"></p>
       </section>
 
       <section id="bankScreen" class="phone-screen bank-screen hidden">
@@ -309,6 +354,59 @@
 
       <div class="phone-nav"><button id="phoneHomeButton" type="button">●</button></div>
       <button id="closePhone" class="close-phone" type="button" aria-label="Закрити телефон">×</button>
+    </div>
+  </div>
+
+  <div id="pcOverlay" class="pc-overlay hidden" role="dialog" aria-modal="true" aria-label="ПК Коса">
+    <div class="pc-window">
+      <header class="pc-topbar">
+        <div class="pc-brand"><span class="pc-brand-mark">⌘</span><div><strong>KOS OS</strong><small id="pcSpecsLabel">Gaming PC</small></div></div>
+        <span class="pc-top-clock" id="pcClock">00:00</span>
+        <button id="pcCloseButton" class="pc-close-button" type="button" aria-label="Закрити ПК">✕</button>
+      </header>
+      <main class="pc-desktop">
+        <section id="pcDesktop" class="pc-desktop-home">
+          <div class="pc-desktop-title"><small>BRUKIVKA SYSTEM</small><h2>Вітаємо, Кос.</h2><p>Обери програму</p></div>
+          <div class="pc-apps">
+            <button id="steamApp" class="pc-app" type="button"><span class="pc-app-icon steam-tile">◉</span><strong>Steam</strong><small>Ігри</small></button>
+            <button id="soundcloudApp" class="pc-app" type="button"><span class="pc-app-icon soundcloud-tile">☁</span><strong>SoundCloud</strong><small>Музика</small></button>
+            <a href="game2.html" id="nextGameApp" class="pc-app pc-app-link"><span class="pc-app-icon nextgame-tile">🎮</span><strong>Друга гра</strong><small>Окрема гра ↗</small></a>
+          </div>
+          <div class="pc-desktop-foot">Комп'ютер придбано ✓ <span id="pcDesktopPower"></span></div>
+        </section>
+        <section id="steamPanel" class="pc-program hidden">
+          <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>STEAM</strong><span class="steam-online">● ONLINE</span></div>
+          <div class="steam-hero"><div class="steam-cover">CS<span>2</span></div><div><small>БІБЛІОТЕКА STEAM</small><h2>КС2 · AIM TRAINER</h2><p>Влучай у кульки якомога швидше. На кожен раунд — рівно 30 секунд.</p></div></div>
+          <div id="csMenu">
+            <div class="cs-difficulty-list">
+              <button class="cs-mode" data-cs-mode="easy" type="button"><span class="cs-mode-icon">◉</span><span><b>Легкий</b><small>10 кульок · 30 секунд</small></span><span>›</span></button>
+              <button class="cs-mode" data-cs-mode="medium" type="button"><span class="cs-mode-icon medium">◎</span><span><b>Середній</b><small>30 кульок · 30 секунд</small></span><span>›</span></button>
+              <button class="cs-mode" data-cs-mode="hardcore" type="button"><span class="cs-mode-icon hard">✺</span><span><b>Хардкор</b><small>60 кульок · 30 секунд · рекорд</small></span><span>›</span></button>
+            </div>
+            <div class="cs-record-panel">🏆 ХАРДКОР РЕКОРД <strong id="csRecord">0 / 60</strong><span id="csBestTime">Немає пройдених раундів</span></div>
+            <a class="steam-other-game" href="game2.html"><span class="steam-other-icon">🎮</span><span><strong>Друга гра</strong><small>Окремий HTML-файл · можна замінити пізніше</small></span><span class="steam-other-arrow">Відкрити ↗</span></a>
+          </div>
+          <div id="csGame" class="hidden">
+            <div class="cs-hud"><div><small>СКЛАДНІСТЬ</small><b id="csModeText">Хардкор</b></div><div><small>ЦІЛІ</small><b id="csHitCount">0 / 60</b></div><div><small>ЧАС</small><b id="csTimer">30.0</b></div></div>
+            <div class="cs-timer-track"><div id="csTimerFill"></div></div>
+            <div id="csArena" class="cs-arena" aria-label="Ігрове поле КС2"><div class="cs-arena-grid"></div><button id="csTarget" class="cs-target" type="button" aria-label="Влучити в кульку"></button></div>
+            <button id="csAbort" class="cs-secondary" type="button">Завершити раунд</button>
+          </div>
+          <div id="csResult" class="cs-result hidden" aria-live="polite"><div class="cs-result-medal">✦</div><h2 id="csResultTitle">Раунд завершено</h2><p id="csResultText"></p><button id="csPlayAgain" class="cs-primary" type="button">Зіграти ще</button><button id="csResultMenu" class="cs-secondary" type="button">Вибрати складність</button></div>
+        </section>
+        <section id="soundcloudPanel" class="pc-program soundcloud-program hidden">
+          <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>SOUNDCLOUD</strong><span class="sc-badge">MIX</span></div>
+          <div class="sc-banner"><div class="sc-banner-glyph">☁</div><div><small>KOS PLAYLIST · 5 TRACKS</small><h2>Музика Коса</h2><p>Треки з папки <code>music/</code> у GitHub</p></div></div>
+          <div id="scTracks" class="sc-tracks"></div>
+          <div class="sc-player"><div class="sc-playing"><div id="scCurrentArt" class="sc-art">♫</div><div class="sc-now"><small>ЗАРАЗ ГРАЄ</small><strong id="scCurrentTitle">Тікі Тікі</strong><span id="scStatus">Готово до відтворення</span></div></div>
+            <div class="sc-progress-bar"><span id="scElapsed">0:00</span><input id="scSeek" aria-label="Позиція треку" type="range" min="0" max="100" value="0" step="0.1" /><span id="scDuration">0:00</span></div>
+            <div class="sc-controls"><button id="scShuffle" type="button" aria-label="Випадковий порядок" title="Випадковий порядок">⇄</button><button id="scPrevious" type="button" aria-label="Попередній трек">⏮</button><button id="scPlay" class="sc-play-btn" type="button" aria-label="Відтворити або пауза">▶</button><button id="scNext" type="button" aria-label="Наступний трек">⏭</button><button id="scMute" type="button" aria-label="Увімкнути або вимкнути звук">🔊</button></div>
+            <div class="sc-volume"><label for="scVolume">Гучність</label><input id="scVolume" type="range" min="0" max="100" value="70" step="1" /><output id="scVolumeLabel">70%</output></div>
+            <p class="sc-path-note">Назви MP3 у GitHub: <code>music/mp3(1).mp3</code> … <code>music/mp3(5).mp3</code>. Відтворення триває після закриття ПК. Обкладинки підвантажуються за посиланнями.</p>
+          </div>
+        </section>
+      </main>
+      <footer class="pc-taskbar"><button id="pcTaskHome" type="button">⊞ <span>Пуск</span></button><span>Brukivka OS · v1</span><span id="pcTaskTime">00:00</span></footer>
     </div>
   </div>
 
