@@ -1,35 +1,113 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Друга гра · Brukivka</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050816">
+  <title>Скоро буде</title>
   <style>
-    :root { color-scheme:dark; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
-    * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; display:grid; place-items:center; padding:22px;
-      background:radial-gradient(ellipse at 76% 5%,#3d327e 0,transparent 48%),linear-gradient(145deg,#131d37,#090c17);
-      color:#f0f3ff; }
-    main { width:min(100%,530px); border:1px solid #ffffff20; background:#0f192de8;
-      box-shadow:0 28px 90px #0006; border-radius:24px; padding:clamp(28px,7vw,55px); text-align:center; }
-    .icon { width:90px; height:90px; display:grid; place-items:center; margin:0 auto 21px;
-      border-radius:20px; background:linear-gradient(140deg,#7467e8,#32418c); font-size:45px; }
-    small { color:#a3b5ed; font-weight:900; letter-spacing:.22em; font-size:11px; }
-    h1 { font-size:clamp(27px,6vw,39px); margin:10px 0; }
-    p { color:#aebad3; line-height:1.65; }
-    a { display:inline-flex; align-items:center; gap:9px; padding:13px 23px; margin-top:16px;
-      background:linear-gradient(120deg,#5f7beb,#8f65ef); color:#fff; text-decoration:none;
-      font-weight:800; border-radius:12px; }
-    a:hover { filter:brightness(1.12); }
+    :root { color-scheme: dark; font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; min-height: 100%; margin: 0; }
+    body { overflow: hidden; background: #050816; color: white; }
+    .scene { position: relative; isolation: isolate; display: grid; place-items: center; min-height: 100svh; padding: 24px; overflow: hidden;
+      background: radial-gradient(ellipse at 48% 49%, #15264a 0%, #0b1127 38%, #050816 78%); }
+    .scene::before { content: ''; position: absolute; inset: -50%; pointer-events: none; z-index: -1;
+      background: conic-gradient(from 0deg, transparent 0 15%, #7e42ff12 21%, transparent 31% 59%, #00e9ff10 70%, transparent 85%);
+      animation: rotate 36s linear infinite; }
+    .noise { position: absolute; inset: 0; pointer-events: none; opacity: .24;
+      background-image: radial-gradient(#b9d5ff5c .75px, transparent .8px); background-size: 29px 29px;
+      mask-image: radial-gradient(ellipse, transparent 22%, #000 100%); }
+    #stars { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .aura { position: absolute; width: min(83vw, 660px); aspect-ratio: 1; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle, #5e50ff24, #15dfff10 35%, transparent 68%);
+      filter: blur(32px); animation: breathe 5s ease-in-out infinite alternate; }
+    .portal { position: absolute; width: min(78vw, 520px); aspect-ratio: 1; pointer-events: none; animation: float 8s ease-in-out infinite; }
+    .ring { position: absolute; inset: 6%; border-radius: 50%; border: 1px solid #72c9ff4a;
+      box-shadow: 0 0 35px #287aff24, inset 0 0 35px #287aff15; animation: rotate 24s linear infinite; }
+    .ring::before, .ring::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 3px solid transparent; }
+    .ring::before { border-top-color: #45ecff; filter: drop-shadow(0 0 10px #45ecff); transform: rotate(-35deg); }
+    .ring::after { border-bottom-color: #9575ff; filter: drop-shadow(0 0 12px #9575ff); transform: rotate(25deg); }
+    .ring:nth-child(2) { inset: 15%; border-style: dashed; border-color: #75c7ff35; animation-direction: reverse; animation-duration: 34s; }
+    .ring:nth-child(2)::before { border-left-color: #b49aff; border-top-color: transparent; }
+    .ring:nth-child(2)::after { border-right-color: #49e6ff; border-bottom-color: transparent; }
+    .ring:nth-child(3) { inset: 25%; border-color: #a896ff35; animation-duration: 15s; }
+    .ring:nth-child(3)::before { border-top-color: #967aff; }
+    .ring:nth-child(3)::after { border-bottom-color: #56eaff; }
+    .core { position: absolute; inset: 34%; border-radius: 50%;
+      background: radial-gradient(circle, #c4f6ff16, #4b7fff1a 36%, transparent 75%);
+      box-shadow: 0 0 70px #5268ff35; animation: breathe 4s ease-in-out infinite alternate-reverse; }
+    main { position: relative; z-index: 2; text-align: center; width: 100%; pointer-events: none; }
+    h1 { position: relative; display: inline-block; margin: 0; max-width: 100%;
+      font-size: clamp(2.5rem, 9.7vw, 7.5rem); font-weight: 900; letter-spacing: .045em; line-height: 1.1;
+      text-transform: uppercase; white-space: nowrap; color: #f5fbff;
+      text-shadow: 0 0 14px #8cd8ffb0, 0 0 42px #508bff80, 0 0 90px #9063ff66;
+      animation: enter 1.2s cubic-bezier(.2,.75,.25,1) both, glow 4s ease-in-out infinite alternate 1.2s; }
+    h1::before, h1::after { content: attr(data-text); position: absolute; inset: 0; opacity: 0; }
+    h1::before { color: #26dfff; text-shadow: -4px 0 #26dfff; animation: glitch-a 8s steps(1) infinite; }
+    h1::after { color: #a16eff; text-shadow: 4px 0 #a16eff; animation: glitch-b 8s steps(1) infinite; }
+    .underline { width: clamp(105px, 25vw, 250px); height: 3px; margin: 29px auto 0; border-radius: 10px;
+      background: linear-gradient(90deg, transparent, #55e4ff, #ad81ff, transparent);
+      box-shadow: 0 0 20px #68baff; animation: enter 1.5s ease both .25s, pulse 3s ease-in-out infinite alternate; }
+    .back { position: fixed; z-index: 5; left: clamp(16px, 3vw, 34px); top: clamp(16px, 3vw, 34px); width: 44px; height: 44px;
+      display: grid; place-items: center; border: 1px solid #a3c4ff42; border-radius: 13px;
+      background: #0e1730a6; color: #e9faff; backdrop-filter: blur(12px); text-decoration: none;
+      transition: transform .22s ease, background .22s ease, border-color .22s ease; }
+    .back:hover, .back:focus-visible { transform: translateX(-3px); background: #213862dd; border-color: #7fd8ff; outline: none; }
+    .back svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    @keyframes rotate { to { transform: rotate(360deg); } }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+    @keyframes breathe { from { opacity: .55; transform: scale(.94); } to { opacity: 1; transform: scale(1.08); } }
+    @keyframes glow { from { text-shadow: 0 0 12px #8cd8ff9a, 0 0 38px #508bff5c; } to { text-shadow: 0 0 22px #bceaff, 0 0 55px #478dffc9, 0 0 100px #8f63ff80; } }
+    @keyframes enter { from { opacity: 0; transform: translateY(28px) scale(.94); filter: blur(10px); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+    @keyframes pulse { from { opacity: .5; transform: scaleX(.75); } to { opacity: 1; transform: scaleX(1.1); } }
+    @keyframes glitch-a { 0%, 87%, 90%, 100% { opacity: 0; clip-path: inset(0 0 0 0); transform: none; } 88% { opacity: .65; clip-path: inset(14% 0 65% 0); transform: translateX(-5px); } 89% { opacity: .35; clip-path: inset(62% 0 19% 0); transform: translateX(3px); } }
+    @keyframes glitch-b { 0%, 88%, 92%, 100% { opacity: 0; clip-path: inset(0 0 0 0); transform: none; } 89% { opacity: .55; clip-path: inset(40% 0 40% 0); transform: translateX(5px); } 90% { opacity: .3; clip-path: inset(8% 0 77% 0); transform: translateX(-2px); } }
+    @media (max-width: 600px) { h1 { font-size: clamp(2.05rem, 10vw, 4rem); letter-spacing: .01em; } .portal { width: min(110vw, 520px); } .underline { margin-top: 21px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
   </style>
 </head>
 <body>
-  <main>
-    <div class="icon" aria-hidden="true">🎮</div>
-    <small>BRUKIVKA · НОВА ГРА</small>
-    <h1>Скоро тут буде гра</h1>
-    <p>Перехід між іграми вже працює. Коли нова гра буде готова, заміни цей файл <strong>game2.html</strong> на її код.</p>
-    <a href="index.html">← Назад до Brukivka</a>
-  </main>
+  <div class="scene">
+    <canvas id="stars" aria-hidden="true"></canvas>
+    <div class="noise" aria-hidden="true"></div>
+    <div class="aura" aria-hidden="true"></div>
+    <div class="portal" aria-hidden="true"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="core"></div></div>
+    <main><h1 data-text="СКОРО БУДЕ">СКОРО БУДЕ</h1><div class="underline" aria-hidden="true"></div></main>
+  </div>
+  <a class="back" href="index.html" aria-label="Назад до головної гри" title="Назад">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+  </a>
+  <script>
+    (() => {
+      const canvas = document.getElementById('stars');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let stars = [], width = 0, height = 0, raf = 0;
+      function resize() {
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        const count = Math.min(145, Math.floor(width * height / 7500));
+        stars = Array.from({length: count}, () => ({x: Math.random() * width, y: Math.random() * height,
+          r: .5 + Math.random() * 1.25, opacity: .2 + Math.random() * .6, speed: .2 + Math.random() * .65, phase: Math.random() * Math.PI * 2}));
+      }
+      function draw(time) {
+        ctx.clearRect(0, 0, width, height);
+        for (const star of stars) {
+          const flicker = reducedMotion ? 1 : .75 + .25 * Math.sin(time * .0012 + star.phase);
+          ctx.beginPath(); ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(187,218,255,${star.opacity * flicker})`; ctx.fill();
+          if (!reducedMotion) { star.y -= star.speed * .25; if (star.y < -4) { star.y = height + 4; star.x = Math.random() * width; } }
+        }
+        if (!reducedMotion && !document.hidden) raf = requestAnimationFrame(draw);
+      }
+      window.addEventListener('resize', () => { resize(); if (reducedMotion || document.hidden) draw(0); });
+      document.addEventListener('visibilitychange', () => { cancelAnimationFrame(raf); if (!document.hidden) draw(0); });
+      resize(); draw(0);
+    })();
+  </script>
 </body>
 </html>
