@@ -21,6 +21,7 @@
     </header>
 
     <div id="saveWarning" class="save-warning hidden" role="alert"></div>
+    <div id="vodoBadge" class="vodo-badge hidden">🌊 Водолаз</div>
 
     <section class="game-panel">
       <div class="game-title-row">
@@ -43,7 +44,8 @@
         <div class="laser"></div>
         <div class="laser"></div>
         <div class="laser"></div>
-
+        <div class="maze-wall wall-a"></div><div class="maze-wall wall-b"></div><div class="maze-wall wall-c"></div>
+        <div class="maze-wall wall-d"></div><div class="maze-wall wall-e"></div><div class="maze-wall wall-f"></div>
         <div id="brukivka" class="brukivka" role="button" aria-label="Бруківка">
           <div class="brick-face"></div>
           <b id="brickCountBadge" class="brick-count">×1</b>
@@ -128,6 +130,11 @@
             <div class="upgrade-row"><span>Рівень</span><strong id="pcRamLevel">0/5</strong></div>
             <button id="pcRamUpgrade" class="upgrade-button" type="button">Прокачати RAM</button>
           </div>
+          <div class="upgrade-card monitor-upgrade"><div class="upgrade-title"><div><small>ОБОВ'ЯЗКОВЕ ОБЛАДНАННЯ</small><h3>Монітор 🖥️</h3></div></div>
+            <div class="upgrade-row"><span>Поточний</span><strong id="pcMonitorStatus">Не придбано</strong></div>
+            <button id="pcMonitorUpgrade" class="upgrade-button" type="button">Купити монітор</button>
+            <p id="pcMonitorHint" class="pc-shop-desc">Екран чорний без монітора.</p>
+          </div>
           <p class="pc-shop-desc">Кожен рівень трохи збільшує розмір кульок у КС2. Час раунду завжди 30 секунд, кількість цілей не змінюється.</p>
         </div>
         <p id="pcShopMessage" class="pc-shop-message" aria-live="polite"></p>
@@ -151,7 +158,7 @@
             <div><small>БРУКІВКА</small><h3 id="bankBrickName">Звичайна</h3></div>
             <div class="mini-brick">■</div>
           </div>
-          <div class="upgrade-row"><span>Рівень</span><strong><span id="brickTierText">0</span>/15</strong></div>
+          <div class="upgrade-row"><span>Рівень</span><strong><span id="brickTierText">0</span>/<span id="brickMaxLabel">27</span></strong></div>
           <div class="upgrade-row"><span>База за 1 шт.</span><strong><span id="brickBaseReward">100</span> UAH</strong></div>
           <div class="upgrade-row"><span>Наступна</span><strong id="nextBrickName">Кам'яна</strong></div>
           <button id="brickUpgradeButton" class="upgrade-button" type="button">Прокачати</button>
@@ -179,6 +186,16 @@
           <button id="strengthUpgradeButton" class="upgrade-button" type="button">Прокачати силу</button>
           <div id="strengthUpgradeHint" class="upgrade-hint"></div>
         </div>
+        <div class="upgrade-card elite-upgrade"><div class="upgrade-title"><div><small>ЛЕГЕНДАРНИЙ КАРМАН</small><h3>Піднесення в степінь</h3></div><span>✦</span></div>
+          <div class="upgrade-row"><span>Рівень</span><strong id="pocketLevel">0/10</strong></div>
+          <div class="upgrade-row"><span>Степінь доходу</span><strong id="pocketPower">× до степеня 1.00</strong></div>
+          <button id="pocketUpgradeButton" class="upgrade-button" type="button">Покращити карман</button>
+          <p class="pc-shop-desc">Найдорожча прокачка. Кожен рівень підвищує степінь доходу, а ціна зростає все швидше.</p>
+        </div>
+        <div class="upgrade-card"><div class="upgrade-title"><div><small>НЕРУХОМІСТЬ</small><h3>Твої острови 🏝️</h3></div></div>
+          <p class="pc-shop-desc">Острови приносять пасивний дохід щохвилини. Загальний дохід: <b id="islandIncome">0</b> UAH/хв</p>
+          <div id="islandList" class="island-list"></div>
+        </div>
       </section>
 
       <section id="brukivkaScreen" class="phone-screen info-screen hidden">
@@ -193,7 +210,7 @@
           <div>
             <small>ПОТОЧНА БРУКІВКА</small>
             <h3 id="infoBrickName">Звичайна Бруківка</h3>
-            <span>Рівень <b id="infoBrickTier">0</b>/15</span>
+            <span>Рівень <b id="infoBrickTier">0</b>/<b id="infoBrickMax">27</b></span>
           </div>
         </div>
 
@@ -313,6 +330,7 @@
         </div>
 
         <div id="tgChatsPanel" class="tg-panel">
+          <div class="waiter-card"><strong>🪑 Робота: Ждун</strong><p>Звучить занадто просто? Витримай хвилину абсолютного спокою.</p><button id="waiterStart" type="button">Влаштуватися Ждуном</button><small id="waiterStatus">Натисни кнопку й нічого не роби.</small></div>
           <button id="reformotiChatOpen" class="chat-list-item" type="button">
             <span class="avatar">R</span>
             <span class="chat-meta"><strong>reformoti</strong><small id="reformotiPreview">Є запит на поставку Бруківки</small></span>
@@ -358,13 +376,14 @@
   </div>
 
   <div id="pcOverlay" class="pc-overlay hidden" role="dialog" aria-modal="true" aria-label="ПК Коса">
-    <div class="pc-window">
+    <div id="pcWindow" class="pc-window monitor-off">
       <header class="pc-topbar">
         <div class="pc-brand"><span class="pc-brand-mark">⌘</span><div><strong>KOS OS</strong><small id="pcSpecsLabel">Gaming PC</small></div></div>
         <span class="pc-top-clock" id="pcClock">00:00</span>
         <button id="pcCloseButton" class="pc-close-button" type="button" aria-label="Закрити ПК">✕</button>
       </header>
       <main class="pc-desktop">
+        <div id="monitorBlackScreen" class="monitor-black" aria-label="Монітор вимкнений"></div>
         <section id="pcDesktop" class="pc-desktop-home">
           <div class="pc-desktop-title"><small>BRUKIVKA SYSTEM</small><h2>Вітаємо, Кос.</h2><p>Обери програму</p></div>
           <div class="pc-apps">
@@ -372,7 +391,7 @@
             <button id="soundcloudApp" class="pc-app" type="button"><span class="pc-app-icon soundcloud-tile">☁</span><strong>SoundCloud</strong><small>Музика</small></button>
             <a href="game2.html" id="nextGameApp" class="pc-app pc-app-link"><span class="pc-app-icon nextgame-tile">🎮</span><strong>Друга гра</strong><small>Окрема гра ↗</small></a>
           </div>
-          <div class="pc-desktop-foot">Комп'ютер придбано ✓ <span id="pcDesktopPower"></span></div>
+          <div class="pc-desktop-foot">Комп'ютер придбано ✓ <span id="pcDesktopPower"></span> <b id="pcMonitorBadge">—</b></div>
         </section>
         <section id="steamPanel" class="pc-program hidden">
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>STEAM</strong><span class="steam-online">● ONLINE</span></div>
@@ -384,6 +403,7 @@
               <button class="cs-mode" data-cs-mode="hardcore" type="button"><span class="cs-mode-icon hard">✺</span><span><b>Хардкор</b><small>60 кульок · 30 секунд · рекорд</small></span><span>›</span></button>
             </div>
             <div class="cs-record-panel">🏆 ХАРДКОР РЕКОРД <strong id="csRecord">0 / 60</strong><span id="csBestTime">Немає пройдених раундів</span></div>
+            <a class="steam-other-game minihoi-entry" href="minihoi.html"><span class="steam-other-icon">🌍</span><span><strong>IRON ATLAS · Mini HOI</strong><small>Три складності · 8 / 15 / 25 країн · збереження кампанії</small></span><span class="steam-other-arrow">Грати ↗</span></a>
             <a class="steam-other-game" href="game2.html"><span class="steam-other-icon">🎮</span><span><strong>Друга гра</strong><small>Окремий HTML-файл · можна замінити пізніше</small></span><span class="steam-other-arrow">Відкрити ↗</span></a>
           </div>
           <div id="csGame" class="hidden">
@@ -400,10 +420,26 @@
           <div id="scTracks" class="sc-tracks"></div>
           <div class="sc-player"><div class="sc-playing"><div id="scCurrentArt" class="sc-art">♫</div><div class="sc-now"><small>ЗАРАЗ ГРАЄ</small><strong id="scCurrentTitle">Тікі Тікі</strong><span id="scStatus">Готово до відтворення</span></div></div>
             <div class="sc-progress-bar"><span id="scElapsed">0:00</span><input id="scSeek" aria-label="Позиція треку" type="range" min="0" max="100" value="0" step="0.1" /><span id="scDuration">0:00</span></div>
-            <div class="sc-controls"><button id="scShuffle" type="button" aria-label="Випадковий порядок" title="Випадковий порядок">⇄</button><button id="scPrevious" type="button" aria-label="Попередній трек">⏮</button><button id="scPlay" class="sc-play-btn" type="button" aria-label="Відтворити або пауза">▶</button><button id="scNext" type="button" aria-label="Наступний трек">⏭</button><button id="scMute" type="button" aria-label="Увімкнути або вимкнути звук">🔊</button></div>
+            <div class="sc-controls"><button id="scRepeat" type="button" aria-label="Повтор треку" title="Зациклити трек">↻</button><button id="scShuffle" type="button" aria-label="Випадковий порядок" title="Випадковий порядок">⇄</button><button id="scPrevious" type="button" aria-label="Попередній трек">⏮</button><button id="scPlay" class="sc-play-btn" type="button" aria-label="Відтворити або пауза">▶</button><button id="scNext" type="button" aria-label="Наступний трек">⏭</button><button id="scMute" type="button" aria-label="Увімкнути або вимкнути звук">🔊</button></div>
             <div class="sc-volume"><label for="scVolume">Гучність</label><input id="scVolume" type="range" min="0" max="100" value="70" step="1" /><output id="scVolumeLabel">70%</output></div>
             <p class="sc-path-note">Назви MP3 у GitHub: <code>music/mp3(1).mp3</code> … <code>music/mp3(5).mp3</code>. Відтворення триває після закриття ПК. Обкладинки підвантажуються за посиланнями.</p>
           </div>
+        </section>
+        <section id="historyPanel" class="pc-program changelog-program hidden">
+          <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>ЖУРНАЛ ОНОВЛЕНЬ</strong><span class="steam-online">● HISTORY</span></div>
+          <h2>Історія Brukivka</h2><p class="history-note">Дати й час орієнтовні, тільки для версій, відомих із розробки.</p>
+          <div class="history-timeline">
+            <article><time>19.10.2026 · близько 18:00</time><h3>Випуск Music & Game 2</h3><p>П'ять обкладинок SoundCloud, шляхи mp3(1–5), посилання на другу гру.</p></article>
+            <article><time>19.10.2026 · близько 15:00</time><h3>Персональний комп'ютер</h3><p>PC Market, Steam, тренажер КС2, SoundCloud, покращення комп'ютера.</p></article>
+            <article><time>19.10.2026 · близько 14:00</time><h3>Стабільність прогресу</h3><p>Перевірка збережень, резервна копія, зміни Telegram-ринку.</p></article>
+            <article><time>19.10.2026 · поточне оновлення</time><h3>IRON ATLAS та новий світ</h3><p>Mini HOI з трьома режимами, монітори, острови, карман, нові рівні, Ждун, перехід між треками.</p></article>
+          </div>
+          <div class="history-locks"><button data-secret="captain" type="button">♛ Архів I</button><button data-secret="navigator" type="button">⚓ Архів II</button><button data-secret="team" type="button">✦ Архів III</button></div>
+        </section>
+        <section id="secretPanel" class="pc-program secret-program hidden">
+          <div class="pc-program-header"><button id="secretBack" class="pc-back-button" type="button">← Назад до журналу</button><strong>ЗАКРИТИЙ АРХІВ</strong></div>
+          <form id="secretForm" class="secret-gate"><div id="secretGate"><h2>Потрібен код доступу</h2><label for="secretInput">Код</label><input id="secretInput" type="password" autocomplete="off" required maxlength="80"><button class="cs-primary" type="submit">Відкрити</button><small id="secretError" role="status"></small></div></form>
+          <div id="secretCredits" class="secret-credits hidden"><div class="secret-crown">✦ ✧ ✦</div><h1 id="secretName"></h1><h2 id="secretTitle"></h2><p id="secretBio"></p><span>LEGENDS NEVER LOG OFF</span></div>
         </section>
       </main>
       <footer class="pc-taskbar"><button id="pcTaskHome" type="button">⊞ <span>Пуск</span></button><span>Brukivka OS · v1</span><span id="pcTaskTime">00:00</span></footer>

@@ -67,7 +67,19 @@
     {name:'Обсидіанова', reward:3250, cost:85000, c1:'#4e4b5f', c2:'#14121a'},
     {name:'Алмазна', reward:4100, cost:115000, c1:'#b9f4ff', c2:'#55a6bd'},
     {name:'Діамантова', reward:5150, cost:155000, c1:'#effcff', c2:'#7bb7cc'},
-    {name:'Легендарна', reward:6500, cost:0, c1:'#c388ff', c2:'#4c1e7c'}
+    {name:'Легендарна', reward:6500, cost:190000, c1:'#c388ff', c2:'#4c1e7c'},
+    {name:'Місячна', reward:8600, cost:275000, c1:'#e6ecff', c2:'#7289b9'},
+    {name:'Метеоритна', reward:11600, cost:395000, c1:'#e79861', c2:'#734f3a'},
+    {name:'Сонячна', reward:15400, cost:570000, c1:'#ffdc6d', c2:'#c7691e'},
+    {name:'Пульсарна', reward:20500, cost:820000, c1:'#83f9ff', c2:'#2c6bb5'},
+    {name:'Небесна', reward:27500, cost:1200000, c1:'#c5dcfc', c2:'#5e9ecc'},
+    {name:'Антиматерія', reward:37000, cost:1800000, c1:'#eebaff', c2:'#6b30a5'},
+    {name:'Квантова', reward:49000, cost:2700000, c1:'#78ffc3', c2:'#20735f'},
+    {name:'Гіпернова', reward:65000, cost:4300000, c1:'#ffc078', c2:'#a8364e'},
+    {name:'Туманність', reward:86000, cost:7000000, c1:'#b88cff', c2:'#394e95'},
+    {name:'Галактична', reward:115000, cost:12500000, c1:'#f3bef4', c2:'#34459a'},
+    {name:'Сингулярність', reward:154000, cost:26000000, c1:'#a4caff', c2:'#171a46'},
+    {name:'Нескінченна', reward:210000, cost:0, c1:'#ffffff', c2:'#7940be'}
   ];
 
   const phoneTiers = [
@@ -93,6 +105,26 @@
   const MARKET_REFRESH_COOLDOWN_MS = 30 * 1000;
   const ITEM_SALE_DELAY_MS = 60 * 1000;
   const MAX_BALANCE = Number.MAX_SAFE_INTEGER;
+  const POCKET_MAX = 10;
+  const ISLANDS = [
+    {id:'palm',name:'Пальмовий риф',price:2500000,income:95000,emoji:'🏝️'},
+    {id:'azure',name:'Лазурна бухта',price:25000000,income:850000,emoji:'🌊'},
+    {id:'volcano',name:'Вулканічний архіпелаг',price:280000000,income:8500000,emoji:'🌋'},
+    {id:'crown',name:'Королівські острови',price:3200000000,income:95000000,emoji:'👑'},
+    {id:'neptune',name:'Океан Нептуна',price:28000000000,income:750000000,emoji:'🔱'}
+  ];
+  const MONITORS = [{name:'Немає монітора',cost:4900,resolution:'—'},
+    {name:'Слабкий CRT',cost:8500,resolution:'800×400'},
+    {name:'HD Monitor',cost:26000,resolution:'1024×600'},
+    {name:'Full HD',cost:105000,resolution:'1280×720'},
+    {name:'Ultra 4K',cost:0,resolution:'1920×1080'}];
+  function pocketPower(){return save.pocketTier ? 1.01+(save.pocketTier-1)*.02:1;}
+  function pocketCost(){return Math.round(1100000*Math.exp(.16*Math.pow(save.pocketTier,1.85))/1000)*1000;}
+  function incomeFactor(){return save.waiterPenalty ? .1:1;}
+  function award(value){const amount=Math.max(0,Math.round(value*incomeFactor()));save.balance=clamp(save.balance+amount,-MAX_BALANCE,MAX_BALANCE);save.totalEarned=clamp(save.totalEarned+amount,0,MAX_BALANCE);return amount;}
+  function islandIncome(){return ISLANDS.reduce((total,i)=>total+i.income*(save.islands[i.id]||0),0);}
+  function marketScale(){return Math.min(35,1+2.3*Math.log10(1+save.totalEarned/15000));}
+
   const PC_PRICE = 12500;
   const PC_UPGRADE_LIMIT = 5;
   const PC_UPGRADE_BASE = {cpu:1100, gpu:1500, ram:900};
@@ -148,7 +180,9 @@ const MUSIC_COVERS = [
       pcUpgrades:{cpu:0,gpu:0,ram:0},
       csHardcoreBest:0,
       csHardcoreBestTimeMs:0,
-      audio:{track:0,volume:70,muted:false,shuffle:false}
+      audio:{track:0,volume:70,muted:false,shuffle:false,repeat:false},
+      monitorTier:0,pocketTier:0,islands:{},lastIslandAt:Date.now(),totalEarned:0,
+      waiterStartedAt:0,waiterPenalty:false,waiterRecover:0
     };
   }
 
@@ -260,6 +294,16 @@ const MUSIC_COVERS = [
     result.audio.volume = safeInt(audio.volume, 70, 0, 100);
     result.audio.muted = audio.muted === true;
     result.audio.shuffle = audio.shuffle === true;
+    result.audio.repeat = audio.repeat === true;
+    result.monitorTier = result.pcOwned ? safeInt(source.monitorTier,0,0,MONITORS.length-1) : 0;
+    result.pocketTier = safeInt(source.pocketTier,0,0,POCKET_MAX);
+    const islands = record(source.islands);
+    ISLANDS.forEach(i=>{result.islands[i.id]=safeInt(islands[i.id],0,0,5)});
+    result.lastIslandAt = safeInt(source.lastIslandAt,Date.now(),0,Date.now());
+    result.totalEarned = safeInt(source.totalEarned,Math.max(0,result.balance),0,MAX_BALANCE);
+    result.waiterStartedAt = safeInt(source.waiterStartedAt,0,0,Date.now());
+    result.waiterPenalty = source.waiterPenalty === true;
+    result.waiterRecover = result.waiterPenalty ? safeInt(source.waiterRecover,0,0,20) : 0;
     return result;
   }
 
@@ -318,7 +362,7 @@ const MUSIC_COVERS = [
       .filter((key) => save.attempted[key])
       .map((key) => nmtScore(key, save.tests[key]))
       .filter((score) => score >= 100);
-    if (!scores.length) return 0;
+    if (scores.length !== Object.keys(SUBJECTS).length) return 0;
     return Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
   }
 
@@ -328,10 +372,10 @@ const MUSIC_COVERS = [
     return 1 + Math.floor((avg - 100) / 10) * 0.5;
   }
 
-  function brickTier() { return brickTiers[clamp(save.brickTier, 0, 15)]; }
+  function brickTier() { return brickTiers[clamp(save.brickTier, 0, brickTiers.length-1)]; }
   function phoneTier() { return phoneTiers[clamp(save.phoneTier, 0, 15)]; }
   function strengthTier() { return strengthTiers[clamp(save.strength, 0, 5)]; }
-  function finalReward() { return Math.round(brickTier().reward * strengthTier().carry * nmtMultiplier()); }
+  function finalReward() { return Math.round(Math.pow(brickTier().reward * strengthTier().carry * nmtMultiplier(),pocketPower())*incomeFactor()); }
   function displayNmt(score) { return score >= 100 ? String(score) : '—'; }
 
   function setBalanceClass(element) {
@@ -374,14 +418,14 @@ const MUSIC_COVERS = [
     $('bankBrickName').textContent = brick.name;
     $('brickTierText').textContent = save.brickTier;
     $('brickBaseReward').textContent = money(brick.reward);
-    $('nextBrickName').textContent = save.brickTier < 15 ? brickTiers[save.brickTier + 1].name : 'МАКСИМУМ';
+    $('nextBrickName').textContent = save.brickTier < brickTiers.length-1 ? brickTiers[save.brickTier+1].name : 'МАКСИМУМ';
     $('bankPhoneName').textContent = phone.name;
     $('phoneTierText').textContent = save.phoneTier;
     $('nextPhoneName').textContent = save.phoneTier < 15 ? phoneTiers[save.phoneTier + 1].name : 'МАКСИМУМ';
     $('strengthTierText').textContent = save.strength;
     $('carryCountBank').textContent = strength.carry;
 
-    setupUpgradeButton($('brickUpgradeButton'), save.brickTier, 15, brick, 'Прокачати Бруківку');
+    setupUpgradeButton($('brickUpgradeButton'), save.brickTier, brickTiers.length-1, brick, 'Прокачати Бруківку');
     setupUpgradeButton($('phoneUpgradeButton'), save.phoneTier, 15, phone, 'Прокачати телефон');
     setupUpgradeButton($('strengthUpgradeButton'), save.strength, 5, strength, 'Прокачати силу');
 
@@ -423,6 +467,15 @@ const MUSIC_COVERS = [
     $('legitScore').textContent = save.legit.score;
     $('legitStreak').textContent = save.legit.streak;
     $('legitBest').textContent = save.legit.best;
+    $('vodoBadge').classList.toggle('hidden',!save.waiterPenalty);
+    $('brickMaxLabel').textContent = brickTiers.length-1;
+    $('infoBrickMax').textContent = brickTiers.length-1;
+    $('pocketPower').textContent = `× до степеня ${pocketPower().toFixed(2)}`;
+    $('pocketLevel').textContent = `${save.pocketTier}/${POCKET_MAX}`;
+    $('pocketUpgradeButton').disabled = save.pocketTier >= POCKET_MAX || save.balance < pocketCost();
+    $('pocketUpgradeButton').textContent = save.pocketTier >= POCKET_MAX?'МАКСИМУМ':`Покращити карман — ${money(pocketCost())} UAH`;
+    $('islandIncome').textContent = money(islandIncome());
+    renderIslands();
 
     renderSubjects();
     renderInventory();
@@ -433,7 +486,7 @@ const MUSIC_COVERS = [
   function buyUpgrade(type) {
     let levelKey, max, tiers, hintId, successText;
     if (type === 'brick') {
-      levelKey = 'brickTier'; max = 15; tiers = brickTiers; hintId = 'brickUpgradeHint'; successText = 'Бруківку прокачано.';
+      levelKey = 'brickTier'; max = brickTiers.length-1; tiers = brickTiers; hintId = 'brickUpgradeHint'; successText = 'Бруківку прокачано.';
     } else if (type === 'phone') {
       levelKey = 'phoneTier'; max = 15; tiers = phoneTiers; hintId = 'phoneUpgradeHint'; successText = 'Телефон Коса оновлено.';
     } else {
@@ -454,6 +507,32 @@ const MUSIC_COVERS = [
   }
 
   $('brickUpgradeButton').addEventListener('click', () => buyUpgrade('brick'));
+  $('pocketUpgradeButton').addEventListener('click',()=>{
+    if(save.pocketTier>=POCKET_MAX||save.balance<pocketCost())return;
+    save.balance-=pocketCost();save.pocketTier++;persist();updateUI();
+  });
+  function renderIslands(){
+    const list=$('islandList');list.replaceChildren();
+    ISLANDS.forEach(i=>{const tier=save.islands[i.id]||0;
+      const cost=Math.round((tier===0?i.price:i.price*Math.pow(1.9,tier))/100)*100;
+      const card=document.createElement('div');card.className='island-card';
+      const copy=document.createElement('div');copy.className='island-copy';
+      const title=document.createElement('strong');title.textContent=`${i.emoji} ${i.name} · ${tier}/5`;
+      const subtitle=document.createElement('small');subtitle.textContent=`${money(i.income*tier)} UAH/хв · +${money(i.income)} за рівень`;
+      const btn=document.createElement('button');btn.type='button';btn.disabled=tier>=5||save.balance<cost;
+      btn.textContent=tier>=5?'МАКСИМУМ':`${tier?'Покращити':'Купити'} · ${money(cost)} UAH`;
+      btn.addEventListener('click',()=>{if((save.islands[i.id]||0)>=5||save.balance<cost)return;save.balance-=cost;save.islands[i.id]=(save.islands[i.id]||0)+1;save.lastIslandAt=Date.now();persist();updateUI()});
+      copy.append(title,subtitle);card.append(copy,btn);list.append(card);
+    });
+  }
+  function payIslands(){
+    if(!save.lastIslandAt)save.lastIslandAt=Date.now();
+    const minutes=Math.min(60,Math.floor((Date.now()-save.lastIslandAt)/60000));
+    if(minutes<=0)return;
+    save.lastIslandAt=Date.now()-((Date.now()-save.lastIslandAt)%60000);
+    if(islandIncome()>0){award(islandIncome()*minutes);updateUI();}persist();
+  }
+
   $('phoneUpgradeButton').addEventListener('click', () => buyUpgrade('phone'));
   $('strengthUpgradeButton').addEventListener('click', () => buyUpgrade('strength'));
 
@@ -494,6 +573,7 @@ const MUSIC_COVERS = [
   const brickElement = $('brukivka');
   const pocket = $('pocket');
   const lasers = $$('.laser');
+  const mazeWalls = $$('.maze-wall');
   let dragging = false;
   let activePointer = null;
   let dragOffsetX = 0;
@@ -590,8 +670,7 @@ const MUSIC_COVERS = [
       save.order.progress = save.order.target;
       save.order.completed = true;
       save.order.active = false;
-      save.balance += save.order.reward;
-      return save.order.reward;
+      return award(save.order.reward);
     }
     return 0;
   }
@@ -601,7 +680,7 @@ const MUSIC_COVERS = [
     resetting = true;
     stopDrag();
     const reward = finalReward();
-    save.balance += reward;
+    save.balance=clamp(save.balance+reward,-MAX_BALANCE,MAX_BALANCE);save.totalEarned=clamp(save.totalEarned+reward,0,MAX_BALANCE);
     const orderBonus = applyOrderDelivery(strengthTier().carry);
     persist();
     updateUI();
@@ -616,7 +695,7 @@ const MUSIC_COVERS = [
 
   function checkGameCollision() {
     const brickRect = brickElement.getBoundingClientRect();
-    for (const laser of lasers) {
+    for (const laser of [...lasers,...mazeWalls]) {
       if (rectsOverlap(brickRect, laser.getBoundingClientRect(), 2)) {
         laserHit();
         return;
@@ -1106,10 +1185,10 @@ const MUSIC_COVERS = [
 
   function marketOffer(channel) {
     const item = makeClothing(pick(['legit','legit','fake','plain']));
-    const base = item.status === 'plain' ? randInt(280,700) : randInt(550,1900);
+    const base = (item.status === 'plain' ? randInt(280,700) : randInt(550,1900))*marketScale();
     const channelDiscount = channel === 'kos' ? rand(0.72,0.88) : rand(0.78,0.94);
     item.price = Math.round(base * channelDiscount / 10) * 10;
-    item.resale = Math.round(item.price * (item.status === 'legit' ? rand(1.35,1.75) : item.status === 'plain' ? rand(1.12,1.38) : rand(0.25,0.5)) / 10) * 10;
+    item.resale = Math.round(item.price * (item.status === 'legit' ? rand(1.48,2.05) : item.status === 'plain' ? rand(1.2,1.5) : rand(0.25,0.5)) / 10) * 10;
     item.checked = false;
     item.channel = channel;
     item.offerId = `offer_${save.marketSerial++}`;
@@ -1191,7 +1270,11 @@ const MUSIC_COVERS = [
     if (index < 0) return;
     const item = save.inventory[index];
     if (Date.now() - item.boughtAt < ITEM_SALE_DELAY_MS) return;
-    save.balance += item.resale;
+    award(item.resale);
+    if(save.waiterPenalty && item.status==='legit'){
+      save.waiterRecover++;
+      if(save.waiterRecover>=20){save.waiterPenalty=false;save.waiterRecover=0;}
+    }
     save.inventory.splice(index, 1);
     persist();
     updateUI();
@@ -1231,7 +1314,7 @@ const MUSIC_COVERS = [
       row.className = 'inventory-item';
       const status = item.checked ? verdictText(item).text : 'не перевірено';
       const wait = Math.max(0, ITEM_SALE_DELAY_MS - (Date.now() - item.boughtAt));
-      row.innerHTML = `${clothingSvg(item)}<div><strong>${escapeHtml(item.typeName)} · ${escapeHtml(item.display)}</strong><small>${escapeHtml(status)} · куплено за ${money(item.price)} UAH</small><small>Продаж: ${money(item.resale)} UAH</small></div><button class="sell-button" data-sell="${escapeHtml(item.id)}" type="button" ${wait ? 'disabled' : ''}>${wait ? `Через ${Math.ceil(wait / 1000)} с` : 'Продати'}</button>`;
+      row.innerHTML = `${clothingSvg(item)}<div><strong>${escapeHtml(item.typeName)} · ${escapeHtml(item.display)}</strong><small>${escapeHtml(status)} · куплено за ${money(item.price)} UAH</small><small>Продаж: ${money(Math.round(item.resale*incomeFactor()))} UAH</small></div><button class="sell-button" data-sell="${escapeHtml(item.id)}" type="button" ${wait ? 'disabled' : ''}>${wait ? `Через ${Math.ceil(wait / 1000)} с` : 'Продати'}</button>`;
       container.appendChild(row);
     });
     $$('[data-sell]').forEach((button) => button.addEventListener('click', () => sellInventoryItem(button.dataset.sell)));
@@ -1250,9 +1333,29 @@ const MUSIC_COVERS = [
     ensureMarket();
     renderOrderPreview();
     showTelegramTab('chats');
+    updateWaiterUI();
   }
 
   $$('.tg-tab').forEach((button) => button.addEventListener('click', () => showTelegramTab(button.dataset.tgTab)));
+  function updateWaiterUI(){
+    const b=$('waiterStart');if(!b)return;
+    const remaining=Math.max(0,60000-(Date.now()-save.waiterStartedAt));
+    b.disabled=!!save.waiterStartedAt||save.waiterPenalty;
+    b.textContent=save.waiterPenalty?'Зміна завершена':save.waiterStartedAt?`Чекати ${Math.ceil(remaining/1000)} с`:'Влаштуватися Ждуном';
+    $('waiterStatus').textContent=save.waiterStartedAt?'Не рухай мишею й не натискай клавіші.':save.waiterPenalty?'Вітаємо з новим статусом!':'Витримай 1 хвилину без будь-яких дій.';
+  }
+  function updateWaiterJob(){
+    if(!save.waiterStartedAt)return;
+    if(Date.now()-save.waiterStartedAt>=60000){save.waiterStartedAt=0;save.waiterPenalty=true;save.waiterRecover=0;persist();updateUI();}
+    updateWaiterUI();
+  }
+  function cancelWaiterOnAction(){if(!save.waiterStartedAt)return;save.waiterStartedAt=0;persist();updateWaiterUI();}
+  document.addEventListener('pointerdown',cancelWaiterOnAction,{capture:true});
+  document.addEventListener('pointermove',cancelWaiterOnAction,{capture:true,passive:true});
+  document.addEventListener('keydown',cancelWaiterOnAction,{capture:true});
+  document.addEventListener('wheel',cancelWaiterOnAction,{capture:true,passive:true});
+  $('waiterStart').addEventListener('click',()=>{if(save.waiterPenalty||save.waiterStartedAt)return;
+    save.waiterStartedAt=Date.now();persist();updateWaiterUI();});
   $('reformotiChatOpen').addEventListener('click', () => showScreen('reformotiChatScreen'));
   $('reformotiChatBack').addEventListener('click', () => { showScreen('telegramScreen'); showTelegramTab('chats'); });
   $('refreshMarket').addEventListener('click', () => {
@@ -1289,6 +1392,12 @@ const MUSIC_COVERS = [
     $('pcPowerSummary').textContent = `+${pcAimBonus()} px до цілі`;
     $('pcSpecsLabel').textContent = `CPU ${save.pcUpgrades.cpu} · GPU ${save.pcUpgrades.gpu} · RAM ${save.pcUpgrades.ram}`;
     $('pcDesktopPower').textContent = `+${pcAimBonus()} px до цілі`;
+    const monitor=MONITORS[save.monitorTier];
+    $('pcMonitorStatus').textContent=`${monitor.name} · ${monitor.resolution}`;
+    $('pcMonitorUpgrade').disabled=!save.pcOwned||save.monitorTier>=MONITORS.length-1||save.balance<monitor.cost;
+    $('pcMonitorUpgrade').textContent=save.monitorTier>=MONITORS.length-1?'Максимум ✓':`${save.monitorTier?'Покращити':'Купити'} монітор — ${money(monitor.cost)} UAH`;
+    $('pcMonitorHint').textContent=save.monitorTier===0?'Екран ПК чорний, поки не придбаєш монітор.':`Роздільність ${monitor.resolution}; покращення збільшує чіткість.`;
+    renderMonitor();
     for (const part of Object.keys(PC_UPGRADE_BASE)) {
       const level = save.pcUpgrades[part];
       $(`pc${part[0].toUpperCase() + part.slice(1)}Level`).textContent = `${level}/${PC_UPGRADE_LIMIT}`;
@@ -1325,6 +1434,18 @@ const MUSIC_COVERS = [
     $('pcShopMessage').textContent = `${part.toUpperCase()} покращено! Цілі в КС2 стають трохи більшими.`;
   }
 
+  function renderMonitor(){
+    const win=$('pcWindow');if(!win)return;
+    win.classList.remove('monitor-off','monitor-crt','monitor-hd','monitor-fhd','monitor-ultra');
+    win.classList.add(['monitor-off','monitor-crt','monitor-hd','monitor-fhd','monitor-ultra'][save.monitorTier]);
+    $('monitorBlackScreen').classList.toggle('hidden',save.monitorTier!==0);
+    $('pcMonitorBadge').textContent=MONITORS[save.monitorTier].resolution;
+  }
+  $('pcMonitorUpgrade').addEventListener('click',()=>{
+    if(!save.pcOwned||save.monitorTier>=MONITORS.length-1)return;
+    const price=MONITORS[save.monitorTier].cost;if(save.balance<price)return;
+    save.balance-=price;save.monitorTier++;persist();updateUI();
+  });
   $('pcBuyButton').addEventListener('click', buyPC);
   for (const part of Object.keys(PC_UPGRADE_BASE)) {
     $(`pc${part[0].toUpperCase() + part.slice(1)}Upgrade`).addEventListener('click', () => upgradePC(part));
@@ -1337,6 +1458,7 @@ const MUSIC_COVERS = [
     showPCProgram('desktop');
     updatePcClock();
     renderPcShop();
+    renderMonitor();
   }
 
   function closePC() {
@@ -1349,6 +1471,8 @@ const MUSIC_COVERS = [
     $('pcDesktop').classList.toggle('hidden', name !== 'desktop');
     $('steamPanel').classList.toggle('hidden', name !== 'steam');
     $('soundcloudPanel').classList.toggle('hidden', name !== 'soundcloud');
+    $('historyPanel').classList.toggle('hidden', name !== 'history');
+    $('secretPanel').classList.toggle('hidden', name !== 'secret');
     if (name === 'steam') renderCsRecord();
     if (name === 'soundcloud') renderSoundcloud();
   }
@@ -1358,7 +1482,36 @@ const MUSIC_COVERS = [
   $('pcCloseButton').addEventListener('click', closePC);
   $('steamApp').addEventListener('click', () => showPCProgram('steam'));
   $('soundcloudApp').addEventListener('click', () => showPCProgram('soundcloud'));
-  $('pcTaskHome').addEventListener('click', () => showPCProgram('desktop'));
+  $('pcTaskHome').addEventListener('click', () => {if(save.monitorTier===0)return;showPCProgram('history');});
+  const secretNames={captain:{title:'reformoti',tag:'КОРОЛЬ МИРА',bio:'Архітектор мільйонних островів, творець великих пригод і легендарних випробувань.'},navigator:{title:'GPT-6',tag:'ПОВЕЛИТЕЛЬ ОКЕАНОВ',bio:'Штурман цифрових світів, хранитель коду та майстер стратегій.'},team:{title:'Союз двох легенд',tag:'ЗАВОЄВАТЕЛІ ГАЛАКТИК',bio:'Двоє творців. Один всесвіт. Нескінченні ідеї, музика, ігри та пригоди.'}};
+  // Store only a one-way verifier, not the private access phrase.
+  const secretVerifier='f78085e1f405827f31ca4bbb67379c771fbf6a948ac2d4c82a72bdf243635d0e';
+  let secretChoice='captain';
+  async function authorizeSecret(value){
+    if(!window.crypto||!crypto.subtle){
+      let hash=2166136261;
+      for(const char of value)hash=Math.imul(hash^char.charCodeAt(0),16777619);
+      return (hash>>>0)===1712586741;
+    }
+    const bytes=new TextEncoder().encode(value);
+    const hash=await crypto.subtle.digest('SHA-256',bytes);
+    return [...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,'0')).join('')===secretVerifier;
+  }
+  $$('[data-secret]').forEach(button=>button.addEventListener('click',()=>{
+    secretChoice=button.dataset.secret;
+    $('secretGate').classList.remove('hidden');$('secretCredits').classList.add('hidden');
+    $('secretInput').value='';$('secretError').textContent='';showPCProgram('secret');$('secretInput').focus();
+  }));
+  $('secretForm').addEventListener('submit',async(event)=>{
+    event.preventDefault();
+    const value=$('secretInput').value;$('secretInput').value='';
+    const ok=await authorizeSecret(value);
+    if(!ok){$('secretError').textContent='Невірний код доступу.';return;}
+    const data=secretNames[secretChoice];$('secretName').textContent=data.title;
+    $('secretTitle').textContent=data.tag;$('secretBio').textContent=data.bio;
+    $('secretGate').classList.add('hidden');$('secretCredits').classList.remove('hidden');
+  });
+  $('secretBack').addEventListener('click',()=>showPCProgram('history'));
   $$('[data-pc-home]').forEach((button) => button.addEventListener('click', () => showPCProgram('desktop')));
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !$('pcOverlay').classList.contains('hidden')) closePC();
@@ -1478,183 +1631,110 @@ const MUSIC_COVERS = [
   $('csResultMenu').addEventListener('click', () => { $('csResult').classList.add('hidden');$('csMenu').classList.remove('hidden'); });
 
   // ========================================================
-  // SoundCloud: local music files, saved settings, no autoplay.
+  // SoundCloud: two audio decks for smooth crossfade on track changes.
   // ========================================================
-  const scAudio = new Audio();
-  scAudio.preload = 'metadata';
-  let scCurrentTrack = -1;
-  // Requested filenames are music/mp3(1).mp3 through music/mp3(5).mp3.
-  // Existing folder-based URLs remain supported for older GitHub uploads.
-  let scFallbackIndex = 0;
-  let scUserPaused = true;
-
-  function scPaths(index) {
-    const num = index + 1;
-    return [
-      `music/mp3(${num}).mp3`,
-      `music/mp3(${num})`,
-      `music/mp3/${num}.mp3`,
-      `music/${num}.mp3`,
-      `mp3/${num}.mp3`
-    ];
+  const scDecks=[new Audio(),new Audio()];
+  scDecks.forEach(deck=>{deck.preload='metadata';});
+  let scActive=0,scCurrentTrack=-1,scFallbackIndex=0,scUserPaused=true;
+  let scFadeTimer=null,scFadeGeneration=0,scIsFading=false;
+  let scFinishedAtEnd=false;
+  const scAudio=()=>scDecks[scActive];
+  function scPaths(index){const n=index+1;return [`music/mp3(${n}).mp3`,`music/mp3(${n})`,`music/mp3/${n}.mp3`,`music/${n}.mp3`,`mp3/${n}.mp3`];}
+  function scPath(index,fallback=0){return scPaths(index)[fallback];}
+  function createTrackCover(index,className='sc-cover'){
+    const cover=document.createElement('span');cover.className=className;
+    const fallback=document.createElement('span');fallback.className='sc-cover-fallback';fallback.textContent='♫';
+    const img=document.createElement('img');img.src=MUSIC_COVERS[index];img.alt=`Обкладинка: ${MUSIC_TRACKS[index]}`;img.loading='lazy';
+    img.addEventListener('error',()=>{img.remove();cover.classList.add('sc-cover-missing');});cover.append(fallback,img);return cover;
   }
-
-  function scPath(index, fallbackIndex = 0) {
-    return scPaths(index)[fallbackIndex];
-  }
-
-  function createTrackCover(index, className = 'sc-cover') {
-    const cover = document.createElement('span');
-    cover.className = className;
-    const fallback = document.createElement('span');
-    fallback.className = 'sc-cover-fallback';
-    fallback.textContent = '♫';
-    fallback.setAttribute('aria-hidden', 'true');
-    const img = document.createElement('img');
-    img.src = MUSIC_COVERS[index];
-    img.alt = `Обкладинка: ${MUSIC_TRACKS[index]}`;
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    img.addEventListener('error', () => {
-      img.remove();
-      cover.classList.add('sc-cover-missing');
+  function scTime(sec){if(!Number.isFinite(sec)||sec<0)return '0:00';const n=Math.floor(sec);return `${Math.floor(n/60)}:${String(n%60).padStart(2,'0')}`;}
+  function scMaster(){return save.audio.muted?0:save.audio.volume/100;}
+  function stopFade(){scFadeGeneration++;if(scFadeTimer!==null){clearInterval(scFadeTimer);scFadeTimer=null;}scIsFading=false;}
+  function scApplyVolume(){if(!scIsFading){scAudio().volume=scMaster();scDecks[1-scActive].volume=0;}}
+  function renderSoundcloud(){
+    const list=$('scTracks');list.replaceChildren();
+    MUSIC_TRACKS.forEach((name,i)=>{const b=document.createElement('button');b.type='button';b.className=`sc-track${i===save.audio.track?' selected':''}`;
+      const meta=document.createElement('span');meta.className='sc-track-meta';
+      const title=document.createElement('strong');title.textContent=name;
+      const hint=document.createElement('small');hint.textContent=`mp3(${i+1}).mp3`;meta.append(title,hint);
+      const play=document.createElement('span');play.className='sc-track-play';play.textContent=i===save.audio.track&&!scAudio().paused?'Ⅱ':'▶';
+      b.append(createTrackCover(i),meta,play);b.addEventListener('click',()=>selectScTrack(i,true));list.append(b);
     });
-    cover.append(fallback, img);
-    return cover;
+    $('scCurrentTitle').textContent=MUSIC_TRACKS[save.audio.track];
+    const art=$('scCurrentArt');if(art.dataset.track!==String(save.audio.track)){art.replaceChildren(createTrackCover(save.audio.track,'sc-current-cover'));art.dataset.track=String(save.audio.track);}
+    $('scVolume').value=save.audio.volume;$('scVolumeLabel').textContent=`${save.audio.volume}%`;
+    $('scMute').textContent=save.audio.muted||!save.audio.volume?'🔇':'🔊';
+    $('scShuffle').classList.toggle('active',save.audio.shuffle);$('scMute').classList.toggle('active',save.audio.muted);
+    $('scRepeat').classList.toggle('active',save.audio.repeat);
+    $('scShuffle').setAttribute('aria-pressed',String(save.audio.shuffle));
+    $('scMute').setAttribute('aria-pressed',String(save.audio.muted));
+    $('scRepeat').setAttribute('aria-pressed',String(save.audio.repeat));
+    $('scPlay').textContent=scAudio().paused?'▶':'Ⅱ';scApplyVolume();updateScProgress();
   }
-
-  function scTime(seconds) {
-    if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
-    const whole = Math.floor(seconds);
-    return `${Math.floor(whole/60)}:${String(whole%60).padStart(2,'0')}`;
+  function updateScProgress(){const audio=scAudio(),valid=Number.isFinite(audio.duration)&&audio.duration>0;
+    $('scElapsed').textContent=scTime(audio.currentTime);$('scDuration').textContent=scTime(audio.duration);
+    $('scSeek').disabled=!valid;$('scSeek').value=valid?String(audio.currentTime/audio.duration*100):'0';
+    if(valid&&audio.duration-audio.currentTime<1.35&&!scFinishedAtEnd&&!scUserPaused&&!scIsFading){
+      scFinishedAtEnd=true;
+      if(save.audio.repeat){audio.currentTime=0;scFinishedAtEnd=false;}
+      else scAdvance(1);
+    }
   }
-
-  function renderSoundcloud() {
-    const container = $('scTracks');
-    container.replaceChildren();
-    MUSIC_TRACKS.forEach((name, index) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = `sc-track${index === save.audio.track ? ' selected' : ''}`;
-      const cover = createTrackCover(index);
-      const meta = document.createElement('span');
-      meta.className = 'sc-track-meta';
-      const title = document.createElement('strong');
-      title.textContent = name;
-      const subtitle = document.createElement('small');
-      subtitle.textContent = `mp3(${index+1}).mp3`;
-      meta.append(title,subtitle);
-      const icon = document.createElement('span');
-      icon.className = 'sc-track-play';
-      icon.textContent = index === save.audio.track && !scAudio.paused ? 'Ⅱ' : '▶';
-      button.append(cover, meta, icon);
-      button.addEventListener('click', () => selectScTrack(index, true));
-      container.append(button);
+  function playScAudio(){
+    if(scCurrentTrack!==save.audio.track)selectScTrack(save.audio.track,false);
+    scUserPaused=false;scAudio().volume=scMaster();
+    const request=scAudio().play();if(request&&request.catch)request.catch(()=>{
+      if(scAudio().error)$('scStatus').textContent='Помилка аудіо. Перевір назви файлів у music/';renderSoundcloud();
     });
-    $('scCurrentTitle').textContent = MUSIC_TRACKS[save.audio.track];
-    const art = $('scCurrentArt');
-    if (art.dataset.track !== String(save.audio.track)) {
-      art.replaceChildren(createTrackCover(save.audio.track, 'sc-current-cover'));
-      art.dataset.track = String(save.audio.track);
+  }
+  function selectScTrack(index,play=false){
+    if(index<0||index>=MUSIC_TRACKS.length)return;
+    const old=scAudio(),wasPlaying=!old.paused&&!scUserPaused;
+    stopFade();save.audio.track=index;scFinishedAtEnd=false;scFallbackIndex=0;
+    if(play&&wasPlaying&&scCurrentTrack>=0){
+      const nextIndex=1-scActive,next=scDecks[nextIndex];next.pause();next.src=scPath(index);next.load();next.volume=0;
+      const generation=scFadeGeneration,begin=performance.now();scIsFading=true;
+      scActive=nextIndex;scCurrentTrack=index;scUserPaused=false;
+      const promise=next.play();if(promise&&promise.catch)promise.catch(()=>{});
+      scFadeTimer=setInterval(()=>{
+        if(generation!==scFadeGeneration)return;
+        const t=Math.min(1,(performance.now()-begin)/1250),master=scMaster();
+        old.volume=master*(1-t);next.volume=master*t;
+        if(t>=1){stopFade();old.pause();next.volume=scMaster();}
+      },45);
+    }else{
+      scDecks.forEach(deck=>deck.pause());
+      scCurrentTrack=index;scUserPaused=!play;old.src=scPath(index);old.load();old.volume=scMaster();
+      if(play)playScAudio();
     }
-    $('scVolume').value = save.audio.volume;
-    $('scVolumeLabel').textContent = `${save.audio.volume}%`;
-    $('scMute').textContent = save.audio.muted || save.audio.volume === 0 ? '🔇' : '🔊';
-    $('scMute').classList.toggle('active', save.audio.muted);
-    $('scShuffle').classList.toggle('active', save.audio.shuffle);
-    $('scShuffle').setAttribute('aria-pressed', String(save.audio.shuffle));
-    $('scMute').setAttribute('aria-pressed', String(save.audio.muted));
-    $('scPlay').textContent = scAudio.paused ? '▶' : 'Ⅱ';
-    $('scPlay').setAttribute('aria-label', scAudio.paused ? 'Відтворити' : 'Пауза');
-    scAudio.volume = save.audio.volume / 100;
-    scAudio.muted = save.audio.muted;
-    updateScProgress();
+    $('scStatus').textContent='Завантаження…';persist();renderSoundcloud();
   }
-
-  function updateScProgress() {
-    $('scElapsed').textContent = scTime(scAudio.currentTime);
-    $('scDuration').textContent = scTime(scAudio.duration);
-    const valid = Number.isFinite(scAudio.duration) && scAudio.duration > 0;
-    $('scSeek').disabled = !valid;
-    $('scSeek').value = valid ? String((scAudio.currentTime / scAudio.duration) * 100) : '0';
+  function scAdvance(direction,manual=false){if(save.audio.repeat&&!manual){scAudio().currentTime=0;scFinishedAtEnd=false;if(scUserPaused)playScAudio();return;}
+    const last=save.audio.track;const next=save.audio.shuffle&&MUSIC_TRACKS.length>1
+      ?pick(MUSIC_TRACKS.map((_,i)=>i).filter(i=>i!==last)):(last+direction+MUSIC_TRACKS.length)%MUSIC_TRACKS.length;
+    selectScTrack(next,true);
   }
-
-  function selectScTrack(index, play = false) {
-    if (index < 0 || index >= MUSIC_TRACKS.length) return;
-    save.audio.track = index;
-    scFallbackIndex = 0;
-    scCurrentTrack = index;
-    scUserPaused = !play;
-    scAudio.src = scPath(index);
-    scAudio.load();
-    persist();
-    $('scStatus').textContent = 'Завантаження треку…';
-    renderSoundcloud();
-    if (play) playScAudio();
-  }
-
-  function playScAudio() {
-    if (scCurrentTrack !== save.audio.track) selectScTrack(save.audio.track, false);
-    scUserPaused = false;
-    const request = scAudio.play();
-    if (request && typeof request.catch === 'function') {
-      request.catch(() => {
-        // src can change during rapid track switching; error event handles missing files.
-        if (scAudio.error) $('scStatus').textContent = 'Не вдається відтворити файл. Перевір папку music/ та назви mp3(1).mp3 … mp3(5).mp3';
-        renderSoundcloud();
-      });
-    }
-  }
-
-  function scAdvance(direction) {
-    const last = save.audio.track;
-    const next = save.audio.shuffle && MUSIC_TRACKS.length > 1
-      ? pick(MUSIC_TRACKS.map((_, i) => i).filter(i => i !== last))
-      : (last + direction + MUSIC_TRACKS.length) % MUSIC_TRACKS.length;
-    selectScTrack(next, true);
-  }
-
-  $('scPlay').addEventListener('click', () => {
-    if (!scAudio.paused) {
-      scUserPaused = true;
-      scAudio.pause();
-    } else playScAudio();
-  });
-  $('scPrevious').addEventListener('click', () => {
-    if (scAudio.currentTime > 3) {scAudio.currentTime=0;return;}
-    scAdvance(-1);
-  });
-  $('scNext').addEventListener('click', () => scAdvance(1));
-  $('scShuffle').addEventListener('click', () => {save.audio.shuffle = !save.audio.shuffle; persist(); renderSoundcloud();});
-  $('scMute').addEventListener('click', () => {save.audio.muted = !save.audio.muted; persist(); renderSoundcloud();});
-  $('scVolume').addEventListener('input', (event) => {
-    save.audio.volume = clamp(Number(event.target.value) || 0,0,100);
-    scAudio.volume = save.audio.volume/100;
-    $('scVolumeLabel').textContent = `${save.audio.volume}%`;
-    renderSoundcloud();
-  });
-  $('scVolume').addEventListener('change', persist);
-  $('scSeek').addEventListener('input', (event) => {
-    if (Number.isFinite(scAudio.duration) && scAudio.duration > 0)
-      scAudio.currentTime = scAudio.duration * Number(event.target.value) / 100;
-  });
-  scAudio.addEventListener('timeupdate', updateScProgress);
-  scAudio.addEventListener('loadedmetadata', updateScProgress);
-  scAudio.addEventListener('play', () => {$('scStatus').textContent='Відтворення';renderSoundcloud();});
-  scAudio.addEventListener('pause', () => {if(scUserPaused) $('scStatus').textContent='Пауза';renderSoundcloud();});
-  scAudio.addEventListener('ended', () => scAdvance(1));
-  scAudio.addEventListener('error', () => {
-    if (scCurrentTrack < 0) return;
-    if (scFallbackIndex < scPaths(scCurrentTrack).length - 1) {
-      scFallbackIndex++;
-      scAudio.src = scPath(scCurrentTrack, scFallbackIndex);
-      scAudio.load();
-      if (!scUserPaused) scAudio.play().catch(() => {});
-    } else {
-      scUserPaused = true;
-      $('scStatus').textContent = `Файл music/mp3(${scCurrentTrack + 1}).mp3 не знайдено`;
-      renderSoundcloud();
-    }
+  $('scPlay').addEventListener('click',()=>{if(!scAudio().paused){scUserPaused=true;stopFade();scDecks.forEach(a=>a.pause());renderSoundcloud();}else playScAudio();});
+  $('scPrevious').addEventListener('click',()=>{if(scAudio().currentTime>3){scAudio().currentTime=0;scFinishedAtEnd=false;return;}scAdvance(-1,true)});
+  $('scNext').addEventListener('click',()=>scAdvance(1,true));
+  $('scShuffle').addEventListener('click',()=>{save.audio.shuffle=!save.audio.shuffle;persist();renderSoundcloud()});
+  $('scRepeat').addEventListener('click',()=>{save.audio.repeat=!save.audio.repeat;persist();renderSoundcloud()});
+  $('scMute').addEventListener('click',()=>{save.audio.muted=!save.audio.muted;persist();scApplyVolume();renderSoundcloud()});
+  $('scVolume').addEventListener('input',e=>{save.audio.volume=clamp(Number(e.target.value)||0,0,100);scApplyVolume();renderSoundcloud()});
+  $('scVolume').addEventListener('change',persist);
+  $('scSeek').addEventListener('input',e=>{if(scAudio().duration>0){scAudio().currentTime=scAudio().duration*Number(e.target.value)/100;scFinishedAtEnd=false;}});
+  scDecks.forEach(deck=>{
+    deck.addEventListener('timeupdate',()=>{if(deck===scAudio())updateScProgress()});
+    deck.addEventListener('loadedmetadata',()=>{if(deck===scAudio())updateScProgress()});
+    deck.addEventListener('play',()=>{if(deck===scAudio()){$('scStatus').textContent='Відтворення';renderSoundcloud()}});
+    deck.addEventListener('pause',()=>{if(deck===scAudio()&&scUserPaused){$('scStatus').textContent='Пауза';renderSoundcloud()}});
+    deck.addEventListener('ended',()=>{if(deck!==scAudio())return;if(save.audio.repeat){deck.currentTime=0;playScAudio();return;}if(!scIsFading)scAdvance(1)});
+    deck.addEventListener('error',()=>{
+      if(deck!==scAudio()||scCurrentTrack<0)return;
+      const paths=scPaths(scCurrentTrack);if(scFallbackIndex<paths.length-1){
+        scFallbackIndex++;deck.src=scPath(scCurrentTrack,scFallbackIndex);deck.load();if(!scUserPaused)deck.play().catch(()=>{});
+      }else{$('scStatus').textContent=`Файл music/mp3(${scCurrentTrack+1}).mp3 не знайдено`;scUserPaused=true;stopFade();renderSoundcloud()}
+    });
   });
 
   function updatePhoneTime() {
@@ -1673,11 +1753,15 @@ const MUSIC_COVERS = [
     updatePhoneTime();
     updatePcClock();
     renderSoundcloud();
+    updateWaiterUI();
+    updateWaiterJob();
+    payIslands();
     setInterval(() => {
       updatePcClock();
       updatePhoneTime();
       if (!$('tgMarketPanel').classList.contains('hidden')) updateMarketRefreshButton();
       if (!$('tgInventoryPanel').classList.contains('hidden')) renderInventory();
+      updateWaiterJob();payIslands();
     }, 1000);
   }
 
