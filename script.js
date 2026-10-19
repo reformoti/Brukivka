@@ -87,7 +87,34 @@
   const taunts = ['КУДА?!', 'БАЦ ФАНЕРА', 'БРУКІВКУ НЕ КРАСТЬ'];
 
   const SAVE_KEY = 'brukivka_kos_v4';
+  const BACKUP_KEY = `${SAVE_KEY}_backup`;
   const OLD_KEYS = ['brukivka_kos_fixed_v1', 'brukivkaPrototypeSave_v3', 'brukivkaPrototypeSave_v2', 'brukivkaPrototypeSave_v1'];
+  const MARKET_REFRESH_PRICE = 250;
+  const MARKET_REFRESH_COOLDOWN_MS = 30 * 1000;
+  const ITEM_SALE_DELAY_MS = 60 * 1000;
+  const MAX_BALANCE = Number.MAX_SAFE_INTEGER;
+  let saveNotice = '';
+
+  function showSaveNotice(message) {
+    saveNotice = message;
+    const banner = $('saveWarning');
+    if (!banner) return;
+    banner.textContent = message;
+    banner.classList.toggle('hidden', !message);
+  }
+
+  function safeInt(value, fallback, min, max) {
+    return typeof value === 'number' && Number.isFinite(value)
+      ? clamp(Math.trunc(value), min, max) : fallback;
+  }
+
+  function safeText(value, fallback = '', max = 90) {
+    return typeof value === 'string' && value.length > 0 ? value.slice(0, max) : fallback;
+  }
+
+  function record(value) {
+    return value !== null && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  }
 
   function defaults() {
     return {
@@ -101,39 +128,154 @@
       order:null,
       inventory:[],
       market:null,
-      marketSerial:1
+      marketSerial:1,
+      marketRefreshedAt:0
     };
   }
 
+  // Only reconstruct recognized fields: corrupt or unexpected nested data never reaches the UI.
+  function sanitizeClothing(source, isInventory, index) {
+    if (!source || typeof source !== 'object' || Array.isArray(source)) return null;
+    const allowedTypes = ['tshirt','hoodie','sweatshirt','jacket','cap','pants','sneakers'];
+    const typeNames = ['Футболка','Худі','Світшот','Куртка','Кепка','Штани','Кросівки'];
+    const typeIndex = allowedTypes.indexOf(source.type);
+    if (typeIndex === -1 || !['legit','fake','plain'].includes(source.status)) return null;
+    if (!Number.isFinite(source.price) || source.price < 0 || !Number.isFinite(source.resale) || source.resale < 0) return null;
+    const item = {
+      id:safeText(source.id, `restored_item_${index}`, 100),
+      type:source.type,
+      typeName:typeNames[typeIndex],
+      status:source.status,
+      brand:safeText(source.brand, 'NO BRAND', 60),
+      detail:safeText(source.detail, 'BASIC', 60),
+      display:safeText(source.display, 'Без бренду', 120),
+      realBrand:safeText(source.realBrand, '', 60),
+      color:/^#[0-9a-fA-F]{6}$/.test(source.color) ? source.color : '#d6d9de',
+      price:safeInt(source.price, 0, 0, MAX_BALANCE),
+      resale:safeInt(source.resale, 0, 0, MAX_BALANCE),
+      checked:source.checked === true
+    };
+    if (isInventory) {
+      // Existing items predate the selling delay: they remain immediately sellable.
+      item.boughtAt = safeInt(source.boughtAt, 0, 0, Date.now());
+    } else {
+      item.channel = source.channel === 'street' ? 'street' : 'kos';
+      item.offerId = safeText(source.offerId, `restored_offer_${index}`, 100);
+    }
+    return item;
+  }
+
+  function sanitizeSave(source) {
+    if (!source || typeof source !== 'object' || Array.isArray(source)) return null;
+    const result = defaults();
+    const tests = record(source.tests);
+    const attempted = record(source.attempted);
+    const legit = record(source.legit);
+    result.balance = safeInt(source.balance, 0, -MAX_BALANCE, MAX_BALANCE); // Negative balance is intentional.
+    result.brickTier = safeInt(source.brickTier, 0, 0, brickTiers.length - 1);
+    result.phoneTier = safeInt(source.phoneTier, 0, 0, phoneTiers.length - 1);
+    result.strength = safeInt(source.strength, 0, 0, strengthTiers.length - 1);
+    Object.keys(SUBJECTS).forEach((subject) => {
+      result.tests[subject] = safeInt(tests[subject], 0, 0, SUBJECTS[subject].max);
+      result.attempted[subject] = typeof attempted[subject] === 'boolean'
+        ? attempted[subject] : result.tests[subject] > 0;
+    });
+    result.legit.score = safeInt(legit.score, 0, 0, MAX_BALANCE);
+    result.legit.streak = safeInt(legit.streak, 0, 0, MAX_BALANCE);
+    result.legit.best = Math.max(result.legit.streak, safeInt(legit.best, 0, 0, MAX_BALANCE));
+    if (source.order !== null && source.order !== undefined) {
+      const order = record(source.order);
+      if (Number.isFinite(order.target) && order.target >= 1 && Number.isFinite(order.reward) && order.reward >= 0) {
+        const target = safeInt(order.target, 6, 1, 1000);
+        const progress = safeInt(order.progress, 0, 0, target);
+        const completed = order.completed === true || progress >= target;
+        result.order = {
+          id:safeInt(order.id, 0, 0, MAX_BALANCE), target, progress,
+          reward:safeInt(order.reward, 0, 0, MAX_BALANCE),
+          active:!completed && order.active === true,
+          completed
+        };
+      }
+    }
+    const inventoryIds = new Set();
+    if (Array.isArray(source.inventory)) {
+      source.inventory.slice(0, 1000).forEach((entry, i) => {
+        const item = sanitizeClothing(entry, true, i);
+        if (item && !inventoryIds.has(item.id)) {
+          inventoryIds.add(item.id);
+          result.inventory.push(item);
+        }
+      });
+    }
+    const market = record(source.market);
+    if (Array.isArray(market.kos) && Array.isArray(market.street)) {
+      const seenOffers = new Set();
+      result.market = {kos:[], street:[]};
+      for (const channel of ['kos','street']) {
+        market[channel].slice(0, 3).forEach((entry, i) => {
+          const item = sanitizeClothing(entry, false, `${channel}_${i}`);
+          if (!item || seenOffers.has(item.offerId)) return;
+          seenOffers.add(item.offerId);
+          item.channel = channel;
+          result.market[channel].push(item);
+        });
+      }
+    }
+    result.marketSerial = safeInt(source.marketSerial, 1, 1, MAX_BALANCE);
+    if (result.market) {
+      const serials = [...result.market.kos, ...result.market.street]
+        .map((item) => /^offer_(\d+)$/.exec(item.offerId))
+        .filter(Boolean).map((match) => Number(match[1]));
+      if (serials.length) result.marketSerial = Math.max(result.marketSerial, Math.max(...serials) + 1);
+    }
+    result.marketRefreshedAt = safeInt(source.marketRefreshedAt, 0, 0, Date.now());
+    return result;
+  }
+
   function loadSave() {
-    try {
-      let raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) {
-        for (const key of OLD_KEYS) {
-          raw = localStorage.getItem(key);
-          if (raw) break;
+    let damaged = false;
+    for (const key of [SAVE_KEY, BACKUP_KEY, ...OLD_KEYS]) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw === null) continue;
+        const parsed = sanitizeSave(JSON.parse(raw));
+        if (!parsed) throw new Error('Invalid save structure');
+        if (damaged || key === BACKUP_KEY) {
+          saveNotice = 'Знайдено пошкоджене збереження. Прогрес відновлено з резервної копії або старої версії.';
+        }
+        return parsed;
+      } catch (error) {
+        damaged = true;
+        // Preserve the original corrupted data for manual recovery if storage allows it.
+        if (key === SAVE_KEY) {
+          try {
+            const raw = localStorage.getItem(key);
+            if (raw !== null && localStorage.getItem(`${SAVE_KEY}_corrupt`) === null)
+              localStorage.setItem(`${SAVE_KEY}_corrupt`, raw);
+          } catch (storageError) {}
         }
       }
-      if (!raw) return defaults();
-      const parsed = JSON.parse(raw);
-      const base = defaults();
-      const merged = Object.assign(base, parsed);
-      merged.tests = Object.assign({}, base.tests, parsed.tests || {});
-      merged.attempted = Object.assign({}, base.attempted, parsed.attempted || {});
-      merged.legit = Object.assign({}, base.legit, parsed.legit || {});
-      for (const subject of Object.keys(merged.tests)) {
-        if (merged.tests[subject] > 0 && parsed.attempted == null) merged.attempted[subject] = true;
-      }
-      if (!Array.isArray(merged.inventory)) merged.inventory = [];
-      return merged;
-    } catch (error) {
-      return defaults();
     }
+    if (damaged) saveNotice = 'Не вдалося прочитати збереження. Запущено новий прогрес; перевір налаштування сховища браузера.';
+    return defaults();
   }
 
   let save = loadSave();
   function persist() {
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (error) {}
+    try {
+      const serialized = JSON.stringify(save);
+      localStorage.setItem(SAVE_KEY, serialized);
+      try {
+        localStorage.setItem(BACKUP_KEY, serialized);
+      } catch (backupError) {
+        showSaveNotice('Прогрес збережено, але резервна копія недоступна (бракує місця у сховищі).');
+        return true;
+      }
+      return true;
+    } catch (error) {
+      showSaveNotice('Увага: прогрес не збережено! Перевір доступ до сховища або вільне місце у браузері.');
+      return false;
+    }
   }
 
   function nmtScore(subject, raw) {
@@ -298,7 +440,7 @@
 
   function openPhone() {
     $('phoneOverlay').classList.remove('hidden');
-    $('phoneTime').textContent = new Date().toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
+    updatePhoneTime();
     showScreen('phoneHome');
   }
 
@@ -325,11 +467,14 @@
   let dragOffsetY = 0;
   let resetting = false;
   let startPosition = {x:0,y:0};
+  let mobileLayout = window.matchMedia('(max-width: 760px)').matches;
 
   function rememberStart() {
     const boardRect = board.getBoundingClientRect();
-    const brickRect = brickElement.getBoundingClientRect();
-    startPosition = {x:brickRect.left - boardRect.left, y:brickRect.top - boardRect.top};
+    startPosition = {
+      x:boardRect.width * (mobileLayout ? 0.11 : 0.07),
+      y:boardRect.height * (mobileLayout ? 0.09 : 0.43)
+    };
   }
 
   function placeBrick(x, y) {
@@ -346,7 +491,7 @@
   }
 
   function randomizeLasers() {
-    const mobile = window.innerWidth <= 760;
+    const mobile = mobileLayout;
     const configs = mobile ? [
       {v:false,l:[9,24],t:[27,34],s:[8,13]},
       {v:true,l:[34,46],t:[37,48],s:[8,12]},
@@ -971,8 +1116,8 @@
           <div class="offer-price">Купити: <b>${money(item.price)} UAH</b> · потенційний продаж: <b>${money(item.resale)} UAH</b></div>
           ${verdict ? `<div class="offer-verdict ${verdict.cls}">${escapeHtml(verdict.text)}</div>` : ''}
           <div class="offer-actions">
-            <button class="check-button" data-check="${item.offerId}" type="button">${item.checked ? 'Перевірено' : 'Legit Check'}</button>
-            <button class="buy-button" data-buy="${item.offerId}" type="button" ${save.balance < item.price ? 'disabled' : ''}>Купити</button>
+            <button class="check-button" data-check="${escapeHtml(item.offerId)}" type="button">${item.checked ? 'Перевірено' : 'Legit Check'}</button>
+            <button class="buy-button" data-buy="${escapeHtml(item.offerId)}" type="button" ${save.balance < item.price ? 'disabled' : ''}>Купити</button>
           </div>
         </div>`;
       container.appendChild(card);
@@ -1012,6 +1157,7 @@
     const index = save.inventory.findIndex((item) => item.id === itemId);
     if (index < 0) return;
     const item = save.inventory[index];
+    if (Date.now() - item.boughtAt < ITEM_SALE_DELAY_MS) return;
     save.balance += item.resale;
     save.inventory.splice(index, 1);
     persist();
@@ -1019,8 +1165,18 @@
     renderInventory();
   }
 
+  function updateMarketRefreshButton() {
+    const button = $('refreshMarket');
+    const remaining = Math.max(0, MARKET_REFRESH_COOLDOWN_MS - (Date.now() - save.marketRefreshedAt));
+    button.disabled = remaining > 0 || save.balance < MARKET_REFRESH_PRICE;
+    button.textContent = remaining > 0
+      ? `Нові пропозиції через ${Math.ceil(remaining / 1000)} с`
+      : `Оновити пропозиції — ${money(MARKET_REFRESH_PRICE)} UAH`;
+  }
+
   function renderMarket() {
     ensureMarket();
+    updateMarketRefreshButton();
     renderOfferList('channelKosOffers', save.market.kos);
     renderOfferList('channelStreetOffers', save.market.street);
     $$('[data-check]').forEach((button) => button.addEventListener('click', () => checkOffer(button.dataset.check)));
@@ -1041,7 +1197,8 @@
       const row = document.createElement('div');
       row.className = 'inventory-item';
       const status = item.checked ? verdictText(item).text : 'не перевірено';
-      row.innerHTML = `${clothingSvg(item)}<div><strong>${escapeHtml(item.typeName)} · ${escapeHtml(item.display)}</strong><small>${escapeHtml(status)} · куплено за ${money(item.price)} UAH</small><small>Продаж: ${money(item.resale)} UAH</small></div><button class="sell-button" data-sell="${item.id}" type="button">Продати</button>`;
+      const wait = Math.max(0, ITEM_SALE_DELAY_MS - (Date.now() - item.boughtAt));
+      row.innerHTML = `${clothingSvg(item)}<div><strong>${escapeHtml(item.typeName)} · ${escapeHtml(item.display)}</strong><small>${escapeHtml(status)} · куплено за ${money(item.price)} UAH</small><small>Продаж: ${money(item.resale)} UAH</small></div><button class="sell-button" data-sell="${escapeHtml(item.id)}" type="button" ${wait ? 'disabled' : ''}>${wait ? `Через ${Math.ceil(wait / 1000)} с` : 'Продати'}</button>`;
       container.appendChild(row);
     });
     $$('[data-sell]').forEach((button) => button.addEventListener('click', () => sellInventoryItem(button.dataset.sell)));
@@ -1065,22 +1222,46 @@
   $$('.tg-tab').forEach((button) => button.addEventListener('click', () => showTelegramTab(button.dataset.tgTab)));
   $('reformotiChatOpen').addEventListener('click', () => showScreen('reformotiChatScreen'));
   $('reformotiChatBack').addEventListener('click', () => { showScreen('telegramScreen'); showTelegramTab('chats'); });
-  $('refreshMarket').addEventListener('click', () => { generateMarket(); renderMarket(); updateUI(); });
+  $('refreshMarket').addEventListener('click', () => {
+    if (Date.now() - save.marketRefreshedAt < MARKET_REFRESH_COOLDOWN_MS) return;
+    if (save.balance < MARKET_REFRESH_PRICE) return;
+    save.balance -= MARKET_REFRESH_PRICE;
+    save.marketRefreshedAt = Date.now();
+    generateMarket();
+    renderMarket();
+    updateUI();
+  });
+
+  function updatePhoneTime() {
+    $('phoneTime').textContent = new Date().toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
+  }
 
   function init() {
+    showSaveNotice(saveNotice);
     ensureOrder();
     ensureMarket();
+    persist(); // Commit sanitized data and restore a damaged main save from the backup.
     rememberStart();
     resetBrick();
     randomizeLasers();
     updateUI();
-    $('phoneTime').textContent = new Date().toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
+    updatePhoneTime();
+    setInterval(() => {
+      updatePhoneTime();
+      if (!$('tgMarketPanel').classList.contains('hidden')) updateMarketRefreshButton();
+      if (!$('tgInventoryPanel').classList.contains('hidden')) renderInventory();
+    }, 1000);
   }
 
   window.addEventListener('resize', () => {
+    const newLayout = window.matchMedia('(max-width: 760px)').matches;
+    if (newLayout !== mobileLayout) {
+      mobileLayout = newLayout;
+      randomizeLasers(); // Rebuild only on desktop/mobile breakpoint crossing.
+    }
+    if (dragging) stopDrag();
     rememberStart();
     resetBrick();
-    randomizeLasers();
   });
 
   init();

@@ -84,3 +84,7 @@ h1 { margin-top:3px; font-size:clamp(30px,5vw,46px); }
   .phone-shell { width:100%; height:96vh; border-width:5px; }
   .legit-items { gap:5px; }.legit-item { padding:5px; }.legit-item svg { height:102px; }
 }
+
+/* Save health and market pacing */
+.save-warning { margin:10px 0; padding:12px 14px; border:1px solid #ffb44380; border-radius:12px; background:#372516; color:#ffe0a0; font-size:12px; line-height:1.45; }
+.refresh-market:disabled, .sell-button:disabled { opacity:.55; cursor:not-allowed; }
