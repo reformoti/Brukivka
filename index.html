@@ -170,8 +170,8 @@
             <div><small>ТЕЛЕФОН КОСА</small><h3 id="bankPhoneName">iPhone 3G</h3></div>
             <div class="mini-phone">▣</div>
           </div>
-          <div class="upgrade-row"><span>Рівень</span><strong><span id="phoneTierText">0</span>/15</strong></div>
-          <div class="upgrade-row"><span>Наступний</span><strong id="nextPhoneName">iPhone 3GS</strong></div>
+          <div class="upgrade-row"><span>Рівень</span><strong><span id="phoneTierText">0</span>/<span id="phoneMaxLabel">25</span></strong></div>
+          <div class="upgrade-row"><span>Наступний</span><strong id="nextPhoneName">iPhone 3GS</strong></div><div class="upgrade-row"><span>Бонус телефону</span><strong id="phoneBoost">×1.00</strong></div>
           <button id="phoneUpgradeButton" class="upgrade-button" type="button">Прокачати телефон</button>
           <div id="phoneUpgradeHint" class="upgrade-hint"></div>
         </div>
@@ -193,7 +193,8 @@
           <p class="pc-shop-desc">Найдорожча прокачка. Кожен рівень підвищує степінь доходу, а ціна зростає все швидше.</p>
         </div>
         <div class="upgrade-card"><div class="upgrade-title"><div><small>НЕРУХОМІСТЬ</small><h3>Твої острови 🏝️</h3></div></div>
-          <p class="pc-shop-desc">Острови приносять пасивний дохід щохвилини. Загальний дохід: <b id="islandIncome">0</b> UAH/хв</p>
+          <p class="pc-shop-desc">Острови поповнюють ФОП щосекунди. Дохід: <b id="islandIncome">0</b> UAH/с</p>
+          <div class="fop-wallet"><small>БАЛАНС ФОП</small><strong id="fopBalance">0 UAH</strong><span>Переказ на картку: комісія 30%</span><button id="fopTransfer" type="button" class="upgrade-button">Переказати</button></div>
           <div id="islandList" class="island-list"></div>
         </div>
       </section>
@@ -225,6 +226,10 @@
           <div class="detail-row"><span>База за 1 Бруківку</span><strong id="infoBaseReward">100 UAH</strong></div>
           <div class="detail-row"><span>Бруківок за раз</span><strong id="infoCarryCount">1</strong></div>
           <div class="detail-row"><span>Бонус NMT</span><strong id="infoNmtBonus">×1.0</strong></div>
+          <div class="detail-row"><span>Legit Check</span><strong id="legitBoost">×1.00</strong></div>
+          <div class="detail-row"><span>Рекорд КС2</span><strong id="csBoost">×1.00</strong></div>
+          <div class="detail-row"><span>Iron Atlas</span><strong id="hoiBoost">×1.00</strong></div>
+          <div class="detail-row"><span>Разом без NMT</span><strong id="allBoost">×1.00</strong></div>
           <div class="detail-row total"><span>За успішну доставку</span><strong id="infoFinalReward">100 UAH</strong></div>
           <div class="detail-row"><span>Телефон</span><strong id="infoPhoneModel">iPhone 3G</strong></div>
         </div>
@@ -395,7 +400,25 @@
         </section>
         <section id="steamPanel" class="pc-program hidden">
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>STEAM</strong><span class="steam-online">● ONLINE</span></div>
-          <div class="steam-hero"><div class="steam-cover">CS<span>2</span></div><div><small>БІБЛІОТЕКА STEAM</small><h2>КС2 · AIM TRAINER</h2><p>Влучай у кульки якомога швидше. На кожен раунд — рівно 30 секунд.</p></div></div>
+          <div id="steamLibrary" class="steam-library">
+            <h2>Бібліотека ігор</h2><p>Обери гру, потім її складність.</p>
+            <div class="steam-games">
+              <button id="steamSelectCs" class="steam-game-tile" type="button"><span class="steam-game-art steam-cs-art">CS<b>2</b></span><strong>КС2 · AIM TRAINER</strong><small>30 секунд · цілі зникають через 2 с</small></button>
+              <button id="steamSelectHoi" class="steam-game-tile" type="button"><span class="steam-game-art steam-hoi-art">🌍</span><strong>IRON ATLAS · Mini HOI</strong><small>Стратегія · країни та дипломатія</small></button>
+            </div>
+          </div>
+          <div id="steamHoiPane" class="hidden">
+            <button id="steamBackHoiLibrary" class="steam-library-back" type="button">← До бібліотеки</button>
+            <div class="steam-hero"><div class="steam-cover hoi-cover">🌍</div><div><small>IRON ATLAS</small><h2>Mini HOI · вибери складність</h2><p>За повну перемогу: ×1.5, ×3 або ×6 до доходу від доставки.</p></div></div>
+            <div class="cs-difficulty-list">
+              <a class="cs-mode" href="minihoi.html?mode=easy"><span class="cs-mode-icon">🟢</span><span><b>Легкий</b><small>8 країн · ×1.5 після перемоги</small></span><span>↗</span></a>
+              <a class="cs-mode" href="minihoi.html?mode=medium"><span class="cs-mode-icon medium">🟠</span><span><b>Середній</b><small>15 країн · ×3 після перемоги</small></span><span>↗</span></a>
+              <a class="cs-mode" href="minihoi.html?mode=hardcore"><span class="cs-mode-icon hard">🔴</span><span><b>Хардкор</b><small>25 країн · ×6 після перемоги</small></span><span>↗</span></a>
+            </div>
+          </div>
+          <div id="steamCsPane" class="hidden">
+          <button id="steamBackLibrary" class="steam-library-back" type="button">← До бібліотеки</button>
+          <div class="steam-hero"><div class="steam-cover">CS<span>2</span></div><div><small>AIM TRAINER</small><h2>КС2 · вибери складність</h2><p>30 секунд. Кульки переміщуються кожні 2 секунди. Бонус за 30 / 40 / 50 / 60 влучань.</p></div></div>
           <div id="csMenu">
             <div class="cs-difficulty-list">
               <button class="cs-mode" data-cs-mode="easy" type="button"><span class="cs-mode-icon">◉</span><span><b>Легкий</b><small>10 кульок · 30 секунд</small></span><span>›</span></button>
@@ -403,8 +426,6 @@
               <button class="cs-mode" data-cs-mode="hardcore" type="button"><span class="cs-mode-icon hard">✺</span><span><b>Хардкор</b><small>60 кульок · 30 секунд · рекорд</small></span><span>›</span></button>
             </div>
             <div class="cs-record-panel">🏆 ХАРДКОР РЕКОРД <strong id="csRecord">0 / 60</strong><span id="csBestTime">Немає пройдених раундів</span></div>
-            <a class="steam-other-game minihoi-entry" href="minihoi.html"><span class="steam-other-icon">🌍</span><span><strong>IRON ATLAS · Mini HOI</strong><small>Три складності · 8 / 15 / 25 країн · збереження кампанії</small></span><span class="steam-other-arrow">Грати ↗</span></a>
-            <a class="steam-other-game" href="game2.html"><span class="steam-other-icon">🎮</span><span><strong>Друга гра</strong><small>Окремий HTML-файл · можна замінити пізніше</small></span><span class="steam-other-arrow">Відкрити ↗</span></a>
           </div>
           <div id="csGame" class="hidden">
             <div class="cs-hud"><div><small>СКЛАДНІСТЬ</small><b id="csModeText">Хардкор</b></div><div><small>ЦІЛІ</small><b id="csHitCount">0 / 60</b></div><div><small>ЧАС</small><b id="csTimer">30.0</b></div></div>
@@ -413,6 +434,7 @@
             <button id="csAbort" class="cs-secondary" type="button">Завершити раунд</button>
           </div>
           <div id="csResult" class="cs-result hidden" aria-live="polite"><div class="cs-result-medal">✦</div><h2 id="csResultTitle">Раунд завершено</h2><p id="csResultText"></p><button id="csPlayAgain" class="cs-primary" type="button">Зіграти ще</button><button id="csResultMenu" class="cs-secondary" type="button">Вибрати складність</button></div>
+          </div>
         </section>
         <section id="soundcloudPanel" class="pc-program soundcloud-program hidden">
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>SOUNDCLOUD</strong><span class="sc-badge">MIX</span></div>
@@ -432,14 +454,17 @@
             <article><time>19.10.2026 · близько 18:00</time><h3>Випуск Music & Game 2</h3><p>П'ять обкладинок SoundCloud, шляхи mp3(1–5), посилання на другу гру.</p></article>
             <article><time>19.10.2026 · близько 15:00</time><h3>Персональний комп'ютер</h3><p>PC Market, Steam, тренажер КС2, SoundCloud, покращення комп'ютера.</p></article>
             <article><time>19.10.2026 · близько 14:00</time><h3>Стабільність прогресу</h3><p>Перевірка збережень, резервна копія, зміни Telegram-ринку.</p></article>
-            <article><time>19.10.2026 · поточне оновлення</time><h3>IRON ATLAS та новий світ</h3><p>Mini HOI з трьома режимами, монітори, острови, карман, нові рівні, Ждун, перехід між треками.</p></article>
+            <article><time>19.10.2026 · близько 20:30</time><h3>IRON ATLAS та новий світ</h3><p>Mini HOI з трьома режимами, монітори, острови, карман, нові рівні, Ждун, перехід між треками.</p></article>
+            <article><time>19.10.2026 · близько 21:00</time><h3>Бонуси та ФОП</h3><p>Серії Legit Check, телефонні множники, нагороди КС2 та Iron Atlas, секундна оренда островів, оновлений лабіринт і Steam.</p></article>
           </div>
           <div class="history-locks"><button data-secret="captain" type="button">♛ Архів I</button><button data-secret="navigator" type="button">⚓ Архів II</button><button data-secret="team" type="button">✦ Архів III</button></div>
         </section>
         <section id="secretPanel" class="pc-program secret-program hidden">
           <div class="pc-program-header"><button id="secretBack" class="pc-back-button" type="button">← Назад до журналу</button><strong>ЗАКРИТИЙ АРХІВ</strong></div>
           <form id="secretForm" class="secret-gate"><div id="secretGate"><h2>Потрібен код доступу</h2><label for="secretInput">Код</label><input id="secretInput" type="password" autocomplete="off" required maxlength="80"><button class="cs-primary" type="submit">Відкрити</button><small id="secretError" role="status"></small></div></form>
-          <div id="secretCredits" class="secret-credits hidden"><div class="secret-crown">✦ ✧ ✦</div><h1 id="secretName"></h1><h2 id="secretTitle"></h2><p id="secretBio"></p><span>LEGENDS NEVER LOG OFF</span></div>
+          <div id="secretCredits" class="secret-credits hidden"><div class="secret-crown">✦ ✧ ✦</div><h1 id="secretName"></h1><h2 id="secretTitle"></h2><p id="secretBio"></p><span>LEGENDS NEVER LOG OFF</span>
+            <div id="archiveTools" class="archive-tools hidden"><h3>ПАНЕЛЬ РОЗРОБНИКА</h3><div class="archive-actions"><button id="archiveMaxAll" type="button">✦ Максимум усього</button><button id="archiveFullNmt" type="button">✦ Повний NMT</button><button id="archiveResetAll" type="button" class="archive-danger">↻ Повне скидання</button></div><p id="archiveToolMessage" role="status"></p></div>
+          </div>
         </section>
       </main>
       <footer class="pc-taskbar"><button id="pcTaskHome" type="button">⊞ <span>Пуск</span></button><span>Brukivka OS · v1</span><span id="pcTaskTime">00:00</span></footer>

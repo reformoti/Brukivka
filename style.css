@@ -170,3 +170,27 @@ h1 { margin-top:3px; font-size:clamp(30px,5vw,46px); }
 .history-note{color:#a8bad0;font-size:11px}.history-timeline{border-left:2px solid #849bff66;display:grid;gap:12px;margin:23px 7px 25px;padding-left:18px}.history-timeline article{position:relative;padding:12px 15px;border-radius:13px;background:#171f34;border:1px solid #ffffff14}.history-timeline article:before{content:'';position:absolute;width:9px;height:9px;background:#9f8cff;border-radius:50%;left:-24px;top:17px}.history-timeline time{color:#a7b6ff;font-size:10px}.history-timeline h3{margin:6px 0;font-size:15px}.history-timeline p{color:#b2bfd4;font-size:11px;line-height:1.45}.history-locks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.history-locks button{padding:18px 6px;background:linear-gradient(135deg,#423770,#232a54);border:1px solid #a69aff66;border-radius:11px;color:#e7e3ff;font-weight:900;cursor:pointer}
 .secret-gate{max-width:420px;margin:45px auto;background:#101b31;padding:28px;border:1px solid #ffffff22;border-radius:18px}.secret-gate label{display:block;font-size:12px;color:#9bafc7;margin-bottom:9px}.secret-gate input{display:block;background:#0b1222;color:white;border:1px solid #7383b6;border-radius:10px;padding:12px;margin-bottom:16px;width:100%}.secret-gate button{width:100%}.secret-gate small{display:block;color:#ff8c9e;margin-top:10px}.secret-gate:has(>div.hidden){display:none}.secret-credits{text-align:center;padding:clamp(30px,7vw,80px) 15px;background:radial-gradient(ellipse at center,#403562 0,transparent 70%)}.secret-crown{font-size:52px;color:#fbd289;letter-spacing:.35em}.secret-credits h1{font-size:clamp(35px,7vw,67px);margin:8px}.secret-credits h2{color:#f9ce72;font-size:clamp(15px,3vw,27px);letter-spacing:.15em}.secret-credits p{max-width:550px;margin:23px auto;line-height:1.8;color:#c4d5eb}.secret-credits span{font-size:11px;letter-spacing:.29em;color:#b1a6f8}
 @media(max-width:760px){.maze-wall{width:8px}.wall-a{left:15%;top:24%;height:23%}.wall-b{left:36%;top:5%;height:28%}.wall-c{left:38%;top:56%;height:23%}.wall-d{left:59%;top:29%;height:29%}.wall-e{left:76%;top:10%;height:24%}.wall-f{left:76%;top:62%;height:29%}.history-locks{grid-template-columns:1fr}}
+
+/* Expansion II: Steam library and session bonuses */
+.steam-library h2 { margin:23px 0 8px;font-size:25px; }
+.steam-library p { color:#9fb0ca;margin-bottom:22px;font-size:13px; }
+.steam-games { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px; }
+.steam-game-tile { border:1px solid #7885bd55;border-radius:20px;padding:14px;background:#111d36;color:#eef5ff;text-align:left;display:flex;flex-direction:column;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;min-width:0; }
+.steam-game-tile:hover { transform:translateY(-4px);border-color:#98abf3;box-shadow:0 15px 28px #0007; }
+.steam-game-tile strong { font-size:16px;margin:11px 0 5px; }.steam-game-tile small{color:#aab9d3;font-size:11px;line-height:1.5;}
+.steam-game-art {height:160px;width:100%;display:grid;place-items:center;font-size:54px;font-weight:1000;border-radius:13px;letter-spacing:-.08em;}
+.steam-game-art b{color:#ffad5c;margin-left:-50px;transform:translate(64px,23px)}
+.steam-cs-art { background:radial-gradient(circle at 70% 30%,#fdb54e80,transparent 40%),linear-gradient(140deg,#604329,#1a2032 67%); }
+.steam-hoi-art { background:radial-gradient(circle at 30% 15%,#37bbab6b,transparent 50%),linear-gradient(135deg,#203c59,#11172b); }
+.steam-library-back {border:1px solid #ffffff2a;border-radius:11px;background:#1b2c4c;color:#d8e6ff;padding:10px 14px;margin:18px 0 4px;cursor:pointer;font-weight:800;}
+.steam-hoi-art,.hoi-cover {font-style:normal;letter-spacing:0}.cs-mode {text-decoration:none}.cs-target.cs-pop {animation:csRespot .18s ease-out both;}
+@keyframes csRespot {0%{transform:translate(-50%,-50%) scale(.45);opacity:.2}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.fop-wallet {display:grid;gap:8px;padding:15px;background:linear-gradient(135deg,#143d40,#1c263e);border:1px solid #62d4bd70;border-radius:15px;margin:12px 0 16px}
+.fop-wallet small{color:#8de6cf;letter-spacing:.1em;font-weight:900}.fop-wallet strong{font-size:21px;color:#ddfff5}.fop-wallet span{color:#b5cfc9;font-size:10px}
+.archive-tools{margin:37px auto 0;padding:18px;border:1px solid #c9ae646d;background:#19182a;border-radius:17px;max-width:660px;}
+.archive-tools h3{font-size:13px;letter-spacing:.13em;color:#ebca86}.archive-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:15px;}
+.archive-actions button{background:#393266;border:1px solid #9b8af6;color:white;padding:13px 8px;border-radius:10px;cursor:pointer;font-weight:800;font-size:11px}.archive-actions .archive-danger{background:#54222a;border-color:#e26c83}
+.archive-tools p{font-size:12px;color:#b3f3c7}
+.maze-wall{background:linear-gradient(90deg,#22334c,#9ce7ff 50%,#253a59)!important;border-color:#8bdaff!important;border-radius:2px!important;box-shadow:0 0 10px #4dbcff99,0 0 1px 1px #d3eaff55!important;}
+.game-board{background:radial-gradient(ellipse at 60% 45%,#24355966,transparent 62%),repeating-linear-gradient(0deg,transparent 0 28px,#ffffff08 29px 30px),repeating-linear-gradient(90deg,transparent 0 28px,#ffffff08 29px 30px),#0a0e19;}
+@media(max-width:520px){.steam-games{gap:10px}.steam-game-art{height:110px;font-size:37px}.steam-game-tile{padding:9px}.steam-game-tile strong{font-size:12px}.steam-game-tile small{font-size:10px}.archive-actions{grid-template-columns:1fr}}

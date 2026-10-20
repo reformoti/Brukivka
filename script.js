@@ -88,7 +88,17 @@
     {name:'iPhone 8', cost:9000}, {name:'iPhone X', cost:13000}, {name:'iPhone 11', cost:18000},
     {name:'iPhone 12', cost:25000}, {name:'iPhone 13', cost:34000}, {name:'iPhone 14', cost:45000},
     {name:'iPhone 15', cost:59000}, {name:'iPhone 16', cost:76000}, {name:'iPhone 17', cost:98000},
-    {name:'iPhone 18', cost:0}
+    {name:'iPhone 18', cost:135000},
+    {name:'iPhone 18 Pro Max', cost:210000},
+    {name:'Galaxy S30 Ultra', cost:340000},
+    {name:'Pixel 14 Pro', cost:550000},
+    {name:'ROG Phone X', cost:900000},
+    {name:'iPhone 20 Ultra', cost:1800000},
+    {name:'Galaxy Z Fold 10', cost:3600000},
+    {name:'HoloPhone X', cost:9500000},
+    {name:'Quantum Phone', cost:28000000},
+    {name:'Nebula One', cost:85000000},
+    {name:'OmniPhone ∞', cost:0}
   ];
 
   const strengthTiers = [
@@ -107,11 +117,11 @@
   const MAX_BALANCE = Number.MAX_SAFE_INTEGER;
   const POCKET_MAX = 10;
   const ISLANDS = [
-    {id:'palm',name:'Пальмовий риф',price:2500000,income:95000,emoji:'🏝️'},
-    {id:'azure',name:'Лазурна бухта',price:25000000,income:850000,emoji:'🌊'},
-    {id:'volcano',name:'Вулканічний архіпелаг',price:280000000,income:8500000,emoji:'🌋'},
-    {id:'crown',name:'Королівські острови',price:3200000000,income:95000000,emoji:'👑'},
-    {id:'neptune',name:'Океан Нептуна',price:28000000000,income:750000000,emoji:'🔱'}
+    {id:'palm',name:'Пальмовий риф',price:2500000,income:1600,emoji:'🏝️'},
+    {id:'azure',name:'Лазурна бухта',price:25000000,income:14000,emoji:'🌊'},
+    {id:'volcano',name:'Вулканічний архіпелаг',price:280000000,income:140000,emoji:'🌋'},
+    {id:'crown',name:'Королівські острови',price:3200000000,income:1600000,emoji:'👑'},
+    {id:'neptune',name:'Океан Нептуна',price:28000000000,income:12500000,emoji:'🔱'}
   ];
   const MONITORS = [{name:'Немає монітора',cost:4900,resolution:'—'},
     {name:'Слабкий CRT',cost:8500,resolution:'800×400'},
@@ -123,11 +133,28 @@
   function incomeFactor(){return save.waiterPenalty ? .1:1;}
   function award(value){const amount=Math.max(0,Math.round(value*incomeFactor()));save.balance=clamp(save.balance+amount,-MAX_BALANCE,MAX_BALANCE);save.totalEarned=clamp(save.totalEarned+amount,0,MAX_BALANCE);return amount;}
   function islandIncome(){return ISLANDS.reduce((total,i)=>total+i.income*(save.islands[i.id]||0),0);}
-  function marketScale(){return Math.min(35,1+2.3*Math.log10(1+save.totalEarned/15000));}
+  // Clothing and delivery contracts scale by lifetime income, not only current cash.
+  function economyBandFor(earned){
+    return earned<100000?0:earned<1000000?1:earned<10000000?2:earned<100000000?3:earned<1000000000?4:earned<10000000000?5:6;
+  }
+  function economyBand(){return economyBandFor(save.totalEarned);}
+  const ECONOMY_SCALES=[1,2.8,8,25,75,250,850];
+  function marketScale(){return ECONOMY_SCALES[economyBand()];}
+  function phoneMultiplier(){const level=save.phoneTier;return 1+level*.1+Math.pow(Math.max(0,level-15),2)*.025;}
+  function legitMultiplier(){return save.legit.streak>=5?Math.floor(save.legit.streak/5)*1.5:1;}
+  function csMultiplier(){const hits=save.csBestHits;return hits>=60?2:hits>=50?1.4:hits>=40?1.2:hits>=30?1.1:1;}
+  function hoiMultiplier(){return [1,1.5,3,6][save.hoiBestMode]||1;}
+  function activityMultiplier(){return phoneMultiplier()*legitMultiplier()*csMultiplier()*hoiMultiplier();}
+  function readHoiBonus(){
+    try{const raw=JSON.parse(localStorage.getItem(HOI_REWARD_KEY));return safeInt(raw&&raw.bestMode,0,0,3);}catch(error){return 0;}
+  }
+  function syncHoiBonus(){const level=readHoiBonus();if(level>save.hoiBestMode){save.hoiBestMode=level;persist();}}
 
+
+  const HOI_REWARD_KEY = 'brukivka_hoi_rewards_v1';
   const PC_PRICE = 12500;
   const PC_UPGRADE_LIMIT = 5;
-  const PC_UPGRADE_BASE = {cpu:1100, gpu:1500, ram:900};
+  const PC_UPGRADE_BASE = {cpu:18000, gpu:27000, ram:15000};
   const CS_MODES = {easy:{label:'Легкий',target:10}, medium:{label:'Середній',target:30}, hardcore:{label:'Хардкор',target:60}};
   const CS_ROUND_MS = 30000;
   const MUSIC_TRACKS = ['Тікі Тікі', 'Манго', 'Аура Фонк', 'Наполеон', '?????'];
@@ -182,7 +209,9 @@ const MUSIC_COVERS = [
       csHardcoreBestTimeMs:0,
       audio:{track:0,volume:70,muted:false,shuffle:false,repeat:false},
       monitorTier:0,pocketTier:0,islands:{},lastIslandAt:Date.now(),totalEarned:0,
-      waiterStartedAt:0,waiterPenalty:false,waiterRecover:0
+      waiterStartedAt:0,waiterPenalty:false,waiterRecover:0,
+      csBestHits:0,hoiBestMode:0,fopBalance:0,marketBand:0
+
     };
   }
 
@@ -304,6 +333,12 @@ const MUSIC_COVERS = [
     result.waiterStartedAt = safeInt(source.waiterStartedAt,0,0,Date.now());
     result.waiterPenalty = source.waiterPenalty === true;
     result.waiterRecover = result.waiterPenalty ? safeInt(source.waiterRecover,0,0,20) : 0;
+    result.csBestHits = Math.max(result.csHardcoreBest,safeInt(source.csBestHits,0,0,60));
+    result.hoiBestMode = safeInt(source.hoiBestMode,0,0,3);
+    result.fopBalance = safeInt(source.fopBalance,0,0,MAX_BALANCE);
+    // On upgrade, maintain existing offers until the next market refresh; band is rebuilt in ensureMarket.
+    result.marketBand = safeInt(source.marketBand, 0, 0, 6);
+
     return result;
   }
 
@@ -373,9 +408,12 @@ const MUSIC_COVERS = [
   }
 
   function brickTier() { return brickTiers[clamp(save.brickTier, 0, brickTiers.length-1)]; }
-  function phoneTier() { return phoneTiers[clamp(save.phoneTier, 0, 15)]; }
+  function phoneTier() { return phoneTiers[clamp(save.phoneTier, 0, phoneTiers.length-1)]; }
   function strengthTier() { return strengthTiers[clamp(save.strength, 0, 5)]; }
-  function finalReward() { return Math.round(Math.pow(brickTier().reward * strengthTier().carry * nmtMultiplier(),pocketPower())*incomeFactor()); }
+  function finalReward() {
+    const base=brickTier().reward*strengthTier().carry*nmtMultiplier()*activityMultiplier();
+    return clamp(Math.round(Math.pow(base,pocketPower())*incomeFactor()),0,MAX_BALANCE);
+  }
   function displayNmt(score) { return score >= 100 ? String(score) : '—'; }
 
   function setBalanceClass(element) {
@@ -411,7 +449,7 @@ const MUSIC_COVERS = [
 
     $('homePhoneModel').textContent = phone.name;
     $('homeAverageNmt').textContent = displayNmt(avg);
-    $('homeSummary').textContent = `Середній NMT · бонус ×${multiplier.toFixed(1)}`;
+    $('homeSummary').textContent = `Загальний бонус ×${activityMultiplier().toFixed(2)} · NMT ×${multiplier.toFixed(1)}`;
 
     $('bankBalance').textContent = money(save.balance);
     setBalanceClass($('bankBalanceCard'));
@@ -421,12 +459,13 @@ const MUSIC_COVERS = [
     $('nextBrickName').textContent = save.brickTier < brickTiers.length-1 ? brickTiers[save.brickTier+1].name : 'МАКСИМУМ';
     $('bankPhoneName').textContent = phone.name;
     $('phoneTierText').textContent = save.phoneTier;
-    $('nextPhoneName').textContent = save.phoneTier < 15 ? phoneTiers[save.phoneTier + 1].name : 'МАКСИМУМ';
+    $('phoneMaxLabel').textContent = phoneTiers.length-1;
+    $('nextPhoneName').textContent = save.phoneTier < phoneTiers.length-1 ? phoneTiers[save.phoneTier + 1].name : 'МАКСИМУМ';
     $('strengthTierText').textContent = save.strength;
     $('carryCountBank').textContent = strength.carry;
 
     setupUpgradeButton($('brickUpgradeButton'), save.brickTier, brickTiers.length-1, brick, 'Прокачати Бруківку');
-    setupUpgradeButton($('phoneUpgradeButton'), save.phoneTier, 15, phone, 'Прокачати телефон');
+    setupUpgradeButton($('phoneUpgradeButton'), save.phoneTier, phoneTiers.length-1, phone, 'Прокачати телефон');
     setupUpgradeButton($('strengthUpgradeButton'), save.strength, 5, strength, 'Прокачати силу');
 
     $('infoBrickName').textContent = `${brick.name} Бруківка`;
@@ -467,6 +506,15 @@ const MUSIC_COVERS = [
     $('legitScore').textContent = save.legit.score;
     $('legitStreak').textContent = save.legit.streak;
     $('legitBest').textContent = save.legit.best;
+    $('legitBoost').textContent = `×${legitMultiplier().toFixed(2)} · кожні 5 правильних +1.5`;
+    $('phoneBoost').textContent = `×${phoneMultiplier().toFixed(2)}`;
+    $('csBoost').textContent = `×${csMultiplier().toFixed(2)}`;
+    $('hoiBoost').textContent = `×${hoiMultiplier().toFixed(2)}`;
+    $('allBoost').textContent = `×${activityMultiplier().toFixed(2)}`;
+    $('fopBalance').textContent = `${money(save.fopBalance)} UAH`;
+    $('fopTransfer').disabled = save.fopBalance < 1;
+    $('fopTransfer').textContent = `Переказати на картку +${money(Math.floor(save.fopBalance*.7))} UAH (комісія 30%)`;
+
     $('vodoBadge').classList.toggle('hidden',!save.waiterPenalty);
     $('brickMaxLabel').textContent = brickTiers.length-1;
     $('infoBrickMax').textContent = brickTiers.length-1;
@@ -488,7 +536,7 @@ const MUSIC_COVERS = [
     if (type === 'brick') {
       levelKey = 'brickTier'; max = brickTiers.length-1; tiers = brickTiers; hintId = 'brickUpgradeHint'; successText = 'Бруківку прокачано.';
     } else if (type === 'phone') {
-      levelKey = 'phoneTier'; max = 15; tiers = phoneTiers; hintId = 'phoneUpgradeHint'; successText = 'Телефон Коса оновлено.';
+      levelKey = 'phoneTier'; max = phoneTiers.length-1; tiers = phoneTiers; hintId = 'phoneUpgradeHint'; successText = 'Телефон Коса оновлено.';
     } else {
       levelKey = 'strength'; max = 5; tiers = strengthTiers; hintId = 'strengthUpgradeHint'; successText = 'Сила Коса зросла.';
     }
@@ -518,20 +566,34 @@ const MUSIC_COVERS = [
       const card=document.createElement('div');card.className='island-card';
       const copy=document.createElement('div');copy.className='island-copy';
       const title=document.createElement('strong');title.textContent=`${i.emoji} ${i.name} · ${tier}/5`;
-      const subtitle=document.createElement('small');subtitle.textContent=`${money(i.income*tier)} UAH/хв · +${money(i.income)} за рівень`;
+      const subtitle=document.createElement('small');subtitle.textContent=`${money(i.income*tier)} UAH/с · +${money(i.income)}/с за рівень`;
       const btn=document.createElement('button');btn.type='button';btn.disabled=tier>=5||save.balance<cost;
       btn.textContent=tier>=5?'МАКСИМУМ':`${tier?'Покращити':'Купити'} · ${money(cost)} UAH`;
-      btn.addEventListener('click',()=>{if((save.islands[i.id]||0)>=5||save.balance<cost)return;save.balance-=cost;save.islands[i.id]=(save.islands[i.id]||0)+1;save.lastIslandAt=Date.now();persist();updateUI()});
+      btn.addEventListener('click',()=>{payIslands();if((save.islands[i.id]||0)>=5||save.balance<cost)return;save.balance-=cost;save.islands[i.id]=(save.islands[i.id]||0)+1;save.lastIslandAt=Date.now();persist();updateUI()});
       copy.append(title,subtitle);card.append(copy,btn);list.append(card);
     });
   }
   function payIslands(){
     if(!save.lastIslandAt)save.lastIslandAt=Date.now();
-    const minutes=Math.min(60,Math.floor((Date.now()-save.lastIslandAt)/60000));
-    if(minutes<=0)return;
-    save.lastIslandAt=Date.now()-((Date.now()-save.lastIslandAt)%60000);
-    if(islandIncome()>0){award(islandIncome()*minutes);updateUI();}persist();
+    const seconds=Math.min(3600,Math.max(0,Math.floor((Date.now()-save.lastIslandAt)/1000)));
+    if(seconds<=0)return;
+    save.lastIslandAt=Date.now()-(Date.now()-save.lastIslandAt)%1000;
+    if(islandIncome()>0){
+      // Passive earnings remain on the separate FOP account until a taxed transfer.
+      save.fopBalance=clamp(save.fopBalance+Math.round(islandIncome()*seconds*incomeFactor()),0,MAX_BALANCE);
+      const balance=$('fopBalance');if(balance)balance.textContent=`${money(save.fopBalance)} UAH`;
+      const button=$('fopTransfer');if(button){button.disabled=false;button.textContent=`Переказати на картку +${money(Math.floor(save.fopBalance*.7))} UAH (комісія 30%)`;}
+    }
+    persist();
   }
+  $('fopTransfer').addEventListener('click',()=>{
+    payIslands();if(save.fopBalance<1)return;
+    const net=Math.floor(save.fopBalance*.7);
+    save.fopBalance=0;
+    save.balance=clamp(save.balance+net,-MAX_BALANCE,MAX_BALANCE);
+    save.totalEarned=clamp(save.totalEarned+net,0,MAX_BALANCE);
+    persist();updateUI();
+  });
 
   $('phoneUpgradeButton').addEventListener('click', () => buyUpgrade('phone'));
   $('strengthUpgradeButton').addEventListener('click', () => buyUpgrade('strength'));
@@ -603,32 +665,68 @@ const MUSIC_COVERS = [
     return !(a.right - padding <= b.left + padding || a.left + padding >= b.right - padding || a.bottom - padding <= b.top + padding || a.top + padding >= b.bottom - padding);
   }
 
-  function randomizeLasers() {
-    const mobile = mobileLayout;
-    const configs = mobile ? [
-      {v:false,l:[9,24],t:[27,34],s:[8,13]},
-      {v:true,l:[34,46],t:[37,48],s:[8,12]},
-      {v:false,l:[48,64],t:[57,65],s:[9,14]},
-      {v:true,l:[70,80],t:[65,73],s:[7,11]}
-    ] : [
-      {v:false,l:[21,31],t:[18,29],s:[9,14]},
-      {v:true,l:[41,49],t:[35,46],s:[9,14]},
-      {v:false,l:[55,64],t:[57,67],s:[9,14]},
-      {v:true,l:[71,79],t:[23,36],s:[9,14]}
-    ];
-
-    lasers.forEach((laser, index) => {
-      const cfg = configs[index];
-      laser.classList.toggle('v', cfg.v);
-      laser.style.left = `${rand(cfg.l[0], cfg.l[1])}%`;
-      laser.style.top = `${rand(cfg.t[0], cfg.t[1])}%`;
-      if (cfg.v) {
-        laser.style.width = mobile ? '3px' : '4px';
-        laser.style.height = `${rand(cfg.s[0], cfg.s[1])}%`;
-      } else {
-        laser.style.height = mobile ? '3px' : '4px';
-        laser.style.width = `${rand(cfg.s[0], cfg.s[1])}%`;
+  // Three gates with alternated openings. Safe route is calculated from brick size
+  // and screen orientation; lasers spawn strictly outside its collision corridor.
+  function mazePlan(){
+    const width=board.getBoundingClientRect().width;
+    const compact=mobileLayout&&width<460;
+    const brickH=brickElement.getBoundingClientRect().height||70;
+    return {
+      xs:mobileLayout?[.32,.51,.70]:[.32,.52,.72],
+      ys:compact?[.34,.50,.66]:mobileLayout?[.29,.52,.73]:[.48,.68,.42],
+      gap:compact?Math.max(brickH+100,176,brickH+120*(320/Math.max(250,width))):mobileLayout?Math.max(brickH+56,153):Math.max(brickH+86,156)
+    };
+  }
+  function mazeWaypoints(){
+    const plan=mazePlan();
+    return [mobileLayout?.14:.10,mobileLayout?.16:.50,
+      ...plan.xs.flatMap((x,i)=>[x,plan.ys[i]]),
+      mobileLayout?.86:.90,mobileLayout?.83:.50];
+  }
+  function buildMaze(){
+    const r=board.getBoundingClientRect();if(!r.width||!r.height)return;
+    const plan=mazePlan();
+    plan.xs.forEach((x,i)=>{
+      const mid=plan.ys[i]*r.height;
+      const top=Math.max(15,mid-plan.gap/2);
+      const bottom=Math.min(r.height-15,mid+plan.gap/2);
+      const upper=mazeWalls[i*2],lower=mazeWalls[i*2+1];
+      for(const w of [upper,lower]){w.style.left=`${x*100}%`;w.style.width=mobileLayout?'7px':'10px';}
+      upper.style.top='0px';upper.style.height=`${top}px`;
+      lower.style.top=`${bottom}px`;lower.style.height=`${r.height-bottom}px`;
+    });
+  }
+  function safeLineAt(x){
+    const pts=mazeWaypoints();
+    const pairs=[];for(let i=0;i<pts.length;i+=2)pairs.push([pts[i],pts[i+1]]);
+    for(let i=0;i<pairs.length-1;i++){
+      if(x>=pairs[i][0]&&x<=pairs[i+1][0]){
+        const t=(x-pairs[i][0])/(pairs[i+1][0]-pairs[i][0]);
+        return pairs[i][1]+(pairs[i+1][1]-pairs[i][1])*t;
       }
+    }
+    return pairs[pairs.length-1][1];
+  }
+  function randomizeLasers(){
+    buildMaze();
+    const b=board.getBoundingClientRect(),brick=brickElement.getBoundingClientRect();
+    if(!b.width||!b.height)return;
+    lasers.forEach((laser,i)=>{
+      const vertical=i%2===1;
+      const wp=mobileLayout?[.20,.43,.61,.81]:[.22,.43,.62,.82];
+      const x=wp[i]+rand(-.018,.018);
+      const safe=safeLineAt(x);
+      const useTop=safe>=.52;
+      const margin=(brick.height/2+27)/b.height;
+      const available=useTop?Math.max(.08,safe-margin):Math.max(.08,1-safe-margin);
+      const length=Math.min(rand(.065,.092),available*.38);
+      const y=useTop?Math.max(.03,safe-margin-length-rand(.035,.06)):Math.min(.90,safe+margin+rand(.035,.06));
+      laser.classList.toggle('v',vertical);
+      laser.style.left=`${x*100}%`;
+      laser.style.top=`${y*100}%`;
+      laser.style.width=vertical?'4px':'9%';
+      laser.style.height=vertical?`${length*100}%`:'4px';
+      if(!vertical){laser.style.left=`${(x-.03)*100}%`;}
     });
   }
 
@@ -722,8 +820,19 @@ const MUSIC_COVERS = [
     if (!dragging || resetting) return;
     if (event.pointerId != null && activePointer !== event.pointerId) return;
     const boardRect = board.getBoundingClientRect();
-    placeBrick(event.clientX - boardRect.left - dragOffsetX, event.clientY - boardRect.top - dragOffsetY);
-    checkGameCollision();
+    const brickSize=brickElement.getBoundingClientRect();
+    const x=clamp(event.clientX-boardRect.left-dragOffsetX,0,boardRect.width-brickSize.width);
+    const y=clamp(event.clientY-boardRect.top-dragOffsetY,0,boardRect.height-brickSize.height);
+    const oldX=parseFloat(brickElement.style.left)||0;
+    const oldY=parseFloat(brickElement.style.top)||0;
+    // Collision is checked along the entire movement path, not just at its end:
+    // fast pointer movements cannot tunnel through a gate or laser.
+    const steps=Math.max(1,Math.ceil(Math.hypot(x-oldX,y-oldY)/10));
+    for(let i=1;i<=steps;i++){
+      placeBrick(oldX+(x-oldX)*i/steps,oldY+(y-oldY)*i/steps);
+      checkGameCollision();
+      if(resetting)break;
+    }
     event.preventDefault();
   }
 
@@ -1104,7 +1213,7 @@ const MUSIC_COVERS = [
       save.legit.score += 1;
       save.legit.streak += 1;
       save.legit.best = Math.max(save.legit.best, save.legit.streak);
-      $('legitMessage').textContent = `ПАЛЬ ЗНАЙДЕНО: ${item.brand} / ${item.detail}. Серія +1.`;
+      $('legitMessage').textContent = `ПАЛЬ ЗНАЙДЕНО: ${item.brand} / ${item.detail}. Серія ${save.legit.streak} · бонус ×${legitMultiplier().toFixed(2)}.`;
     } else {
       button.classList.add('bad');
       save.legit.streak = 0;
@@ -1124,8 +1233,9 @@ const MUSIC_COVERS = [
 
   // Telegram: reformoti supply request + two clothing channels.
   function newOrder() {
-    const target = randInt(6, 18);
-    const reward = target * randInt(260, 430);
+    const band=economyBand();
+    const target=randInt(6+band*2,18+band*3);
+    const reward=clamp(Math.round(target*randInt(260,430)*ECONOMY_SCALES[band]),0,MAX_BALANCE);
     return {id:Date.now(), target, progress:0, reward, active:false, completed:false};
   }
 
@@ -1196,6 +1306,7 @@ const MUSIC_COVERS = [
   }
 
   function generateMarket() {
+    save.marketBand=economyBand();
     save.market = {
       kos:[marketOffer('kos'), marketOffer('kos'), marketOffer('kos')],
       street:[marketOffer('street'), marketOffer('street'), marketOffer('street')]
@@ -1204,7 +1315,8 @@ const MUSIC_COVERS = [
   }
 
   function ensureMarket() {
-    if (!save.market || !Array.isArray(save.market.kos) || !Array.isArray(save.market.street)) generateMarket();
+    if (!save.market || !Array.isArray(save.market.kos) || !Array.isArray(save.market.street) || save.marketBand!==economyBand())
+      generateMarket();
   }
 
   function verdictText(item) {
@@ -1372,7 +1484,7 @@ const MUSIC_COVERS = [
   // PC Market: an owned PC unlocks a separate desktop UI.
   // ========================================================
   function pcUpgradeCost(part) {
-    return Math.round(PC_UPGRADE_BASE[part] * Math.pow(1.85, save.pcUpgrades[part]) / 50) * 50;
+    return Math.round(PC_UPGRADE_BASE[part] * Math.pow(2.1, save.pcUpgrades[part]) / 50) * 50;
   }
 
   function pcAimBonus() {
@@ -1473,13 +1585,29 @@ const MUSIC_COVERS = [
     $('soundcloudPanel').classList.toggle('hidden', name !== 'soundcloud');
     $('historyPanel').classList.toggle('hidden', name !== 'history');
     $('secretPanel').classList.toggle('hidden', name !== 'secret');
-    if (name === 'steam') renderCsRecord();
+    if (name === 'steam') {renderCsRecord();showSteamLibrary();}
     if (name === 'soundcloud') renderSoundcloud();
   }
 
   $('pcOpenButton').addEventListener('click', openPC);
   $('pcShopOpen').addEventListener('click', openPC);
   $('pcCloseButton').addEventListener('click', closePC);
+  function showSteamLibrary(){
+    $('steamLibrary').classList.remove('hidden');
+    $('steamCsPane').classList.add('hidden');
+    $('steamHoiPane').classList.add('hidden');
+    if(csRun)finishCsRun(false,true);
+    $('csMenu').classList.remove('hidden');$('csResult').classList.add('hidden');
+  }
+  function openSteamGame(game){
+    $('steamLibrary').classList.add('hidden');
+    $('steamCsPane').classList.toggle('hidden',game!=='cs');
+    $('steamHoiPane').classList.toggle('hidden',game!=='hoi');
+  }
+  $('steamSelectCs').addEventListener('click',()=>openSteamGame('cs'));
+  $('steamSelectHoi').addEventListener('click',()=>openSteamGame('hoi'));
+  $('steamBackLibrary').addEventListener('click',showSteamLibrary);
+  $('steamBackHoiLibrary').addEventListener('click',showSteamLibrary);
   $('steamApp').addEventListener('click', () => showPCProgram('steam'));
   $('soundcloudApp').addEventListener('click', () => showPCProgram('soundcloud'));
   $('pcTaskHome').addEventListener('click', () => {if(save.monitorTier===0)return;showPCProgram('history');});
@@ -1487,6 +1615,7 @@ const MUSIC_COVERS = [
   // Store only a one-way verifier, not the private access phrase.
   const secretVerifier='f78085e1f405827f31ca4bbb67379c771fbf6a948ac2d4c82a72bdf243635d0e';
   let secretChoice='captain';
+  let secretAuthorized=false;
   async function authorizeSecret(value){
     if(!window.crypto||!crypto.subtle){
       let hash=2166136261;
@@ -1498,7 +1627,7 @@ const MUSIC_COVERS = [
     return [...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,'0')).join('')===secretVerifier;
   }
   $$('[data-secret]').forEach(button=>button.addEventListener('click',()=>{
-    secretChoice=button.dataset.secret;
+    secretChoice=button.dataset.secret;secretAuthorized=false;$('archiveTools').classList.add('hidden');
     $('secretGate').classList.remove('hidden');$('secretCredits').classList.add('hidden');
     $('secretInput').value='';$('secretError').textContent='';showPCProgram('secret');$('secretInput').focus();
   }));
@@ -1509,9 +1638,49 @@ const MUSIC_COVERS = [
     if(!ok){$('secretError').textContent='Невірний код доступу.';return;}
     const data=secretNames[secretChoice];$('secretName').textContent=data.title;
     $('secretTitle').textContent=data.tag;$('secretBio').textContent=data.bio;
+    secretAuthorized=true;
+    $('archiveTools').classList.toggle('hidden',secretChoice!=='team');
     $('secretGate').classList.add('hidden');$('secretCredits').classList.remove('hidden');
   });
-  $('secretBack').addEventListener('click',()=>showPCProgram('history'));
+  function unlockTools(){return secretAuthorized&&secretChoice==='team'&&!$('secretCredits').classList.contains('hidden');}
+  $('archiveMaxAll').addEventListener('click',()=>{
+    if(!unlockTools()||!confirm('Видати всю прокачку, острови, ПК, бонуси та величезний баланс?'))return;
+    save.balance=900000000000000;
+    save.totalEarned=900000000000000;
+    save.fopBalance=900000000000000;
+    save.brickTier=brickTiers.length-1;
+    save.phoneTier=phoneTiers.length-1;
+    save.strength=strengthTiers.length-1;
+    save.pcOwned=true;save.monitorTier=MONITORS.length-1;
+    Object.keys(save.pcUpgrades).forEach(part=>save.pcUpgrades[part]=PC_UPGRADE_LIMIT);
+    save.pocketTier=POCKET_MAX;
+    ISLANDS.forEach(i=>save.islands[i.id]=5);
+    save.csBestHits=60;save.csHardcoreBest=60;save.csHardcoreBestTimeMs=1500;
+    save.hoiBestMode=3;
+    save.legit.score=Math.max(save.legit.score,100);save.legit.streak=100;save.legit.best=Math.max(save.legit.best,100);
+    save.waiterPenalty=false;save.waiterStartedAt=0;save.waiterRecover=0;
+    save.order=null;save.market=null;save.lastIslandAt=Date.now();
+    // A full developer unlock also provides sellable legit outfits.
+    save.inventory.push(...Array.from({length:20},()=>({
+      ...makeClothing('legit'),price:0,resale:Math.round(3000*marketScale()),
+      checked:true,boughtAt:0
+    })));
+    save.inventory=save.inventory.slice(-1000);
+    for(const key of Object.keys(SUBJECTS)){save.tests[key]=SUBJECTS[key].max;save.attempted[key]=true;}
+    try{localStorage.setItem(HOI_REWARD_KEY,JSON.stringify({bestMode:3}));}catch(e){}
+    persist();updateUI();$('archiveToolMessage').textContent='Усе прокачано та розблоковано.';
+  });
+  $('archiveFullNmt').addEventListener('click',()=>{
+    if(!unlockTools())return;
+    for(const key of Object.keys(SUBJECTS)){save.tests[key]=SUBJECTS[key].max;save.attempted[key]=true;}
+    persist();updateUI();$('archiveToolMessage').textContent='NMT: 200 з усіх предметів.';
+  });
+  $('archiveResetAll').addEventListener('click',()=>{
+    if(!unlockTools()||!confirm('ПОВНІСТЮ скинути всі дані Brukivka, Mini HOI та резервну копію? Це не можна скасувати.'))return;
+    try{for(const key of [SAVE_KEY,BACKUP_KEY,...OLD_KEYS,HOI_REWARD_KEY,'brukivka_minihoi_v1',`${SAVE_KEY}_corrupt`])localStorage.removeItem(key);}catch(error){showSaveNotice('Не вдалося очистити всі збереження. Перевір доступ до сховища.');return;}
+    window.location.reload();
+  });
+  $('secretBack').addEventListener('click',()=>{secretAuthorized=false;showPCProgram('history');});
   $$('[data-pc-home]').forEach((button) => button.addEventListener('click', () => showPCProgram('desktop')));
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !$('pcOverlay').classList.contains('hidden')) closePC();
@@ -1539,6 +1708,7 @@ const MUSIC_COVERS = [
   }
 
   function setCsTargetPosition() {
+    if(csRun)csRun.spawnAt=performance.now();
     // Percentages keep the target within the play area on mobile too.
     const x = randInt(13,87);
     const y = randInt(18,82);
@@ -1548,6 +1718,7 @@ const MUSIC_COVERS = [
     target.style.top = `${y}%`;
     target.style.width = `${size}px`;
     target.style.height = `${size}px`;
+    target.classList.remove('cs-pop');void target.offsetWidth;target.classList.add('cs-pop');
   }
 
   function startCsRun(mode) {
@@ -1573,6 +1744,7 @@ const MUSIC_COVERS = [
     $('csTimer').textContent = (remaining / 1000).toFixed(1);
     $('csTimerFill').style.width = `${(remaining / CS_ROUND_MS) * 100}%`;
     if (remaining <= 0) finishCsRun(false);
+    else if(performance.now()-csRun.spawnAt>=2000)setCsTargetPosition();
   }
 
   function hitCsTarget() {
@@ -1583,6 +1755,7 @@ const MUSIC_COVERS = [
       return;
     }
     csRun.hits++;
+    csRun.spawnAt=performance.now();
     $('csHitCount').textContent = `${csRun.hits} / ${csRun.target}`;
     if (csRun.hits >= csRun.target) {
       finishCsRun(true);
@@ -1601,6 +1774,7 @@ const MUSIC_COVERS = [
       csTickInterval = null;
     }
     $('csGame').classList.add('hidden');
+    if(!silent && run.hits>save.csBestHits){save.csBestHits=run.hits;persist();}
     if (run.mode === 'hardcore' && !silent) {
       let changed = false;
       if (run.hits > save.csHardcoreBest) {
@@ -1614,6 +1788,7 @@ const MUSIC_COVERS = [
       if (changed) persist();
     }
     renderCsRecord();
+    updateUI();
     if (silent) {
       $('csMenu').classList.remove('hidden');
       $('csResult').classList.add('hidden');
@@ -1621,7 +1796,7 @@ const MUSIC_COVERS = [
     }
     $('csResult').classList.remove('hidden');
     $('csResultTitle').textContent = completed ? 'Є влучання! Раунд пройдено' : 'Час вийшов!';
-    $('csResultText').textContent = `${CS_MODES[run.mode].label}: ${run.hits}/${run.target} кульок за ${(elapsed/1000).toFixed(2)} с. ${run.mode === 'hardcore' ? 'Хардкор оновлює рекорд.' : 'Рекорд рахується тільки на хардкорі.'}`;
+    $('csResultText').textContent = `${CS_MODES[run.mode].label}: ${run.hits}/${run.target} кульок за ${(elapsed/1000).toFixed(2)} с. Глобальний бонус ×${csMultiplier().toFixed(2)}. Рекорд хардкору зберігається окремо.`;
   }
 
   $$('[data-cs-mode]').forEach((button) => button.addEventListener('click', () => startCsRun(button.dataset.csMode)));
@@ -1743,6 +1918,7 @@ const MUSIC_COVERS = [
 
   function init() {
     showSaveNotice(saveNotice);
+    syncHoiBonus();
     ensureOrder();
     ensureMarket();
     persist(); // Commit sanitized data and restore a damaged main save from the backup.
@@ -1765,12 +1941,14 @@ const MUSIC_COVERS = [
     }, 1000);
   }
 
+  window.addEventListener('focus',()=>{syncHoiBonus();updateUI();});
   window.addEventListener('resize', () => {
     const newLayout = window.matchMedia('(max-width: 760px)').matches;
     if (newLayout !== mobileLayout) {
       mobileLayout = newLayout;
       randomizeLasers(); // Rebuild only on desktop/mobile breakpoint crossing.
     }
+    buildMaze();
     if (dragging) stopDrag();
     rememberStart();
     resetBrick();
