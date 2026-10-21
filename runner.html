@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111b25">
+  <title>Бруківка · Вуличний забіг</title>
+  <link rel="stylesheet" href="runner.css">
+  <script src="runner.js" defer></script>
+</head>
+<body>
+  <main class="runner-shell">
+    <header><a href="index.html">← До Бруківки</a><span>BRUKIVKA ARCADE</span><button id="pause" type="button" disabled>Пауза</button></header>
+    <div class="heading"><div><small>ТРИ СМУГИ. ОДНА БРУКІВКА.</small><h1>Вуличний забіг</h1></div><span class="tag">НЕСКІНЧЕННИЙ РАННЕР</span></div>
+    <section class="stage" aria-label="Ігрове поле: бруківка перестрибує ями та паркани">
+      <canvas id="road" tabindex="0" width="900" height="680" aria-label="Керування: стрілки ліворуч і праворуч, пробіл — стрибок"></canvas>
+      <div class="hud"><div><small>ДИСТАНЦІЯ</small><b id="distance">0 м</b></div><div><small>РЕКОРД</small><b id="best">0 м</b></div><div><small>ШВИДКІСТЬ</small><b id="speed">1.0×</b></div></div>
+      <div id="overlay" class="overlay"><div class="card"><span class="brick-mark">▰</span><small>BRUKIVKA RUN</small><h2 id="message">Вулиця чекає</h2><p id="description">Змінюй смуги, перестрибуй ями та паркани. З кожним метром забіг стає швидшим.</p><button id="start" type="button">Почати забіг →</button><p class="hint">← → / A D — смуги · Пробіл / ↑ / W — стрибок<br>На телефоні: свайпи або кнопки внизу · P — пауза</p></div></div>
+    </section>
+    <nav class="controls" aria-label="Керування грою"><button id="left" aria-label="Ліворуч" type="button">←</button><button id="jump" type="button">↑ СТРИБОК</button><button id="right" aria-label="Праворуч" type="button">→</button></nav>
+    <footer><span><i class="hole-dot"></i> Яма — перестрибни або зміни смугу</span><span><i class="fence-dot"></i> Паркан — перестрибни або обійди</span></footer>
+    <p id="storageNote" role="status"></p>
+  </main>
+</body>
+</html>
