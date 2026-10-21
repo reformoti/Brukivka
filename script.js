@@ -118,12 +118,12 @@
   // These URLs are fixed game assets, never interpolated from saved user input.
   const WALLPAPERS = [
     {id:0,name:'Стандартна тема',price:0,icon:'◈',image:'',accent:'#7885ff',panel:'#131720',panel2:'#1a1f29',bg:'#090b10',soft:'#242a49',glow:'#7885ff'},
-    {id:1,name:'Зоряна одіссея',price:3_000_000,icon:'✦',image:'https://img.goodfon.ru/original/1366x768/8/a7/art-kosmos-planety.jpg',accent:'#948dff',panel:'#151329',panel2:'#201b40',bg:'#080719',soft:'#3c316d',glow:'#816bff'},
-    {id:2,name:'Цвіт сакури',price:12_000_000,icon:'❀',image:'https://img1.akspic.ru/crops/8/2/1/1/8/181128/181128-vesna-tsvetok-cvetenie_vishni-oblako-pole-3840x2160.jpg',accent:'#ff93ba',panel:'#281723',panel2:'#3a2132',bg:'#190b18',soft:'#563047',glow:'#f770ae'},
-    {id:3,name:'Астральне сяйво',price:60_000_000,icon:'☄',image:'https://images8.alphacoders.com/135/thumb-1920-1354199.jpeg',accent:'#71caff',panel:'#101f31',panel2:'#192f45',bg:'#071523',soft:'#23506a',glow:'#46aaff'},
-    {id:4,name:'Лісова таємниця',price:320_000_000,icon:'♣',image:'https://img2.akspic.ru/crops/1/1/7/7/97711/97711-les-chernyj_les-priroda-derevo-solnechnyj_svet-3840x2160.jpg',accent:'#75dc9c',panel:'#13251e',panel2:'#1b3829',bg:'#081910',soft:'#2b5940',glow:'#49b976'},
-    {id:5,name:'Імператорський сон',price:1_600_000_000,icon:'♛',image:'https://images8.alphacoders.com/131/1315742.jpg',accent:'#ffc06a',panel:'#292014',panel2:'#3c2c1b',bg:'#1a1108',soft:'#604427',glow:'#f29c46'},
-    {id:6,name:'Горизонт безмежжя',price:9_000_000_000,icon:'∞',image:'https://wallpaper.forfun.com/fetch/00/008ff52a2516af485380ffd409e6c834.jpeg',accent:'#5ce4e0',panel:'#102729',panel2:'#1a373a',bg:'#06191c',soft:'#20575b',glow:'#39bcca'}
+    {id:1,name:'Зоряна одіссея',price:3_000_000,icon:'✦',image:'assets/wallpapers/1.webp',accent:'#948dff',panel:'#151329',panel2:'#201b40',bg:'#080719',soft:'#3c316d',glow:'#816bff'},
+    {id:2,name:'Цвіт сакури',price:12_000_000,icon:'❀',image:'assets/wallpapers/2.webp',accent:'#ff93ba',panel:'#281723',panel2:'#3a2132',bg:'#190b18',soft:'#563047',glow:'#f770ae'},
+    {id:3,name:'Астральне сяйво',price:60_000_000,icon:'☄',image:'assets/wallpapers/3.webp',accent:'#71caff',panel:'#101f31',panel2:'#192f45',bg:'#071523',soft:'#23506a',glow:'#46aaff'},
+    {id:4,name:'Лісова таємниця',price:320_000_000,icon:'♣',image:'assets/wallpapers/4.webp',accent:'#75dc9c',panel:'#13251e',panel2:'#1b3829',bg:'#081910',soft:'#2b5940',glow:'#49b976'},
+    {id:5,name:'Імператорський сон',price:1_600_000_000,icon:'♛',image:'assets/wallpapers/5.webp',accent:'#ffc06a',panel:'#292014',panel2:'#3c2c1b',bg:'#1a1108',soft:'#604427',glow:'#f29c46'},
+    {id:6,name:'Горизонт безмежжя',price:9_000_000_000,icon:'∞',image:'assets/wallpapers/6.webp',accent:'#5ce4e0',panel:'#102729',panel2:'#1a373a',bg:'#06191c',soft:'#20575b',glow:'#39bcca'}
   ];
   const POCKET_MAX = 10;
   const ISLANDS = [
@@ -645,8 +645,12 @@ const MUSIC_COVERS = [
       preview.style.background = `linear-gradient(150deg,${wall.soft},${wall.bg})`;
       if (wall.image) {
         const img = document.createElement('img');
-        img.src = wall.image;img.alt = wall.name;img.loading = 'lazy';
-        img.addEventListener('error',()=>img.remove());
+        img.src = wall.image;img.alt = wall.name;img.loading = 'lazy';img.decoding = 'async';
+        img.addEventListener('error',()=>{
+          preview.classList.add('wallpaper-image-error');
+          const warning=document.createElement('small');warning.className='wallpaper-image-warning';
+          warning.textContent='Зображення не завантажилося. Онови сторінку.';preview.append(warning);
+        },{once:true});
         preview.appendChild(img);
       }
       const icon = document.createElement('span'); icon.className='wallpaper-symbol';icon.textContent=wall.icon;
