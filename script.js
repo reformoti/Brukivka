@@ -536,15 +536,15 @@ const MUSIC_COVERS = [
     if (type === 'brick') {
       levelKey = 'brickTier'; max = brickTiers.length-1; tiers = brickTiers; hintId = 'brickUpgradeHint'; successText = 'Бруківку прокачано.';
     } else if (type === 'phone') {
-      levelKey = 'phoneTier'; max = phoneTiers.length-1; tiers = phoneTiers; hintId = 'phoneUpgradeHint'; successText = 'Телефон Коса оновлено.';
+      levelKey = 'phoneTier'; max = phoneTiers.length-1; tiers = phoneTiers; hintId = 'phoneUpgradeHint'; successText = 'Телефон оновлено.';
     } else {
-      levelKey = 'strength'; max = 5; tiers = strengthTiers; hintId = 'strengthUpgradeHint'; successText = 'Сила Коса зросла.';
+      levelKey = 'strength'; max = 5; tiers = strengthTiers; hintId = 'strengthUpgradeHint'; successText = 'Сила зросла.';
     }
     const level = save[levelKey];
     if (level >= max) return;
     const cost = tiers[level].cost;
     if (save.balance < cost) {
-      $(hintId).textContent = 'Кос, не вистачає UAH.';
+      $(hintId).textContent = 'Не вистачає UAH.';
       return;
     }
     save.balance -= cost;
@@ -742,7 +742,7 @@ const MUSIC_COVERS = [
   }
 
   function showTaunt() {
-    $('taunt').innerHTML = `${pick(taunts)}<small>−500 UAH · КОС</small>`;
+    $('taunt').innerHTML = `${pick(taunts)}<small>−500 UAH</small>`;
     $('taunt').classList.remove('hidden');
     setTimeout(() => $('taunt').classList.add('hidden'), 800);
   }
@@ -783,12 +783,12 @@ const MUSIC_COVERS = [
     persist();
     updateUI();
     if (orderBonus) {
-      setStatus(`Карман Коса: +${money(reward)} UAH · поставка reformoti виконана +${money(orderBonus)} UAH`, 'good');
+      setStatus(`Карман: +${money(reward)} UAH · поставка reformoti виконана +${money(orderBonus)} UAH`, 'good');
     } else {
-      setStatus(`Карман Коса: +${money(reward)} UAH`, 'good');
+      setStatus(`Карман: +${money(reward)} UAH`, 'good');
     }
     randomizeLasers();
-    setTimeout(() => { resetBrick(); setStatus('Кос, новий маршрут готовий →'); resetting = false; }, 380);
+    setTimeout(() => { resetBrick(); setStatus('Новий маршрут готовий →'); resetting = false; }, 380);
   }
 
   function checkGameCollision() {
@@ -1190,7 +1190,7 @@ const MUSIC_COVERS = [
   let legitRoundItems = [];
   function startLegitRound() {
     legitLocked = false;
-    $('legitMessage').textContent = 'Кос, знайди підробку. Дивись на напис і деталі дизайну.';
+    $('legitMessage').textContent = 'Знайди підробку. Дивись на напис і деталі дизайну.';
     $('nextLegitRound').classList.add('hidden');
     legitRoundItems = shuffle([makeClothing('fake'), makeClothing('legit'), makeClothing('plain')]);
     const container = $('legitItems');
@@ -1261,7 +1261,7 @@ const MUSIC_COVERS = [
     messages.innerHTML = '';
     const intro = document.createElement('div');
     intro.className = 'message in';
-    intro.innerHTML = `Кос, є тема по Бруківці.<small>reformoti</small>`;
+    intro.innerHTML = `Є тема по Бруківці.<small>reformoti</small>`;
     messages.appendChild(intro);
 
     const orderMessage = document.createElement('div');
@@ -1273,7 +1273,7 @@ const MUSIC_COVERS = [
     const msg = document.createElement('div');
     msg.className = 'message in';
     if (order.completed) msg.innerHTML = `Все чітко. Поставка закрита, бонус уже на балансі.<small>reformoti</small>`;
-    else if (order.active) msg.innerHTML = `Чекаю. Занось Бруківку в Карман Коса — прогрес піде автоматично.<small>reformoti</small>`;
+    else if (order.active) msg.innerHTML = `Чекаю. Занось Бруківку в Карман — прогрес піде автоматично.<small>reformoti</small>`;
     else msg.innerHTML = `Забереш замовлення? За виконання окремо ${money(order.reward)} UAH.<small>reformoti</small>`;
     messages.appendChild(msg);
 
@@ -1405,7 +1405,7 @@ const MUSIC_COVERS = [
   function renderMarket() {
     ensureMarket();
     updateMarketRefreshButton();
-    renderOfferList('channelKosOffers', save.market.kos);
+    renderOfferList('channelOutletOffers', save.market.kos);
     renderOfferList('channelStreetOffers', save.market.street);
     $$('[data-check]').forEach((button) => button.addEventListener('click', () => checkOffer(button.dataset.check)));
     $$('[data-buy]').forEach((button) => button.addEventListener('click', () => buyOffer(button.dataset.buy)));
@@ -1494,7 +1494,7 @@ const MUSIC_COVERS = [
   function renderPcShop() {
     $('pcShopBalance').textContent = `${money(save.balance)} UAH`;
     $('pcShopBalance').classList.toggle('debt', save.balance < 0);
-    $('pcOwnership').textContent = save.pcOwned ? 'ПК Коса · встановлено ✓' : 'ПК не придбано';
+    $('pcOwnership').textContent = save.pcOwned ? 'ПК · встановлено ✓' : 'ПК не придбано';
     $('pcBuyButton').classList.toggle('hidden', save.pcOwned);
     $('pcBuyButton').disabled = save.balance < PC_PRICE;
     $('pcBuyButton').textContent = `Купити ПК — ${money(PC_PRICE)} UAH`;
@@ -1529,7 +1529,7 @@ const MUSIC_COVERS = [
     save.pcOwned = true;
     persist();
     updateUI();
-    $('pcShopMessage').textContent = 'ПК придбано! Кнопка «ПК Коса» вже доступна.';
+    $('pcShopMessage').textContent = 'ПК придбано! Кнопка «ПК» вже доступна.';
   }
 
   function upgradePC(part) {

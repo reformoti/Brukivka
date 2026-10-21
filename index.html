@@ -4,19 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#090b10" />
-  <title>Бруківка Коса — v4</title>
+  <title>Бруківка — v4</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="page-shell">
     <header class="main-header">
       <div>
-        <div class="eyebrow">KOS BRUKIVKA</div>
-        <h1>Бруківка Коса</h1>
+        <div class="eyebrow">BRUKIVKA</div>
+        <h1>Бруківка</h1>
       </div>
       <div class="main-actions">
-        <button id="pcOpenButton" class="pc-open-button hidden" type="button">💻 ПК Коса</button>
-        <button id="phoneButton" class="phone-button" type="button">📱 Телефон Коса</button>
+        <button id="pcOpenButton" class="pc-open-button hidden" type="button">💻 ПК</button>
+        <button id="phoneButton" class="phone-button" type="button">📱 Телефон</button>
       </div>
     </header>
 
@@ -26,18 +26,18 @@
     <section class="game-panel">
       <div class="game-title-row">
         <div>
-          <h2>Достав Бруківку в Карман Коса</h2>
+          <h2>Достав Бруківку в Карман</h2>
           <p>Проведи партію через короткі випадкові лазери.</p>
         </div>
       </div>
 
       <div id="gameBoard" class="game-board" aria-label="Ігрове поле">
         <div class="grid-overlay"></div>
-        <div class="start-zone"><span>СКЛАД КОСА</span></div>
+        <div class="start-zone"><span>СКЛАД</span></div>
 
         <div id="pocket" class="pocket">
           <div class="pocket-slot"></div>
-          <span>КАРМАН КОСА</span>
+          <span>КАРМАН</span>
         </div>
 
         <div class="laser"></div>
@@ -53,13 +53,13 @@
         </div>
 
         <div id="taunt" class="taunt hidden"></div>
-        <div id="statusMessage" class="status-message">Кос, тягни Бруківку →</div>
+        <div id="statusMessage" class="status-message">Тягни Бруківку →</div>
       </div>
     </section>
   </main>
 
   <div id="phoneOverlay" class="phone-overlay hidden">
-    <div id="phoneShell" class="phone-shell" role="dialog" aria-modal="true" aria-label="Телефон Коса">
+    <div id="phoneShell" class="phone-shell" role="dialog" aria-modal="true" aria-label="Телефон">
       <div class="phone-statusbar">
         <span id="phoneTime">19:49</span>
         <div class="camera-dot"></div>
@@ -67,7 +67,7 @@
       </div>
 
       <section id="phoneHome" class="phone-screen home-screen">
-        <div class="home-heading">Телефон Коса</div>
+        <div class="home-heading">Телефон</div>
         <div class="home-widget">
           <span id="homePhoneModel">iPhone 3G</span>
           <strong id="homeAverageNmt">—</strong>
@@ -99,7 +99,7 @@
       <section id="pcShopScreen" class="phone-screen pc-shop-screen hidden">
         <div class="screen-header">
           <button class="icon-button" data-home type="button">‹</button>
-          <span>PC Market Коса</span><span class="header-dot">●</span>
+          <span>PC Market</span><span class="header-dot">●</span>
         </div>
         <div class="pc-shop-hero">
           <span class="pc-shop-monitor">▣</span>
@@ -109,7 +109,7 @@
         <div class="pc-wallet">Баланс: <strong id="pcShopBalance">0 UAH</strong></div>
         <div class="upgrade-card">
           <div class="upgrade-title"><div><small>КОМПЛЕКТ ПК</small><h3 id="pcOwnership">ПК не придбано</h3></div><div class="mini-phone">💻</div></div>
-          <p class="pc-shop-desc">ПК коштує <b id="pcPriceLabel">12 500</b> UAH. Після покупки з'явиться кнопка «ПК Коса».</p>
+          <p class="pc-shop-desc">ПК коштує <b id="pcPriceLabel">12 500</b> UAH. Після покупки з'явиться кнопка «ПК».</p>
           <button id="pcBuyButton" type="button" class="upgrade-button">Купити ПК</button>
           <button id="pcShopOpen" type="button" class="pc-store-open hidden">Відкрити ПК ↗</button>
         </div>
@@ -143,7 +143,7 @@
       <section id="bankScreen" class="phone-screen bank-screen hidden">
         <div class="screen-header">
           <button class="icon-button" data-home type="button">‹</button>
-          <span>BrukBank Коса</span>
+          <span>BrukBank</span>
           <span class="header-dot">●</span>
         </div>
 
@@ -167,7 +167,7 @@
 
         <div class="upgrade-card">
           <div class="upgrade-title">
-            <div><small>ТЕЛЕФОН КОСА</small><h3 id="bankPhoneName">iPhone 3G</h3></div>
+            <div><small>ТЕЛЕФОН</small><h3 id="bankPhoneName">iPhone 3G</h3></div>
             <div class="mini-phone">▣</div>
           </div>
           <div class="upgrade-row"><span>Рівень</span><strong><span id="phoneTierText">0</span>/<span id="phoneMaxLabel">25</span></strong></div>
@@ -178,7 +178,7 @@
 
         <div class="upgrade-card">
           <div class="upgrade-title">
-            <div><small>СИЛА КОСА</small><h3>Більше Бруківки за раз</h3></div>
+            <div><small>СИЛА</small><h3>Більше Бруківки за раз</h3></div>
             <div class="mini-strength">💪</div>
           </div>
           <div class="upgrade-row"><span>Рівень</span><strong><span id="strengthTierText">0</span>/5</strong></div>
@@ -202,7 +202,7 @@
       <section id="brukivkaScreen" class="phone-screen info-screen hidden">
         <div class="screen-header">
           <button class="icon-button" data-home type="button">‹</button>
-          <span>Бруківка Коса</span>
+          <span>Бруківка</span>
           <span class="header-dot brick-dot">●</span>
         </div>
 
@@ -250,7 +250,7 @@
       <section id="znoScreen" class="phone-screen zno-screen hidden">
         <div class="screen-header">
           <button class="icon-button" data-home type="button">‹</button>
-          <span>ЗНО Хаб Коса</span>
+          <span>ЗНО Хаб</span>
           <span class="header-dot zno-dot">●</span>
         </div>
 
@@ -286,7 +286,7 @@
       <section id="quizResultScreen" class="phone-screen quiz-result-screen hidden">
         <div class="screen-header">
           <button id="resultBack" class="icon-button" type="button">‹</button>
-          <span>Результат Коса</span>
+          <span>Результат</span>
           <span class="header-dot zno-dot">●</span>
         </div>
         <div class="result-card">
@@ -303,7 +303,7 @@
       <section id="legitScreen" class="phone-screen legit-screen hidden">
         <div class="screen-header">
           <button class="icon-button" data-home type="button">‹</button>
-          <span>Legit Check Коса</span>
+          <span>Legit Check</span>
           <span class="header-dot legit-dot">●</span>
         </div>
         <div class="legit-hero">
@@ -312,7 +312,7 @@
           <p>Серед трьох речей є одна підробка з неправильним дизайном. Звичайна річ без бренду не вважається підробкою.</p>
         </div>
         <div id="legitItems" class="legit-items"></div>
-        <div id="legitMessage" class="legit-message">Кос, дивись на напис і деталі.</div>
+        <div id="legitMessage" class="legit-message">Дивись на напис і деталі.</div>
         <div class="legit-stats">
           <div><span>Очки</span><strong id="legitScore">0</strong></div>
           <div><span>Серія</span><strong id="legitStreak">0</strong></div>
@@ -324,7 +324,7 @@
       <section id="telegramScreen" class="phone-screen telegram-screen hidden">
         <div class="screen-header telegram-header">
           <button class="icon-button" data-home type="button">‹</button>
-          <span>Telegram Коса</span>
+          <span>Telegram</span>
           <span class="telegram-plane">➤</span>
         </div>
 
@@ -345,8 +345,8 @@
 
         <div id="tgMarketPanel" class="tg-panel hidden">
           <div class="channel-card">
-            <div class="channel-title"><span class="avatar channel-a">K</span><div><strong>KOS Outlet</strong><small>дешеві дропи та розпродажі</small></div></div>
-            <div id="channelKosOffers" class="offers-list"></div>
+            <div class="channel-title"><span class="avatar channel-a">B</span><div><strong>Brukivka Outlet</strong><small>дешеві дропи та розпродажі</small></div></div>
+            <div id="channelOutletOffers" class="offers-list"></div>
           </div>
           <div class="channel-card">
             <div class="channel-title"><span class="avatar channel-b">S</span><div><strong>Street Drop</strong><small>вуличний одяг та перепродаж</small></div></div>
@@ -357,7 +357,7 @@
 
         <div id="tgInventoryPanel" class="tg-panel hidden">
           <div class="inventory-summary">
-            <span>Гардероб Коса</span>
+            <span>Гардероб</span>
             <strong><span id="inventoryCount">0</span> речей</strong>
             <small>Купуй дешевше — продавай дорожче. Паль зазвичай продається зі збитком.</small>
           </div>
@@ -380,17 +380,17 @@
     </div>
   </div>
 
-  <div id="pcOverlay" class="pc-overlay hidden" role="dialog" aria-modal="true" aria-label="ПК Коса">
+  <div id="pcOverlay" class="pc-overlay hidden" role="dialog" aria-modal="true" aria-label="ПК">
     <div id="pcWindow" class="pc-window monitor-off">
       <header class="pc-topbar">
-        <div class="pc-brand"><span class="pc-brand-mark">⌘</span><div><strong>KOS OS</strong><small id="pcSpecsLabel">Gaming PC</small></div></div>
+        <div class="pc-brand"><span class="pc-brand-mark">⌘</span><div><strong>BRUKIVKA OS</strong><small id="pcSpecsLabel">Gaming PC</small></div></div>
         <span class="pc-top-clock" id="pcClock">00:00</span>
         <button id="pcCloseButton" class="pc-close-button" type="button" aria-label="Закрити ПК">✕</button>
       </header>
       <main class="pc-desktop">
         <div id="monitorBlackScreen" class="monitor-black" aria-label="Монітор вимкнений"></div>
         <section id="pcDesktop" class="pc-desktop-home">
-          <div class="pc-desktop-title"><small>BRUKIVKA SYSTEM</small><h2>Вітаємо, Кос.</h2><p>Обери програму</p></div>
+          <div class="pc-desktop-title"><small>BRUKIVKA SYSTEM</small><h2>Вітаємо!</h2><p>Обери програму</p></div>
           <div class="pc-apps">
             <button id="steamApp" class="pc-app" type="button"><span class="pc-app-icon steam-tile">◉</span><strong>Steam</strong><small>Ігри</small></button>
             <button id="soundcloudApp" class="pc-app" type="button"><span class="pc-app-icon soundcloud-tile">☁</span><strong>SoundCloud</strong><small>Музика</small></button>
@@ -438,7 +438,7 @@
         </section>
         <section id="soundcloudPanel" class="pc-program soundcloud-program hidden">
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>SOUNDCLOUD</strong><span class="sc-badge">MIX</span></div>
-          <div class="sc-banner"><div class="sc-banner-glyph">☁</div><div><small>KOS PLAYLIST · 5 TRACKS</small><h2>Музика Коса</h2><p>Треки з папки <code>music/</code> у GitHub</p></div></div>
+          <div class="sc-banner"><div class="sc-banner-glyph">☁</div><div><small>BRUKIVKA PLAYLIST · 5 TRACKS</small><h2>Музика</h2><p>Треки з папки <code>music/</code> у GitHub</p></div></div>
           <div id="scTracks" class="sc-tracks"></div>
           <div class="sc-player"><div class="sc-playing"><div id="scCurrentArt" class="sc-art">♫</div><div class="sc-now"><small>ЗАРАЗ ГРАЄ</small><strong id="scCurrentTitle">Тікі Тікі</strong><span id="scStatus">Готово до відтворення</span></div></div>
             <div class="sc-progress-bar"><span id="scElapsed">0:00</span><input id="scSeek" aria-label="Позиція треку" type="range" min="0" max="100" value="0" step="0.1" /><span id="scDuration">0:00</span></div>
