@@ -75,7 +75,6 @@
         </div>
 
         <div class="app-grid">
-          <a href="runner.html" class="app-icon" style="text-decoration:none;color:inherit"><span class="app-square bruk-icon">↟</span><small>Вуличний забіг</small></a>
           <button id="bankApp" class="app-icon" type="button">
             <span class="app-square bank-icon">₴</span><small>BrukBank</small>
           </button>
@@ -94,6 +93,32 @@
           <button id="pcShopApp" class="app-icon" type="button">
             <span class="app-square pc-shop-icon">⌘</span><small>PC Market</small>
           </button>
+          <button id="wallpaperApp" class="app-icon" type="button">
+            <span class="app-square wallpaper-icon">✦</span><small>Шпалери</small>
+          </button>
+          <a href="game2.html" id="nextGameApp" class="app-icon phone-game-link">
+            <span class="app-square nextgame-tile">🎮</span><small>Друга гра</small>
+          </a>
+        </div>
+      </section>
+
+      <section id="wallpaperScreen" class="phone-screen wallpaper-screen hidden">
+        <div class="screen-header">
+          <button class="icon-button" data-home type="button">‹</button>
+          <span>Магазин шпалер</span><span class="header-dot">✦</span>
+        </div>
+        <div class="wallpaper-shop-head">
+          <small>ТВІЙ СТИЛЬ</small>
+          <h2>Шпалери та теми</h2>
+          <p>Обери фон для гри й телефону. Кожні шпалери змінюють кольори всього інтерфейсу. Після покупки можна перемикати безкоштовно.</p>
+          <strong id="wallpaperBalance">0 UAH</strong>
+        </div>
+        <div id="wallpaperGrid" class="wallpaper-grid"></div>
+        <p id="wallpaperMessage" class="wallpaper-message" role="status" aria-live="polite"></p>
+        <div class="wallpaper-utilities">
+          <strong>Тестування прогресу</strong>
+          <p>Повне скидання видаляє гроші, прокачку, НМТ, одяг, шпалери, ПК, збереження Mini HOI та резервні копії. Повернути дані не вийде.</p>
+          <button id="phoneResetProgress" type="button">↻ Повністю скинути прогрес</button>
         </div>
       </section>
 
@@ -395,7 +420,6 @@
           <div class="pc-apps">
             <button id="steamApp" class="pc-app" type="button"><span class="pc-app-icon steam-tile">◉</span><strong>Steam</strong><small>Ігри</small></button>
             <button id="soundcloudApp" class="pc-app" type="button"><span class="pc-app-icon soundcloud-tile">☁</span><strong>SoundCloud</strong><small>Музика</small></button>
-            <a href="game2.html" id="nextGameApp" class="pc-app pc-app-link"><span class="pc-app-icon nextgame-tile">🎮</span><strong>Друга гра</strong><small>Окрема гра ↗</small></a>
           </div>
           <div class="pc-desktop-foot">Комп'ютер придбано ✓ <span id="pcDesktopPower"></span> <b id="pcMonitorBadge">—</b></div>
         </section>
@@ -404,7 +428,8 @@
           <div id="steamLibrary" class="steam-library">
             <h2>Бібліотека ігор</h2><p>Обери гру, потім її складність.</p>
             <div class="steam-games">
-              <a href="runner.html" class="steam-game-tile" style="text-decoration:none;color:inherit"><span class="steam-game-art steam-hoi-art">▰ ↟</span><strong>БРУКІВКА · ВУЛИЧНИЙ ЗАБІГ</strong><small>3 смуги · стрибки через ями та паркани</small></a>
+              <a href="runner.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-hoi-art">▰ ↟</span><strong>БРУКІВКА · ВУЛИЧНИЙ ЗАБІГ</strong><small>3 смуги · ями та паркани</small></a>
+              <a href="merge.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-merge-art">2048</span><strong>БРУКІВКА · 2048</strong><small>Об'єднуй бруківку · збери плитку 2048</small></a>
               <button id="steamSelectCs" class="steam-game-tile" type="button"><span class="steam-game-art steam-cs-art">CS<b>2</b></span><strong>КС2 · AIM TRAINER</strong><small>30 секунд · цілі зникають через 2 с</small></button>
               <button id="steamSelectHoi" class="steam-game-tile" type="button"><span class="steam-game-art steam-hoi-art">🌍</span><strong>IRON ATLAS · Mini HOI</strong><small>Стратегія · країни та дипломатія</small></button>
             </div>
@@ -458,6 +483,7 @@
             <article><time>19.10.2026 · близько 14:00</time><h3>Стабільність прогресу</h3><p>Перевірка збережень, резервна копія, зміни Telegram-ринку.</p></article>
             <article><time>19.10.2026 · близько 20:30</time><h3>IRON ATLAS та новий світ</h3><p>Mini HOI з трьома режимами, монітори, острови, карман, нові рівні, Ждун, перехід між треками.</p></article>
             <article><time>19.10.2026 · близько 21:00</time><h3>Бонуси та ФОП</h3><p>Серії Legit Check, телефонні множники, нагороди КС2 та Iron Atlas, секундна оренда островів, оновлений лабіринт і Steam.</p></article>
+            <article><time>20.10.2026 · близько 21:30</time><h3>Магазин шпалер</h3><p>Шість платних фонів, тематичні кольори гри та телефону, перехід до другої гри з телефону, повне скидання і тестове поповнення балансу.</p></article>
           </div>
           <div class="history-locks"><button data-secret="captain" type="button">♛ Архів I</button><button data-secret="navigator" type="button">⚓ Архів II</button><button data-secret="team" type="button">✦ Архів III</button></div>
         </section>
@@ -465,7 +491,7 @@
           <div class="pc-program-header"><button id="secretBack" class="pc-back-button" type="button">← Назад до журналу</button><strong>ЗАКРИТИЙ АРХІВ</strong></div>
           <form id="secretForm" class="secret-gate"><div id="secretGate"><h2>Потрібен код доступу</h2><label for="secretInput">Код</label><input id="secretInput" type="password" autocomplete="off" required maxlength="80"><button class="cs-primary" type="submit">Відкрити</button><small id="secretError" role="status"></small></div></form>
           <div id="secretCredits" class="secret-credits hidden"><div class="secret-crown">✦ ✧ ✦</div><h1 id="secretName"></h1><h2 id="secretTitle"></h2><p id="secretBio"></p><span>LEGENDS NEVER LOG OFF</span>
-            <div id="archiveTools" class="archive-tools hidden"><h3>ПАНЕЛЬ РОЗРОБНИКА</h3><div class="archive-actions"><button id="archiveMaxAll" type="button">✦ Максимум усього</button><button id="archiveFullNmt" type="button">✦ Повний NMT</button><button id="archiveResetAll" type="button" class="archive-danger">↻ Повне скидання</button></div><p id="archiveToolMessage" role="status"></p></div>
+            <div id="archiveTools" class="archive-tools hidden"><h3>ПАНЕЛЬ РОЗРОБНИКА</h3><div class="archive-actions"><button id="archiveMaxAll" type="button">✦ Максимум усього</button><button id="archiveFullNmt" type="button">✦ Повний NMT</button><button id="archiveResetAll" type="button" class="archive-danger">↻ Повне скидання</button><button id="archiveAdd100M" type="button">+100 млн грн</button></div><p id="archiveToolMessage" role="status"></p></div>
           </div>
         </section>
       </main>
@@ -473,6 +499,10 @@
     </div>
   </div>
 
+  <dialog id="steamGameHost" class="steam-game-host" aria-label="Гра Steam">
+    <header class="steam-game-bar"><button id="steamGameBack" type="button">← До Steam</button><strong id="steamGameTitle">STEAM</strong><div><button id="steamGameMusic" type="button" aria-label="Відтворити або призупинити музику">▶ Музика</button><button id="steamGameMute" type="button" aria-label="Вимкнути звук">🔊</button></div></header>
+    <iframe id="steamGameFrame" title="Гра Steam" allow="autoplay"></iframe>
+  </dialog>
   <script src="script.js"></script>
 </body>
 </html>

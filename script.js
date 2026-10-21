@@ -115,6 +115,16 @@
   const MARKET_REFRESH_COOLDOWN_MS = 30 * 1000;
   const ITEM_SALE_DELAY_MS = 60 * 1000;
   const MAX_BALANCE = Number.MAX_SAFE_INTEGER;
+  // These URLs are fixed game assets, never interpolated from saved user input.
+  const WALLPAPERS = [
+    {id:0,name:'Стандартна тема',price:0,icon:'◈',image:'',accent:'#7885ff',panel:'#131720',panel2:'#1a1f29',bg:'#090b10',soft:'#242a49',glow:'#7885ff'},
+    {id:1,name:'Зоряна одіссея',price:3_000_000,icon:'✦',image:'https://img.goodfon.ru/original/1366x768/8/a7/art-kosmos-planety.jpg',accent:'#948dff',panel:'#151329',panel2:'#201b40',bg:'#080719',soft:'#3c316d',glow:'#816bff'},
+    {id:2,name:'Цвіт сакури',price:12_000_000,icon:'❀',image:'https://img1.akspic.ru/crops/8/2/1/1/8/181128/181128-vesna-tsvetok-cvetenie_vishni-oblako-pole-3840x2160.jpg',accent:'#ff93ba',panel:'#281723',panel2:'#3a2132',bg:'#190b18',soft:'#563047',glow:'#f770ae'},
+    {id:3,name:'Астральне сяйво',price:60_000_000,icon:'☄',image:'https://images8.alphacoders.com/135/thumb-1920-1354199.jpeg',accent:'#71caff',panel:'#101f31',panel2:'#192f45',bg:'#071523',soft:'#23506a',glow:'#46aaff'},
+    {id:4,name:'Лісова таємниця',price:320_000_000,icon:'♣',image:'https://img2.akspic.ru/crops/1/1/7/7/97711/97711-les-chernyj_les-priroda-derevo-solnechnyj_svet-3840x2160.jpg',accent:'#75dc9c',panel:'#13251e',panel2:'#1b3829',bg:'#081910',soft:'#2b5940',glow:'#49b976'},
+    {id:5,name:'Імператорський сон',price:1_600_000_000,icon:'♛',image:'https://images8.alphacoders.com/131/1315742.jpg',accent:'#ffc06a',panel:'#292014',panel2:'#3c2c1b',bg:'#1a1108',soft:'#604427',glow:'#f29c46'},
+    {id:6,name:'Горизонт безмежжя',price:9_000_000_000,icon:'∞',image:'https://wallpaper.forfun.com/fetch/00/008ff52a2516af485380ffd409e6c834.jpeg',accent:'#5ce4e0',panel:'#102729',panel2:'#1a373a',bg:'#06191c',soft:'#20575b',glow:'#39bcca'}
+  ];
   const POCKET_MAX = 10;
   const ISLANDS = [
     {id:'palm',name:'Пальмовий риф',price:2500000,income:1600,emoji:'🏝️'},
@@ -210,7 +220,8 @@ const MUSIC_COVERS = [
       audio:{track:0,volume:70,muted:false,shuffle:false,repeat:false},
       monitorTier:0,pocketTier:0,islands:{},lastIslandAt:Date.now(),totalEarned:0,
       waiterStartedAt:0,waiterPenalty:false,waiterRecover:0,
-      csBestHits:0,hoiBestMode:0,fopBalance:0,marketBand:0
+      csBestHits:0,hoiBestMode:0,fopBalance:0,marketBand:0,
+      wallpapersOwned:[],activeWallpaper:0
 
     };
   }
@@ -338,6 +349,11 @@ const MUSIC_COVERS = [
     result.fopBalance = safeInt(source.fopBalance,0,0,MAX_BALANCE);
     // On upgrade, maintain existing offers until the next market refresh; band is rebuilt in ensureMarket.
     result.marketBand = safeInt(source.marketBand, 0, 0, 6);
+    // Only recognized wallpaper IDs can be owned, and the selected one must be owned.
+    const owned = Array.isArray(source.wallpapersOwned) ? source.wallpapersOwned : [];
+    result.wallpapersOwned = [...new Set(owned.filter((id) => Number.isInteger(id) && id >= 1 && id < WALLPAPERS.length))];
+    const active = safeInt(source.activeWallpaper, 0, 0, WALLPAPERS.length - 1);
+    result.activeWallpaper = active === 0 || result.wallpapersOwned.includes(active) ? active : 0;
 
     return result;
   }
@@ -598,21 +614,105 @@ const MUSIC_COVERS = [
   $('phoneUpgradeButton').addEventListener('click', () => buyUpgrade('phone'));
   $('strengthUpgradeButton').addEventListener('click', () => buyUpgrade('strength'));
 
+  // Wallpaper shop: persistent purchases plus immediate previews throughout the game.
+  function applyWallpaperTheme() {
+    const theme = WALLPAPERS[save.activeWallpaper] || WALLPAPERS[0];
+    const root = document.documentElement;
+    root.dataset.wallpaper = String(theme.id);
+    for (const [key, value] of Object.entries({
+      '--bg':theme.bg,'--panel':theme.panel,'--panel2':theme.panel2,
+      '--accent':theme.accent,'--theme-soft':theme.soft,'--theme-glow':theme.glow,
+      '--theme-accent':theme.accent,'--theme-panel':theme.panel,'--theme-panel2':theme.panel2,
+      '--wallpaper-image':theme.image ? `url("${theme.image}")` : 'none'
+    })) root.style.setProperty(key, value);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = theme.bg;
+  }
+
+  function renderWallpaperShop(message = '') {
+    $('wallpaperBalance').textContent = `${money(save.balance)} UAH`;
+    $('wallpaperMessage').textContent = message;
+    const grid = $('wallpaperGrid');
+    grid.replaceChildren();
+    for (const wall of WALLPAPERS) {
+      const owned = wall.id === 0 || save.wallpapersOwned.includes(wall.id);
+      const selected = save.activeWallpaper === wall.id;
+      const tile = document.createElement('article');
+      tile.className = `wallpaper-card${selected?' is-selected':''}`;
+      tile.style.setProperty('--wallpaper-tile-accent', wall.accent);
+      const preview = document.createElement('div');
+      preview.className = 'wallpaper-thumb';
+      preview.style.background = `linear-gradient(150deg,${wall.soft},${wall.bg})`;
+      if (wall.image) {
+        const img = document.createElement('img');
+        img.src = wall.image;img.alt = wall.name;img.loading = 'lazy';
+        img.addEventListener('error',()=>img.remove());
+        preview.appendChild(img);
+      }
+      const icon = document.createElement('span'); icon.className='wallpaper-symbol';icon.textContent=wall.icon;
+      preview.appendChild(icon);
+      const info = document.createElement('div');info.className='wallpaper-info';
+      const heading=document.createElement('strong');heading.textContent=wall.name;
+      const cost=document.createElement('small');
+      cost.textContent = wall.id===0?'Безкоштовно':owned?'Придбано':`${money(wall.price)} UAH`;
+      info.append(heading,cost);
+      const button=document.createElement('button');button.type='button';
+      button.textContent=selected?'Встановлено ✓':owned?'Застосувати':`Купити`;
+      button.disabled=selected || (!owned && save.balance < wall.price);
+      button.addEventListener('click',()=>{
+        if (save.activeWallpaper===wall.id)return;
+        if (!owned){
+          if (save.balance < wall.price)return;
+          save.balance -= wall.price;
+          save.wallpapersOwned.push(wall.id);
+        }
+        save.activeWallpaper=wall.id;
+        applyWallpaperTheme();persist();updateUI();
+        renderWallpaperShop(owned?'Тему встановлено.':'Шпалери придбано та встановлено!');
+      });
+      tile.append(preview,info,button);grid.appendChild(tile);
+    }
+  }
+
+  // Delete all recognized Brukivka storage, including historical backups and Mini HOI campaigns.
+  function completelyResetProgress() {
+    if (!window.confirm('ВИДАЛИТИ ВСІ збереження гри, НМТ, ПК, шпалери, гроші та Mini HOI?'))return;
+    if (!window.confirm('Останнє підтвердження: видалений прогрес неможливо відновити. Скинути все?'))return;
+    try {
+      for (const store of [localStorage,sessionStorage]) {
+        const keys = [];
+        for (let i = 0; i < store.length; i++) {
+          const key = store.key(i);
+          if (key && /^brukivka/i.test(key)) keys.push(key);
+        }
+        for (const key of keys) store.removeItem(key);
+      }
+    } catch (error) {
+      showSaveNotice('Не вдалося видалити всі збереження. Перевір доступ браузера до сховища.');
+      return;
+    }
+    window.location.reload();
+  }
+  $('phoneResetProgress').addEventListener('click', completelyResetProgress);
+  $('wallpaperApp').addEventListener('click',()=>showScreen('wallpaperScreen'));
+
   // Phone navigation.
   const screenIds = [
     'phoneHome','bankScreen','brukivkaScreen','znoScreen','quizScreen','quizResultScreen',
-    'legitScreen','telegramScreen','reformotiChatScreen','pcShopScreen'
+    'legitScreen','telegramScreen','reformotiChatScreen','pcShopScreen','wallpaperScreen'
   ];
   function showScreen(id) {
     screenIds.forEach((screenId) => $(screenId).classList.add('hidden'));
     $(id).classList.remove('hidden');
     updateUI();
+    if (id === 'wallpaperScreen') renderWallpaperShop();
     if (id === 'telegramScreen') renderTelegram();
     if (id === 'reformotiChatScreen') renderReformotiChat();
   }
 
   function openPhone() {
     $('phoneOverlay').classList.remove('hidden');
+    applyWallpaperTheme();
     updatePhoneTime();
     showScreen('phoneHome');
   }
@@ -1668,22 +1768,29 @@ const MUSIC_COVERS = [
     save.inventory=save.inventory.slice(-1000);
     for(const key of Object.keys(SUBJECTS)){save.tests[key]=SUBJECTS[key].max;save.attempted[key]=true;}
     try{localStorage.setItem(HOI_REWARD_KEY,JSON.stringify({bestMode:3}));}catch(e){}
-    persist();updateUI();$('archiveToolMessage').textContent='Усе прокачано та розблоковано.';
+    save.wallpapersOwned=WALLPAPERS.slice(1).map(w=>w.id);
+    persist();updateUI();$('archiveToolMessage').textContent='Усе прокачано та розблоковано, усі шпалери придбано.';
   });
   $('archiveFullNmt').addEventListener('click',()=>{
     if(!unlockTools())return;
     for(const key of Object.keys(SUBJECTS)){save.tests[key]=SUBJECTS[key].max;save.attempted[key]=true;}
     persist();updateUI();$('archiveToolMessage').textContent='NMT: 200 з усіх предметів.';
   });
+  $('archiveAdd100M').addEventListener('click',()=>{
+    if(!unlockTools())return;
+    save.balance=clamp(save.balance+100_000_000,-MAX_BALANCE,MAX_BALANCE);
+    save.totalEarned=clamp(save.totalEarned+100_000_000,0,MAX_BALANCE);
+    persist();updateUI();
+    $('archiveToolMessage').textContent='+100 000 000 UAH на балансі. Загальний заробіток також оновлено.';
+  });
   $('archiveResetAll').addEventListener('click',()=>{
-    if(!unlockTools()||!confirm('ПОВНІСТЮ скинути всі дані Brukivka, Mini HOI та резервну копію? Це не можна скасувати.'))return;
-    try{for(const key of [SAVE_KEY,BACKUP_KEY,...OLD_KEYS,HOI_REWARD_KEY,'brukivka_minihoi_v1',`${SAVE_KEY}_corrupt`])localStorage.removeItem(key);}catch(error){showSaveNotice('Не вдалося очистити всі збереження. Перевір доступ до сховища.');return;}
-    window.location.reload();
+    if(!unlockTools())return;
+    completelyResetProgress();
   });
   $('secretBack').addEventListener('click',()=>{secretAuthorized=false;showPCProgram('history');});
   $$('[data-pc-home]').forEach((button) => button.addEventListener('click', () => showPCProgram('desktop')));
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !$('pcOverlay').classList.contains('hidden')) closePC();
+    if (event.key === 'Escape' && !$('steamGameHost').open && !$('pcOverlay').classList.contains('hidden')) closePC();
   });
 
   function updatePcClock() {
@@ -1917,6 +2024,7 @@ const MUSIC_COVERS = [
   }
 
   function init() {
+    applyWallpaperTheme();
     showSaveNotice(saveNotice);
     syncHoiBonus();
     ensureOrder();
@@ -1952,6 +2060,73 @@ const MUSIC_COVERS = [
     if (dragging) stopDrag();
     rememberStart();
     resetBrick();
+  });
+
+  // Keep this document and its two SoundCloud decks alive while a Steam game runs.
+  const steamHost = $('steamGameHost');
+  const steamFrame = $('steamGameFrame');
+  const steamGames = new Map([
+    ['runner.html', 'БРУКІВКА · ВУЛИЧНИЙ ЗАБІГ'],
+    ['merge.html', 'БРУКІВКА · 2048'],
+    ['minihoi.html', 'IRON ATLAS · MINI HOI']
+  ]);
+  function updateSteamMusic() {
+    const playing = !scAudio().paused && !scUserPaused;
+    $('steamGameMusic').textContent = playing ? 'Ⅱ Музика' : '▶ Музика';
+    $('steamGameMusic').setAttribute('aria-pressed', String(playing));
+    $('steamGameMute').textContent = save.audio.muted ? '🔇' : '🔊';
+    $('steamGameMute').setAttribute('aria-pressed', String(save.audio.muted));
+  }
+  function returnToSteam() {
+    if (!steamHost.open) return;
+    steamHost.close();
+    steamFrame.src = 'about:blank';
+    syncHoiBonus();
+    updateUI();
+    showPCProgram('steam');
+    if (steamLaunchLink && steamLaunchLink.isConnected) steamLaunchLink.focus();
+  }
+  let steamLaunchLink = null;
+  $('steamPanel').addEventListener('click', event => {
+    const link = event.target.closest('a[href]');
+    if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    const url = new URL(link.href, location.href);
+    const file = url.pathname.split('/').pop();
+    if (url.origin !== location.origin || !steamGames.has(file)) return;
+    event.preventDefault();
+    steamLaunchLink = link;
+    $('steamGameTitle').textContent = steamGames.get(file);
+    steamFrame.title = steamGames.get(file);
+    steamFrame.src = url.href;
+    updateSteamMusic();
+    steamHost.showModal();
+    steamFrame.focus();
+  });
+  steamFrame.addEventListener('load', () => {
+    if (!steamHost.open) return;
+    // The in-game return links close the game rather than loading a second main page.
+    const child = steamFrame.contentDocument;
+    if (!child) return;
+    child.addEventListener('click', event => {
+      const link = event.target.closest('a[href]');
+      if (!link) return;
+      const url = new URL(link.href, location.href);
+      if (url.origin === location.origin && url.pathname === new URL('index.html', location.href).pathname) {
+        event.preventDefault();
+        returnToSteam();
+      }
+    });
+  });
+  $('steamGameBack').addEventListener('click', returnToSteam);
+  steamHost.addEventListener('cancel', event => { event.preventDefault(); returnToSteam(); });
+  $('steamGameMusic').addEventListener('click', () => { $('scPlay').click(); updateSteamMusic(); });
+  $('steamGameMute').addEventListener('click', () => { $('scMute').click(); updateSteamMusic(); });
+  scDecks.forEach(deck => ['play','pause','ended'].forEach(name => deck.addEventListener(name, updateSteamMusic)));
+  $('nextGameApp').addEventListener('click', () => {
+    scUserPaused = true;
+    stopFade();
+    scDecks.forEach(deck => deck.pause());
+    renderSoundcloud();
   });
 
   init();

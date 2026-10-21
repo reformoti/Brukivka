@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="uk">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#18232b"><title>Бруківка · 2048</title><link rel="stylesheet" href="merge.css"><script src="merge.js" defer></script></head>
+<body><main class="merge-shell">
+  <header><a href="index.html">← До Steam</a><span>BRUKIVKA ARCADE / 02</span></header>
+  <section class="merge-heading"><div><small>БУДУЙ. ОБ'ЄДНУЙ. ПРОКАЧУЙ.</small><h1>Бруківка <em>2048</em></h1></div><div class="scores"><div><small>ОЧКИ</small><strong id="score">0</strong></div><div><small>РЕКОРД</small><strong id="record">0</strong></div></div></section>
+  <div class="merge-actions"><p>З'єднуй однакову бруківку та збери <b>2048</b>.</p><button id="newGame" type="button">Новий майданчик ↻</button></div>
+  <div class="board-wrap"><div id="board" class="board" role="group" aria-label="Поле 2048, чотири на чотири" tabindex="0"></div><div id="result" class="result" hidden><div><span>▰</span><h2 id="resultTitle"></h2><p id="resultText"></p><button id="continue" type="button">Продовжити →</button><button id="restart" type="button">Зіграти знову ↻</button></div></div></div>
+  <p id="status" class="status" role="status" aria-live="polite">Майданчик готовий. Зроби перший хід.</p>
+  <nav class="merge-controls" aria-label="Пересунути плитки"><button data-move="up" aria-label="Вгору" type="button">↑</button><div><button data-move="left" aria-label="Ліворуч" type="button">←</button><button data-move="down" aria-label="Вниз" type="button">↓</button><button data-move="right" aria-label="Праворуч" type="button">→</button></div></nav>
+  <footer><p><b>← ↑ ↓ → або WASD</b> · На телефоні: свайпи чи кнопки.</p><p>2 → 4 → 8 → … → 2048. Кожна плитка зливається один раз за хід.<br>Поле й рекорд зберігаються автоматично на цьому пристрої.</p><span id="storageNote" role="status"></span></footer>
+</main></body></html>
