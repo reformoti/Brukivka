@@ -59,3 +59,12 @@ test('walls bounce the projectile and do not let it tunnel through',()=>{
   const world=new FlightWorld();world.phase='flying';world.ball={x:355,y:500,vx:1000,vy:0};world.step(.025);
   assert(world.ball.vx<0);assert(world.ball.x<THROW.walls[0].x-THROW.radius);
 });
+
+test('wall damage is emitted inside the collision step, once for the contact',()=>{
+ const hits=[],world=new FlightWorld(kind=>hits.push(kind));world.phase='flying';world.ball={x:355,y:500,vx:1000,vy:0};
+ world.step(.025);assert.deepEqual(hits,['wall']);world.step(.02);assert.deepEqual(hits,['wall'],'moving away is not another impact');
+});
+test('drone damage is immediate and its contact cooldown prevents duplicate penalties',()=>{
+ const hits=[],world=new FlightWorld(kind=>hits.push(kind)),d=dronesAt(0)[0];world.phase='flying';world.ball={x:d.x-33,y:d.y,vx:300,vy:0};
+ world.step(.01);assert.deepEqual(hits,['drone']);world.step(.01);assert.deepEqual(hits,['drone']);
+});

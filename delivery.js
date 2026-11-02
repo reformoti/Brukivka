@@ -3,8 +3,8 @@
   const LEVELS = [
     {name:'Склад', multiplier:0.1, icon:'▰', hint:'Просто перенеси бруківку зі складу в карман. Без перешкод.'},
     {name:'Лазерні ворота', multiplier:1, icon:'⌁', hint:'Знайомий маршрут: проведи бруківку між воротами й лазерами.'},
-    {name:'Лабіринт', multiplier:3, icon:'▦', hint:'Знайди шлях від входу ліворуч до виходу праворуч. Стіни не пропускають бруківку.'},
-    {name:'У відкрите вікно', multiplier:10, icon:'↗', hint:'Потягни бруківку вниз і вліво та відпусти. Влуч у вікно зверху, на спаданні.'}
+    {name:'Лабіринт', multiplier:3, icon:'▦', hint:'Знайди шлях від входу ліворуч до виходу праворуч. Торкання стіни: −500 UAH.'},
+    {name:'У відкрите вікно', multiplier:10, icon:'↗', hint:'Потягни бруківку вниз і вліво та відпусти. Влуч у вікно зверху, на спаданні. Стіна чи БПЛА: −500 UAH.'}
   ];
   // Coordinates follow the supplied maze drawing; openings are on the left/right.
   const MAZE_LINES = [
@@ -61,8 +61,8 @@
     return x>THROW.window.left+THROW.radius&&x<THROW.window.right-THROW.radius;
   }
   class FlightWorld {
-    constructor(){this.time=0;this.reset();}
-    reset(){this.ball={...THROW.anchor,vx:0,vy:0};this.phase='ready';this.elapsed=0;this.bounces=0;this.cooldown=0;this.hitDrone=false;}
+    constructor(onCollision=()=>{}){this.time=0;this.onCollision=onCollision;this.reset();}
+    reset(){this.ball={...THROW.anchor,vx:0,vy:0};this.phase='ready';this.elapsed=0;this.bounces=0;this.cooldown=0;this.hitDrone=false;this.wallContacts=new Set();}
     launch(pull){const shot=shotFromPull(pull);if(shot.power<.07)return false;this.ball={...shot};this.phase='flying';this.elapsed=0;return true;}
     step(dt) {
       const count=Math.max(1,Math.ceil(dt*240)),h=dt/count;
@@ -73,35 +73,40 @@
         const b=this.ball,old={...b};
         b.x+=b.vx*h;b.y+=b.vy*h+THROW.gravity*h*h/2;b.vy+=THROW.gravity*h;
         if(catchesWindow(old,b)){this.phase='success';return;}
-        for(const wall of THROW.walls) {
+        const contacts=new Set();
+        for(const [wallId,wall] of THROW.walls.entries()) {
           const px=clamp(b.x,wall.x,wall.x+wall.w),py=clamp(b.y,wall.y,wall.y+wall.h);
           if(Math.hypot(b.x-px,b.y-py)>=THROW.radius)continue;
+          contacts.add(wallId);
+          if(!this.wallContacts.has(wallId))this.onCollision('wall');
           if(old.y<=wall.y-THROW.radius){b.y=wall.y-THROW.radius;b.vy=-Math.abs(b.vy)*.58;}
           else if(old.x<=wall.x-THROW.radius){b.x=wall.x-THROW.radius;b.vx=-Math.abs(b.vx)*.6;}
           else if(old.x>=wall.x+wall.w+THROW.radius){b.x=wall.x+wall.w+THROW.radius;b.vx=Math.abs(b.vx)*.6;}
           else {b.y=wall.y+wall.h+THROW.radius;b.vy=Math.abs(b.vy)*.6;}
         }
+        this.wallContacts=contacts;
         for(const drone of dronesAt(this.time)) {
           const dx=b.x-drone.x,dy=b.y-drone.y,d=Math.hypot(dx,dy),range=THROW.radius+drone.radius;
           if(d>=range||this.cooldown>0)continue;
+          this.onCollision('drone');
           const nx=d?dx/d:0,ny=d?dy/d:-1,dot=b.vx*nx+b.vy*ny;
           b.x=drone.x+nx*(range+2);b.y=drone.y+ny*(range+2);
           if(dot<0){b.vx-=1.7*dot*nx;b.vy-=1.7*dot*ny;}
           b.vx+=nx*105;b.vy+=ny*105;this.cooldown=.22;this.hitDrone=true;
         }
         if(b.y>THROW.floor-THROW.radius){b.y=THROW.floor-THROW.radius;b.vy=-Math.abs(b.vy)*.47;b.vx*=.7;this.bounces++;}
-        if(b.x<THROW.radius){b.x=THROW.radius;b.vx=Math.abs(b.vx)*.55;}
-        if(b.x>THROW.width-THROW.radius){b.x=THROW.width-THROW.radius;b.vx=-Math.abs(b.vx)*.55;}
+        if(b.x<THROW.radius){this.onCollision('wall');b.x=THROW.radius;b.vx=Math.abs(b.vx)*.55;}
+        if(b.x>THROW.width-THROW.radius){this.onCollision('wall');b.x=THROW.width-THROW.radius;b.vx=-Math.abs(b.vx)*.55;}
         if(this.elapsed>9||this.bounces>=3||(this.bounces&&Math.hypot(b.vx,b.vy)<55)){this.phase='miss';return;}
       }
     }
   }
   function create(options) {
-    const {canvas,onSuccess,onMessage,isActive}=options,ctx=canvas.getContext('2d');
+    const {canvas,onSuccess,onMessage,isActive,onPenalty=()=>{}}=options,ctx=canvas.getContext('2d');
     let level=2,maze={x:.65,y:5},done=false,pointer=null,offset={x:0,y:0},pull={x:-54,y:78};
-    let aiming=false,keys=new Set(),previous=null,pastDrone=false,flight=new FlightWorld();
+    let aiming=false,keys=new Set(),previous=null,mazeContact=false,flight=new FlightWorld(kind=>onPenalty(kind));
     function notify(text,type=''){onMessage(text,type);}
-    function reset() {maze={x:.65,y:5};done=false;pointer=null;aiming=false;keys.clear();flight.reset();pastDrone=false;draw();}
+    function reset() {maze={x:.65,y:5};done=false;pointer=null;aiming=false;keys.clear();flight.reset();mazeContact=false;draw();}
     function setLevel(id){level=id;canvas.style.aspectRatio=id===2?'1 / 1':'10 / 7';reset();resize();}
     function resize() {
       const r=canvas.getBoundingClientRect(),ratio=Math.min(root.devicePixelRatio||1,2);
@@ -112,7 +117,8 @@
     function finishMaze(target) {
       const next=moveMaze(maze,target);maze={x:next.x,y:next.y};
       if(next.won&&!done){done=true;keys.clear();onSuccess();}
-      else if(next.blocked)notify('Стіна. Шукай прохід — бруківка залишилась на місці.');
+      else if(next.blocked){if(!mazeContact)onPenalty('wall');mazeContact=true;}
+      else mazeContact=false;
     }
     function setPull(p){const shot=shotFromPull({x:p.x-THROW.anchor.x,y:p.y-THROW.anchor.y});pull={x:shot.x-THROW.anchor.x,y:shot.y-THROW.anchor.y};}
     canvas.addEventListener('pointerdown',event=>{
@@ -120,11 +126,11 @@
       const p=point(event);
       if(level===2) {
         const m=mazePoint(p);if(Math.hypot(m.x-maze.x,m.y-maze.y)>.85)return;
-        offset={x:m.x-maze.x,y:m.y-maze.y};
+        offset={x:m.x-maze.x,y:m.y-maze.y};mazeContact=false;
       } else {
         if(flight.phase==='flying')return;
         if(Math.hypot(p.x-THROW.anchor.x,p.y-THROW.anchor.y)>95)return;
-        flight.reset();pastDrone=false;aiming=true;pull={x:0,y:0};setPull(p);
+        flight.reset();aiming=true;pull={x:0,y:0};setPull(p);
       }
       pointer=event.pointerId;canvas.focus({preventScroll:true});canvas.setPointerCapture(event.pointerId);event.preventDefault();draw();
     });
@@ -152,9 +158,9 @@
           const shot=shotFromPull(pull);pull={x:shot.x-THROW.anchor.x,y:shot.y-THROW.anchor.y};aiming=true;
         }
       }
-      if(level===3&&event.code==='Space'){event.preventDefault();if(!event.repeat&&flight.phase!=='flying'){flight.reset();pastDrone=false;aiming=false;flight.launch(pull);}}
+      if(level===3&&event.code==='Space'){event.preventDefault();if(!event.repeat&&flight.phase!=='flying'){flight.reset();aiming=false;flight.launch(pull);}}
     });
-    root.document.addEventListener('keyup',event=>keys.delete(codeMap[event.code]));
+    root.document.addEventListener('keyup',event=>{keys.delete(codeMap[event.code]);if(!keys.size)mazeContact=false;});
     root.addEventListener('blur',()=>{keys.clear();pointer=null;aiming=false;});
     function brick(x,y,size=34,rotation=0) {
       ctx.save();ctx.translate(x,y);ctx.rotate(rotation);ctx.fillStyle='#d7a676';ctx.strokeStyle='#f8d7ae';ctx.lineWidth=2;
@@ -217,7 +223,6 @@
       if(isActive()&&!done) {
         if(level===2&&keys.size){const x=(keys.has('right')?1:0)-(keys.has('left')?1:0),y=(keys.has('down')?1:0)-(keys.has('up')?1:0),norm=Math.hypot(x,y)||1;finishMaze({x:maze.x+x/norm*dt*2.5,y:maze.y+y/norm*dt*2.5});}
         if(level===3){const before=flight.phase;flight.step(dt);
-          if(flight.hitDrone&&!pastDrone){pastDrone=true;notify('БПЛА зачепив бруківку — траєкторію змінено.','bad');}
           if(before==='flying'&&flight.phase==='success'){done=true;onSuccess();}
           else if(before==='flying'&&flight.phase==='miss')notify('Не влучив. Візьми бруківку біля рогатки та спробуй ще раз.');
         }
@@ -226,7 +231,7 @@
       root.requestAnimationFrame(frame);
     }
     root.requestAnimationFrame(frame);
-    return {setLevel,reset,resize,cancel:()=>{keys.clear();pointer=null;aiming=false;}};
+    return {setLevel,reset,resize,cancel:()=>{keys.clear();pointer=null;aiming=false;mazeContact=false;}};
   }
   const api={LEVELS,MAZE_LINES,mazeBlocked,moveMaze,THROW,dronesAt,shotFromPull,catchesWindow,FlightWorld,create};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;

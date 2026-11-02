@@ -756,9 +756,15 @@ const MUSIC_COVERS = [
   let startPosition = {x:0,y:0};
   let mobileLayout = window.matchMedia('(max-width: 760px)').matches;
   const deliveryGame = window.BrukDelivery.create({
-    canvas:$('deliveryCanvas'),onSuccess:delivered,onMessage:setStatus,
+    canvas:$('deliveryCanvas'),onSuccess:delivered,onMessage:setStatus,onPenalty:deliveryPenalty,
     isActive:()=>save.deliveryLevel>=2&&!resetting&&!document.hidden&&$('phoneOverlay').classList.contains('hidden')&&$('pcOverlay').classList.contains('hidden')
   });
+  function deliveryPenalty(kind) {
+    if(resetting||save.deliveryLevel<2)return;
+    save.balance=clamp(save.balance-500,-MAX_BALANCE,MAX_BALANCE);
+    persist();updateUI();
+    setStatus(`${kind==='drone'?'БПЛА підбив бруківку':'Удар об стіну'}! −500 UAH.`, 'bad');
+  }
   function renderDeliveryLevel() {
     const level=DELIVERY_LEVELS[save.deliveryLevel];
     $('deliveryTitle').textContent=`${save.deliveryLevel+1}. ${level.name} · ×${level.multiplier}`;
@@ -1721,10 +1727,12 @@ const MUSIC_COVERS = [
 
   function closePC() {
     if (csRun) finishCsRun(false, true);
+    window.BrukPaint?.leave();
     $('pcOverlay').classList.add('hidden');
   }
 
   function showPCProgram(name) {
+    if(name!=='previews')window.BrukPaint?.leave();
     if (csRun && name !== 'steam') finishCsRun(false, true);
     $('pcDesktop').classList.toggle('hidden', name !== 'desktop');
     $('steamPanel').classList.toggle('hidden', name !== 'steam');

@@ -22,15 +22,8 @@
   function button(text,action,disabled=false){const el=document.createElement('button');el.type='button';el.textContent=text;el.disabled=disabled;el.addEventListener('click',action);return el;}
   function heading(title,description){const box=document.createElement('div');box.className='preview-hero';const h=document.createElement('h2');h.textContent=title;const p=document.createElement('p');p.textContent=description;box.append(h,p);return box;}
   function stat(label,value){const el=document.createElement('div');el.className='preview-stat';const small=document.createElement('small');small.textContent=label;const b=document.createElement('strong');b.textContent=value;el.append(small,b);return el;}
-  function renderPaint(root){
-    root.append(heading('BrukPaint','Збери піксельний візерунок для своєї бруківки. Обери колір та натискай клітинки.'));
-    const palette=document.createElement('div');palette.className='paint-palette';
-    for(const c of COLORS){const b=button('',()=>{color=c;render();});b.style.background=c;b.setAttribute('aria-label',`Колір ${c}`);b.setAttribute('aria-pressed',String(c===color));palette.append(b);}
-    palette.append(button('Гумка',()=>{color='';render();}));root.append(palette);
-    const grid=document.createElement('div');grid.className='paint-grid';grid.setAttribute('role','group');grid.setAttribute('aria-label','Полотно 12 на 8');
-    state.paint.forEach((c,i)=>{const b=button('',()=>{state.paint[i]=color;b.style.setProperty('--pixel-color',color||'#2e3d50');persist();});b.style.setProperty('--pixel-color',c||'#2e3d50');b.setAttribute('aria-label',`Піксель ${i+1}`);grid.append(b);});root.append(grid);
-    root.append(button('Очистити полотно',()=>{if(!confirm('Очистити малюнок?'))return;state.paint.fill('');persist();render();}));
-  }
+  function renderPaint(root){window.BrukPaint.mount(root);}
+  function renderGallery(root){window.BrukPaint.gallery(root);}
   function renderExchange(root){
     root.append(heading('BrukExchange','Спробуй торгувати будматеріалами. Купуй дешевше, перемотуй день та продавай дорожче. Демо-кредити окремі від ігрових UAH.'));
     const summary=document.createElement('div');summary.className='preview-stats';summary.append(stat('ДЕМО-КРЕДИТИ',state.credits),stat('ДЕНЬ',state.day));root.append(summary);
@@ -69,9 +62,9 @@
     if(van)van.style.left=`${p*86}%`;if(label)label.textContent=`${trip.name} · ${Math.floor(p*100)}%`;
     if(p>=1){state.deliveries++;state.points+=trip.points;const name=trip.name;trip=null;persist();if(selected==='dispatch'&&!$('pcPreviewPanel').classList.contains('hidden'))render();notice(`Доставлено: ${name}!`);}
   }
-  const renderers={paint:renderPaint,exchange:renderExchange,workshop:renderWorkshop,dispatch:renderDispatch};
-  const titles={paint:'BrukPaint',exchange:'BrukExchange',workshop:'BrukWorkshop',dispatch:'BrukDispatch'};
-  function render(){const root=$('pcPreviewContent');root.replaceChildren();$('pcPreviewTitle').textContent=titles[selected];renderers[selected](root);}
+  const renderers={paint:renderPaint,gallery:renderGallery,exchange:renderExchange,workshop:renderWorkshop,dispatch:renderDispatch};
+  const titles={paint:'BrukPaint',gallery:'Мої малюнки',exchange:'BrukExchange',workshop:'BrukWorkshop',dispatch:'BrukDispatch'};
+  function render(){window.BrukPaint.leave();const root=$('pcPreviewContent');root.replaceChildren();$('pcPreviewBadge').textContent=selected==='paint'?'СТУДІЯ':selected==='gallery'?'ПАПКА':'ПРОБНА ВЕРСІЯ';$('pcPreviewTitle').textContent=titles[selected];renderers[selected](root);}
   window.BrukPcApps={open(id){if(!renderers[id])return;selected=id;notice('');render();}};
   function frame(time){if(trip&&time-lastTick>60){lastTick=time;tickDispatch();}requestAnimationFrame(frame);}requestAnimationFrame(frame);
 })();
