@@ -24,23 +24,7 @@
   function stat(label,value){const el=document.createElement('div');el.className='preview-stat';const small=document.createElement('small');small.textContent=label;const b=document.createElement('strong');b.textContent=value;el.append(small,b);return el;}
   function renderPaint(root){window.BrukPaint.mount(root);}
   function renderGallery(root){window.BrukPaint.gallery(root);}
-  function renderExchange(root){
-    root.append(heading('BrukExchange','Мінісимулятор торгівлі будматеріалами. Ти починаєш з 1 000 демо-кредитів; мета — довести загальну вартість грошей і товарів до 2 000.'));
-    const equity=state.credits+state.holdings.reduce((sum,count,i)=>sum+count*state.prices[i],0);
-    const summary=document.createElement('div');summary.className='preview-stats';summary.append(stat('ВІЛЬНІ КРЕДИТИ',state.credits),stat('ВЕСЬ КАПІТАЛ',equity),stat('РЕЗУЛЬТАТ',`${equity-1000>=0?'+':''}${equity-1000}`),stat('ДЕНЬ',state.day));root.append(summary);
-    const guide=document.createElement('details');guide.className='exchange-guide';guide.open=true;
-    guide.innerHTML='<summary>Як грати та навіщо ця програма?</summary><ol><li>Купи один чи кілька товарів, коли ціна здається низькою.</li><li>Натисни «Наступний день», щоб отримати нові умовні ціни. Вони можуть і зрости, і впасти.</li><li>Продай товар дорожче, ніж купував, щоб заробити демо-кредити. Якщо продаси дешевше — буде збиток.</li></ol><p><b>Приклад:</b> купив камінь за 30, продав за 45 — заробив 15 кредитів.</p><p><b>Задумка:</b> спробувати роль торговця і навчитися порівнювати ціну покупки та продажу. Капітал = вільні кредити + товари за поточними цінами. Це окрема пробна гра: кредити не переводяться в UAH і не змінюють основний баланс.</p>';
-    root.append(guide);
-    const goal=document.createElement('p');goal.className='exchange-goal';goal.textContent=equity>=2000?'Мету досягнуто: капітал перевищив 2 000! Можна продовжувати торгівлю.':`Мета: 2 000 кредитів · зараз ${equity}.`;root.append(goal);
-    const list=document.createElement('div');list.className='demo-market';
-    goods.forEach((g,i)=>{
-      const row=document.createElement('article');const title=document.createElement('h3');title.textContent=`${g.icon} ${g.name}`;
-      const p=document.createElement('p');p.textContent=`Ціна: ${state.prices[i]} кр. · На складі: ${state.holdings[i]}`;
-      row.append(title,p,button('Купити 1',()=>{if(state.credits<state.prices[i])return;state.credits-=state.prices[i];state.holdings[i]++;persist();render();},state.credits<state.prices[i]),
-        button('Продати 1',()=>{if(!state.holdings[i])return;state.credits+=state.prices[i];state.holdings[i]--;persist();render();},!state.holdings[i]));list.append(row);
-    });root.append(list);
-    root.append(button('Наступний день →',()=>{state.day++;state.prices=goods.map(g=>Math.round(g.base*(.6+Math.random()*.95)));persist();render();notice('Нові котирування. Порівняй ціни зі своїми покупками.');}));
-  }
+  function renderExchange(root){window.BrukExchange.mount(root);}
   function renderWorkshop(root){
     root.append(heading('BrukWorkshop','Мініатюрна виробнича лінія: зібрати 3 камені → випалити заготовку → зробити одну бруківку. Збери партію з 10 штук.'));
     const line=document.createElement('div');line.className='workshop-line';
@@ -69,7 +53,7 @@
   }
   const renderers={paint:renderPaint,gallery:renderGallery,exchange:renderExchange,workshop:renderWorkshop,dispatch:renderDispatch};
   const titles={paint:'BrukPaint',gallery:'Мої малюнки',exchange:'BrukExchange',workshop:'BrukWorkshop',dispatch:'BrukDispatch'};
-  function render(){window.BrukPaint.leave();const root=$('pcPreviewContent');root.replaceChildren();$('pcPreviewBadge').textContent=selected==='paint'?'СТУДІЯ':selected==='gallery'?'ПАПКА':'ПРОБНА ВЕРСІЯ';$('pcPreviewTitle').textContent=titles[selected];renderers[selected](root);}
+  function render(){window.BrukPaint.leave();const root=$('pcPreviewContent');root.replaceChildren();$('pcPreviewBadge').textContent=selected==='paint'?'СТУДІЯ':selected==='gallery'?'ПАПКА':selected==='exchange'?'PAPER MARKET':'ПРОБНА ВЕРСІЯ';$('pcPreviewTitle').textContent=titles[selected];renderers[selected](root);}
   window.BrukPcApps={open(id){if(!renderers[id])return;selected=id;notice('');render();}};
   function frame(time){if(trip&&time-lastTick>60){lastTick=time;tickDispatch();}requestAnimationFrame(frame);}requestAnimationFrame(frame);
 })();

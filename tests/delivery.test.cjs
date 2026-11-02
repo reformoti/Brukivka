@@ -50,10 +50,10 @@ test('drone patrols remain in their respective zones over repeated circuits',()=
     const z=THROW.zones[i];assert(d.x>=z.left&&d.x<=z.right);assert(d.y>=z.top&&d.y<=z.bottom);
   });
 });
-test('a drone knocks the brick away without instantly ending the shot',()=>{
+test('a drone destroys the brick and ends its flight without a delivery reward',()=>{
   const world=new FlightWorld(),d=dronesAt(0)[0];
   world.phase='flying';world.ball={x:d.x-33,y:d.y,vx:300,vy:0};world.step(.01);
-  assert(world.hitDrone);assert.equal(world.phase,'flying');assert(world.ball.vx<300);
+  assert(world.hitDrone);assert.equal(world.phase,'destroyed');const old={...world.ball};world.step(.2);assert.equal(world.ball.x,old.x);assert.equal(world.ball.y,old.y);
 });
 test('walls bounce the projectile and do not let it tunnel through',()=>{
   const world=new FlightWorld();world.phase='flying';world.ball={x:355,y:500,vx:1000,vy:0};world.step(.025);

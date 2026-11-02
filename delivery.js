@@ -100,10 +100,7 @@
           if(d>=range||this.cooldown>0)continue;
           this.onCollision('drone');
           this.explosions.push({x:drone.x,y:drone.y,age:0,seed:this.time*3});
-          const nx=d?dx/d:0,ny=d?dy/d:-1,dot=b.vx*nx+b.vy*ny;
-          b.x=drone.x+nx*(range+2);b.y=drone.y+ny*(range+2);
-          if(dot<0){b.vx-=1.7*dot*nx;b.vy-=1.7*dot*ny;}
-          b.vx+=nx*105;b.vy+=ny*105;this.cooldown=.22;this.hitDrone=true;
+          this.hitDrone=true;this.phase='destroyed';return;
         }
         if(b.y>THROW.floor-THROW.radius){b.y=THROW.floor-THROW.radius;b.vy=-Math.abs(b.vy)*.47;b.vx*=.7;this.bounces++;}
         if(b.x<THROW.radius){this.onCollision('wall');b.x=THROW.radius;b.vx=Math.abs(b.vx)*.55;}
@@ -127,7 +124,7 @@
     ctx.globalAlpha=fade*.8;ctx.strokeStyle='#ffd28b';ctx.lineWidth=2*fade;ctx.beginPath();ctx.arc(0,0,18+90*t,0,Math.PI*2);ctx.stroke();
     for(let i=0;i<16;i++){
       const a=i*Math.PI/8+e.seed,speed=65+(i%4)*24,x=Math.cos(a)*speed*t,y=Math.sin(a)*speed*t+35*t*t;
-      ctx.globalAlpha=fade;ctx.fillStyle=i%3?'#ffc264':'#b7d3d8';ctx.save();ctx.translate(x,y);ctx.rotate(a+t*7);ctx.fillRect(-3,-2,7*fade+1,3);ctx.restore();
+      ctx.globalAlpha=fade;ctx.fillStyle=i%3?'#d4a171':'#b7d3d8';ctx.save();ctx.translate(x,y);ctx.rotate(a+t*7);ctx.fillRect(-3,-2,7*fade+1,3);ctx.restore();
     }
     for(let i=0;i<5;i++){
       ctx.globalAlpha=Math.max(0,t*.5*(1-t));ctx.fillStyle='#263039';ctx.beginPath();ctx.arc(Math.sin(i*2+e.seed)*26*t,-t*(24+i*12),14+23*t,0,Math.PI*2);ctx.fill();
@@ -161,7 +158,7 @@
         const m=mazePoint(p);if(Math.hypot(m.x-maze.x,m.y-maze.y)>.85)return;
         offset={x:m.x-maze.x,y:m.y-maze.y};mazeContact=false;
       } else {
-        if(flight.phase==='flying')return;
+        if(flight.phase==='flying'||flight.phase==='destroyed')return;
         if(Math.hypot(p.x-THROW.anchor.x,p.y-THROW.anchor.y)>95)return;
         flight.reset();aiming=true;pull={x:0,y:0};setPull(p);
       }
@@ -191,7 +188,7 @@
           const shot=shotFromPull(pull);pull={x:shot.x-THROW.anchor.x,y:shot.y-THROW.anchor.y};aiming=true;
         }
       }
-      if(level===3&&event.code==='Space'){event.preventDefault();if(!event.repeat&&flight.phase!=='flying'){flight.reset();aiming=false;flight.launch(pull);}}
+      if(level===3&&event.code==='Space'){event.preventDefault();if(!event.repeat&&flight.phase!=='flying'&&flight.phase!=='destroyed'){flight.reset();aiming=false;flight.launch(pull);}}
     });
     root.document.addEventListener('keyup',event=>{keys.delete(codeMap[event.code]);if(!keys.size)mazeContact=false;});
     root.addEventListener('blur',()=>{keys.clear();pointer=null;aiming=false;});
@@ -237,17 +234,18 @@
       });
       ctx.strokeStyle='#8c6747';ctx.lineWidth=12;ctx.beginPath();ctx.moveTo(128,THROW.floor);ctx.lineTo(128,554);ctx.moveTo(128,567);ctx.lineTo(101,526);ctx.moveTo(128,567);ctx.lineTo(155,526);ctx.stroke();
       const shot=shotFromPull(pull),shown=aiming?shot:flight.phase==='miss'?THROW.anchor:flight.ball;
-      if(flight.phase!=='flying'&&flight.phase!=='success'&&flight.phase!=='miss') {
+      if(flight.phase!=='flying'&&flight.phase!=='success'&&flight.phase!=='miss'&&flight.phase!=='destroyed') {
         const aim=shotFromPull(pull);ctx.fillStyle='#d7f39488';
         for(let t=.12;t<2.8;t+=.1){const x=aim.x+aim.vx*t,y=aim.y+aim.vy*t+THROW.gravity*t*t/2;if(x<0||x>1000||y>THROW.floor)break;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();}
       }
       if(aiming){ctx.strokeStyle='#e9c382';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(101,526);ctx.lineTo(shot.x,shot.y);ctx.lineTo(155,526);ctx.stroke();}
-      brick(shown.x,shown.y,36,flight.phase==='flying'?flight.elapsed*5:0);
+      if(flight.phase!=='destroyed')brick(shown.x,shown.y,36,flight.phase==='flying'?flight.elapsed*5:0);
       flight.explosions.forEach(effect=>drawExplosion(ctx,effect,reducedMotion));
       text('ВІДКРИТЕ ВІКНО / 04',28,37,'#c0cdd3',17);
       text(flight.phase==='flying'?'У ПОЛЬОТІ':`НАТЯГ ${Math.round(shot.power*100)}%`,28,65,'#d5f19c',17);
       ctx.fillStyle='#0d1c27';ctx.fillRect(28,78,150,7);ctx.fillStyle='#d5f19c';ctx.fillRect(28,78,150*shot.power,7);
       if(flight.phase==='ready')text('↙ потягни й відпусти',40,475,'#f6d1a0',16);
+      if(flight.phase==='destroyed')text('БРУКІВКУ ЗНИЩЕНО',500,80,'#ffd19e',24,'center');
       if(flight.phase==='miss')text('Повз! Бруківка знову на старті.',500,80,'#ffd19e',21,'center');
       if(flight.phase==='success')text('ДОСТАВЛЕНО У ВІКНО!',500,80,'#d6f69e',26,'center');
     }
@@ -257,6 +255,8 @@
       if(isActive()&&!done) {
         if(level===2&&keys.size){const x=(keys.has('right')?1:0)-(keys.has('left')?1:0),y=(keys.has('down')?1:0)-(keys.has('up')?1:0),norm=Math.hypot(x,y)||1;finishMaze({x:maze.x+x/norm*dt*2.5,y:maze.y+y/norm*dt*2.5});}
         if(level===3){const before=flight.phase;flight.step(dt);
+          if(before==='flying'&&flight.phase==='destroyed')notify('БПЛА знищив бруківку! −500 UAH. Бонусу за цей кидок немає.','bad');
+          if(flight.phase==='destroyed'&&!flight.explosions.length)flight.reset();
           if(before==='flying'&&flight.phase==='success'){done=true;onSuccess();}
           else if(before==='flying'&&flight.phase==='miss')notify('Не влучив. Візьми бруківку біля рогатки та спробуй ще раз.');
         }

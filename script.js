@@ -205,6 +205,8 @@ const MUSIC_COVERS = [
       balance:0,
       deliveryLevel:0,
       deliveryOwned:[0],
+      estate:window.BrukVentures.defaultEstate(),
+      garage:window.BrukVentures.defaultGarage(),
       brickTier:0,
       phoneTier:0,
       strength:0,
@@ -268,6 +270,8 @@ const MUSIC_COVERS = [
     const attempted = record(source.attempted);
     const legit = record(source.legit);
     result.balance = safeInt(source.balance, 0, -MAX_BALANCE, MAX_BALANCE); // Negative balance is intentional.
+    result.estate=window.BrukVentures.normalizeEstate(source.estate);
+    result.garage=window.BrukVentures.normalizeGarage(source.garage);
     const access=window.BrukDelivery.restoreAccess(source);
     result.deliveryLevel=access.selected;result.deliveryOwned=access.owned;
     result.brickTier = safeInt(source.brickTier, 0, 0, brickTiers.length - 1);
@@ -466,6 +470,7 @@ const MUSIC_COVERS = [
 
     $('deliveryReward').textContent = `+${money(finalReward())} UAH · ×${DELIVERY_LEVELS[save.deliveryLevel].multiplier}`;
     $('deliveryBalance').textContent = `${money(save.balance)} UAH`;
+    $('businessBalance').textContent = `${money(save.balance)} UAH`;
     updateDeliveryButtons();
     $('brickBoardName').textContent = `${brick.name} Бруківка`;
     $('brickCountBadge').textContent = `×${strength.carry}`;
@@ -760,7 +765,7 @@ const MUSIC_COVERS = [
   let mobileLayout = window.matchMedia('(max-width: 760px)').matches;
   const deliveryGame = window.BrukDelivery.create({
     canvas:$('deliveryCanvas'),onSuccess:delivered,onMessage:setStatus,onPenalty:deliveryPenalty,
-    isActive:()=>save.deliveryLevel>=2&&save.deliveryOwned.includes(save.deliveryLevel)&&!resetting&&!document.hidden&&$('phoneOverlay').classList.contains('hidden')&&$('pcOverlay').classList.contains('hidden')
+    isActive:()=>save.deliveryLevel>=2&&save.deliveryOwned.includes(save.deliveryLevel)&&!resetting&&!document.hidden&&$('phoneOverlay').classList.contains('hidden')&&$('pcOverlay').classList.contains('hidden')&&!$('businessHost').open
   });
   function deliveryPenalty(kind) {
     if(resetting||save.deliveryLevel<2)return;
@@ -1850,6 +1855,9 @@ const MUSIC_COVERS = [
     try{localStorage.setItem(HOI_REWARD_KEY,JSON.stringify({bestMode:3}));}catch(e){}
     save.wallpapersOwned=WALLPAPERS.slice(1).map(w=>w.id);
     save.deliveryOwned=DELIVERY_LEVELS.map((_,i)=>i);
+    save.estate.owned=true;save.estate.upgrades={foundation:3,quality:3,crane:3};
+    save.garage.owned=window.BrukVentures.CARS.map(c=>c.id);save.garage.active=save.garage.active||'hyperion';
+    for(const car of window.BrukVentures.CARS)save.garage.custom[car.id]={...window.BrukVentures.defaultStyle(car),...(save.garage.custom[car.id]||{}),engine:3,unlocks:['rims1','rims2','spoiler','neon','wrap','lowered']};
     renderDeliveryLevel();
     persist();updateUI();$('archiveToolMessage').textContent='Усе прокачано та розблоковано, усі шпалери придбано.';
   });
@@ -1872,7 +1880,7 @@ const MUSIC_COVERS = [
   $('secretBack').addEventListener('click',()=>{secretAuthorized=false;showPCProgram('history');});
   $$('[data-pc-home]').forEach((button) => button.addEventListener('click', () => showPCProgram('desktop')));
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !$('steamGameHost').open && !$('pcOverlay').classList.contains('hidden')) closePC();
+    if (event.key === 'Escape' && !$('businessHost').open && !$('steamGameHost').open && !$('pcOverlay').classList.contains('hidden')) closePC();
   });
 
   function updatePcClock() {
@@ -2154,6 +2162,8 @@ const MUSIC_COVERS = [
     ['merge.html', 'БРУКІВКА · 2048'],
     ['breakout.html', 'БРУКІВКА · BREAKOUT'],
     ['memory.html', 'БРУКІВКА · MEMORY'],
+    ['rally.html', 'BRUK RALLY'],
+    ['stack.html', 'БРУКІВКА · STACK'],
     ['minihoi.html', 'IRON ATLAS · MINI HOI']
   ]);
   function updateSteamMusic() {
@@ -2215,5 +2225,27 @@ const MUSIC_COVERS = [
     renderSoundcloud();
   });
 
+  const businessAPI={
+    estate:()=>save.estate,garage:()=>save.garage,balance:()=>save.balance,
+    message:text=>$('businessMessage').textContent=text,
+    commit:()=>{persist();updateUI();},
+    buy:(cost,change)=>{
+      if(!Number.isSafeInteger(cost)||cost<0||cost>MAX_BALANCE)return false;
+      if(cost>0&&save.balance<cost){$('businessMessage').textContent=`Потрібно ${money(cost)} UAH. На балансі ${money(save.balance)}.`;return false;}
+      if(change()===false)return false;save.balance-=cost;persist();updateUI();return true;
+    },
+    reward:amount=>{if(Number.isSafeInteger(amount)&&amount>=0&&amount<=25000){const earned=award(amount);persist();updateUI();return earned;}return 0;}
+  };
+  function closeBusiness(){window.BrukBusiness?.close();$('businessHost').close();}
+  function openBusiness(kind){
+    stopDrag();deliveryGame.cancel();window.BrukPaint?.leave();$('businessTitle').textContent=kind==='estate'?'BRUK ESTATE':'BRUK GARAGE';$('businessBalance').textContent=`${money(save.balance)} UAH`;$('businessMessage').textContent='';
+    $('businessHost').showModal();window.BrukBusiness.mount($('businessContent'),kind,businessAPI);
+  }
+  $('estateApp').addEventListener('click',()=>openBusiness('estate'));
+  $('garageApp').addEventListener('click',()=>openBusiness('garage'));
+  $$('[data-business]').forEach(button=>button.addEventListener('click',()=>openBusiness(button.dataset.business)));
+  $('businessBack').addEventListener('click',closeBusiness);
+  $('businessHost').addEventListener('cancel',event=>{event.preventDefault();closeBusiness();});
+  window.BrukGarageSnapshot=()=>window.BrukVentures.normalizeGarage(save.garage);
   init();
 })();
