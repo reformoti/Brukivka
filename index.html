@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#090b10" />
   <title>Бруківка — v4</title>
-  <link rel="stylesheet" href="style.css?v=20261021-wallpapers-2" />
+  <link rel="stylesheet" href="style.css?v=20261102-levels-1" />
 </head>
 <body>
   <main class="page-shell">
@@ -26,11 +26,18 @@
     <section class="game-panel">
       <div class="game-title-row">
         <div>
-          <h2>Достав Бруківку в Карман</h2>
-          <p>Проведи партію через короткі випадкові лазери.</p>
+          <h2 id="deliveryTitle">Достав Бруківку в Карман</h2>
+          <p id="deliveryHint">Обери маршрут доставки.</p>
         </div>
       </div>
 
+      <nav id="deliveryLevels" class="delivery-levels" aria-label="Рівні доставки"></nav>
+      <div class="delivery-summary"><span>ЗА ДОСТАВКУ <strong id="deliveryReward">—</strong></span><span>БАЛАНС <strong id="deliveryBalance">—</strong></span></div>
+      <div id="deliveryCanvasBox" class="delivery-canvas-box hidden">
+        <canvas id="deliveryCanvas" tabindex="0" width="1000" height="1000" aria-label="Рівень доставки"></canvas>
+        <div class="delivery-tools"><button id="deliveryReset" type="button">↻ Спочатку</button><span id="deliveryControls"></span></div>
+      </div>
+      <div id="deliveryStatus" class="delivery-feedback hidden" role="status" aria-live="polite"></div>
       <div id="gameBoard" class="game-board" aria-label="Ігрове поле">
         <div class="grid-overlay"></div>
         <div class="start-zone"><span>СКЛАД</span></div>
@@ -53,7 +60,7 @@
         </div>
 
         <div id="taunt" class="taunt hidden"></div>
-        <div id="statusMessage" class="status-message">Тягни Бруківку →</div>
+        <div id="statusMessage" class="status-message" role="status">Тягни Бруківку →</div>
       </div>
     </section>
   </main>
@@ -420,8 +427,17 @@
           <div class="pc-apps">
             <button id="steamApp" class="pc-app" type="button"><span class="pc-app-icon steam-tile">◉</span><strong>Steam</strong><small>Ігри</small></button>
             <button id="soundcloudApp" class="pc-app" type="button"><span class="pc-app-icon soundcloud-tile">☁</span><strong>SoundCloud</strong><small>Музика</small></button>
+            <button class="pc-app" data-pc-preview="paint" type="button"><span class="pc-app-icon paint-tile">◩</span><strong>BrukPaint</strong><small>Піксельна майстерня</small></button>
+            <button class="pc-app" data-pc-preview="exchange" type="button"><span class="pc-app-icon exchange-tile">↗</span><strong>BrukExchange</strong><small>Навчальна біржа</small></button>
+            <button class="pc-app" data-pc-preview="workshop" type="button"><span class="pc-app-icon workshop-tile">⚒</span><strong>BrukWorkshop</strong><small>Виробництво бруківки</small></button>
+            <button class="pc-app" data-pc-preview="dispatch" type="button"><span class="pc-app-icon dispatch-tile">⇄</span><strong>BrukDispatch</strong><small>Логістика доставок</small></button>
           </div>
           <div class="pc-desktop-foot">Комп'ютер придбано ✓ <span id="pcDesktopPower"></span> <b id="pcMonitorBadge">—</b></div>
+        </section>
+        <section id="pcPreviewPanel" class="pc-program pc-preview-panel hidden">
+          <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← На робочий стіл</button><strong id="pcPreviewTitle">ПРОГРАМА</strong><span class="preview-badge">ПРОБНА ВЕРСІЯ</span></div>
+          <div id="pcPreviewContent"></div>
+          <p id="pcPreviewNotice" class="preview-notice" role="status" aria-live="polite"></p>
         </section>
         <section id="steamPanel" class="pc-program hidden">
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>STEAM</strong><span class="steam-online">● ONLINE</span></div>
@@ -478,6 +494,7 @@
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>ЖУРНАЛ ОНОВЛЕНЬ</strong><span class="steam-online">● HISTORY</span></div>
           <h2>Історія Brukivka</h2><p class="history-note">Дати й час орієнтовні, тільки для версій, відомих із розробки.</p>
           <div class="history-timeline">
+            <article><time>02.11.2026</time><h3>Нові маршрути доставки та програми ПК</h3><p>Склад ×0.1, лазери ×1, лабіринт ×3 та кидок у відкрите вікно ×10. Чотири пробні програми ПК. Астральне сяйво — найдорожчі шпалери.</p></article>
             <article><time>19.10.2026 · близько 18:00</time><h3>Випуск Music & Game 2</h3><p>П'ять обкладинок SoundCloud, шляхи mp3(1–5), посилання на другу гру.</p></article>
             <article><time>19.10.2026 · близько 15:00</time><h3>Персональний комп'ютер</h3><p>PC Market, Steam, тренажер КС2, SoundCloud, покращення комп'ютера.</p></article>
             <article><time>19.10.2026 · близько 14:00</time><h3>Стабільність прогресу</h3><p>Перевірка збережень, резервна копія, зміни Telegram-ринку.</p></article>
@@ -503,6 +520,8 @@
     <header class="steam-game-bar"><button id="steamGameBack" type="button">← До Steam</button><strong id="steamGameTitle">STEAM</strong><div><button id="steamGameMusic" type="button" aria-label="Відтворити або призупинити музику">▶ Музика</button><button id="steamGameMute" type="button" aria-label="Вимкнути звук">🔊</button></div></header>
     <iframe id="steamGameFrame" title="Гра Steam" allow="autoplay"></iframe>
   </dialog>
-  <script src="script.js?v=20261021-wallpapers-2"></script>
+  <script src="delivery.js?v=20261102-levels-1"></script>
+  <script src="script.js?v=20261102-levels-1"></script>
+  <script src="pc-apps.js?v=20261102-levels-1"></script>
 </body>
 </html>

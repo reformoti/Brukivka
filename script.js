@@ -120,11 +120,12 @@
     {id:0,name:'Стандартна тема',price:0,icon:'◈',image:'',accent:'#7885ff',panel:'#131720',panel2:'#1a1f29',bg:'#090b10',soft:'#242a49',glow:'#7885ff'},
     {id:1,name:'Зоряна одіссея',price:3_000_000,icon:'✦',image:'assets/wallpapers/1.webp',accent:'#948dff',panel:'#151329',panel2:'#201b40',bg:'#080719',soft:'#3c316d',glow:'#816bff'},
     {id:2,name:'Цвіт сакури',price:12_000_000,icon:'❀',image:'assets/wallpapers/2.webp',accent:'#ff93ba',panel:'#281723',panel2:'#3a2132',bg:'#190b18',soft:'#563047',glow:'#f770ae'},
-    {id:3,name:'Астральне сяйво',price:60_000_000,icon:'☄',image:'assets/wallpapers/3.webp',accent:'#71caff',panel:'#101f31',panel2:'#192f45',bg:'#071523',soft:'#23506a',glow:'#46aaff'},
+    {id:3,name:'Астральне сяйво',price:12_000_000_000,icon:'☄',image:'assets/wallpapers/3.webp',accent:'#71caff',panel:'#101f31',panel2:'#192f45',bg:'#071523',soft:'#23506a',glow:'#46aaff'},
     {id:4,name:'Лісова таємниця',price:320_000_000,icon:'♣',image:'assets/wallpapers/4.webp',accent:'#75dc9c',panel:'#13251e',panel2:'#1b3829',bg:'#081910',soft:'#2b5940',glow:'#49b976'},
     {id:5,name:'Імператорський сон',price:1_600_000_000,icon:'♛',image:'assets/wallpapers/5.webp',accent:'#ffc06a',panel:'#292014',panel2:'#3c2c1b',bg:'#1a1108',soft:'#604427',glow:'#f29c46'},
     {id:6,name:'Горизонт безмежжя',price:9_000_000_000,icon:'∞',image:'assets/wallpapers/6.webp',accent:'#5ce4e0',panel:'#102729',panel2:'#1a373a',bg:'#06191c',soft:'#20575b',glow:'#39bcca'}
   ];
+  const DELIVERY_LEVELS = window.BrukDelivery.LEVELS;
   const POCKET_MAX = 10;
   const ISLANDS = [
     {id:'palm',name:'Пальмовий риф',price:2500000,income:1600,emoji:'🏝️'},
@@ -202,6 +203,7 @@ const MUSIC_COVERS = [
   function defaults() {
     return {
       balance:0,
+      deliveryLevel:0,
       brickTier:0,
       phoneTier:0,
       strength:0,
@@ -265,6 +267,7 @@ const MUSIC_COVERS = [
     const attempted = record(source.attempted);
     const legit = record(source.legit);
     result.balance = safeInt(source.balance, 0, -MAX_BALANCE, MAX_BALANCE); // Negative balance is intentional.
+    result.deliveryLevel = safeInt(source.deliveryLevel, 1, 0, DELIVERY_LEVELS.length - 1);
     result.brickTier = safeInt(source.brickTier, 0, 0, brickTiers.length - 1);
     result.phoneTier = safeInt(source.phoneTier, 0, 0, phoneTiers.length - 1);
     result.strength = safeInt(source.strength, 0, 0, strengthTiers.length - 1);
@@ -428,7 +431,7 @@ const MUSIC_COVERS = [
   function strengthTier() { return strengthTiers[clamp(save.strength, 0, 5)]; }
   function finalReward() {
     const base=brickTier().reward*strengthTier().carry*nmtMultiplier()*activityMultiplier();
-    return clamp(Math.round(Math.pow(base,pocketPower())*incomeFactor()),0,MAX_BALANCE);
+    return clamp(Math.round(Math.pow(base,pocketPower())*incomeFactor()*DELIVERY_LEVELS[save.deliveryLevel].multiplier),0,MAX_BALANCE);
   }
   function displayNmt(score) { return score >= 100 ? String(score) : '—'; }
 
@@ -459,6 +462,8 @@ const MUSIC_COVERS = [
     const avg = averageNmt();
     const multiplier = nmtMultiplier(avg);
 
+    $('deliveryReward').textContent = `+${money(finalReward())} UAH · ×${DELIVERY_LEVELS[save.deliveryLevel].multiplier}`;
+    $('deliveryBalance').textContent = `${money(save.balance)} UAH`;
     $('brickBoardName').textContent = `${brick.name} Бруківка`;
     $('brickCountBadge').textContent = `×${strength.carry}`;
     $('brukivka').style.background = `linear-gradient(145deg,${brick.c1},${brick.c2})`;
@@ -634,7 +639,7 @@ const MUSIC_COVERS = [
     $('wallpaperMessage').textContent = message;
     const grid = $('wallpaperGrid');
     grid.replaceChildren();
-    for (const wall of WALLPAPERS) {
+    for (const wall of WALLPAPERS.slice().sort((a,b)=>a.price-b.price)) {
       const owned = wall.id === 0 || save.wallpapersOwned.includes(wall.id);
       const selected = save.activeWallpaper === wall.id;
       const tile = document.createElement('article');
@@ -656,7 +661,7 @@ const MUSIC_COVERS = [
       const icon = document.createElement('span'); icon.className='wallpaper-symbol';icon.textContent=wall.icon;
       preview.appendChild(icon);
       const info = document.createElement('div');info.className='wallpaper-info';
-      const heading=document.createElement('strong');heading.textContent=wall.name;
+      const heading=document.createElement('strong');heading.textContent=wall.name+(wall.id===3?' · PREMIUM':'');
       const cost=document.createElement('small');
       cost.textContent = wall.id===0?'Безкоштовно':owned?'Придбано':`${money(wall.price)} UAH`;
       info.append(heading,cost);
@@ -715,6 +720,8 @@ const MUSIC_COVERS = [
   }
 
   function openPhone() {
+    stopDrag();
+    deliveryGame.cancel();
     $('phoneOverlay').classList.remove('hidden');
     applyWallpaperTheme();
     updatePhoneTime();
@@ -745,8 +752,34 @@ const MUSIC_COVERS = [
   let dragOffsetX = 0;
   let dragOffsetY = 0;
   let resetting = false;
+  let deliveryGeneration = 0;
   let startPosition = {x:0,y:0};
   let mobileLayout = window.matchMedia('(max-width: 760px)').matches;
+  const deliveryGame = window.BrukDelivery.create({
+    canvas:$('deliveryCanvas'),onSuccess:delivered,onMessage:setStatus,
+    isActive:()=>save.deliveryLevel>=2&&!resetting&&!document.hidden&&$('phoneOverlay').classList.contains('hidden')&&$('pcOverlay').classList.contains('hidden')
+  });
+  function renderDeliveryLevel() {
+    const level=DELIVERY_LEVELS[save.deliveryLevel];
+    $('deliveryTitle').textContent=`${save.deliveryLevel+1}. ${level.name} · ×${level.multiplier}`;
+    $('deliveryHint').textContent=level.hint;
+    $('gameBoard').classList.toggle('hidden',save.deliveryLevel>=2);
+    $('deliveryCanvasBox').classList.toggle('hidden',save.deliveryLevel<2);
+    $('deliveryStatus').classList.toggle('hidden',save.deliveryLevel<2);
+    $('deliveryCanvas').setAttribute('aria-label',level.name);
+    board.dataset.level=String(save.deliveryLevel);
+    $('deliveryControls').textContent=save.deliveryLevel===2?'Тягни бруківку або керуй стрілками / WASD':'Миша / дотик: натягни й відпусти. Клавіатура: ← → — напрямок, ↑ ↓ — натяг, пробіл — кидок.';
+    $('deliveryLevels').replaceChildren();
+    DELIVERY_LEVELS.forEach((item,id)=>{
+      const button=document.createElement('button');button.type='button';button.className='delivery-level'+(id===save.deliveryLevel?' selected':'');button.setAttribute('aria-pressed',String(id===save.deliveryLevel));
+      const title=document.createElement('strong');title.textContent=`${item.icon} ${id+1}. ${item.name}`;
+      const bonus=document.createElement('span');bonus.textContent=`×${item.multiplier}`;button.append(title,bonus);
+      button.addEventListener('click',()=>{if(id===save.deliveryLevel)return;stopDrag();deliveryGame.cancel();save.deliveryLevel=id;deliveryGeneration++;resetting=false;persist();renderDeliveryLevel();rememberStart();resetBrick();randomizeLasers();updateUI();setStatus(item.hint);if(id>=2)$('deliveryCanvas').focus({preventScroll:true});});
+      $('deliveryLevels').append(button);
+    });
+    deliveryGame.setLevel(save.deliveryLevel>=2?save.deliveryLevel:2);
+  }
+  $('deliveryReset').addEventListener('click',()=>{if(resetting)return;deliveryGame.reset();setStatus(DELIVERY_LEVELS[save.deliveryLevel].hint);$('deliveryCanvas').focus({preventScroll:true});});
 
   function rememberStart() {
     const boardRect = board.getBoundingClientRect();
@@ -763,7 +796,7 @@ const MUSIC_COVERS = [
     brickElement.style.top = `${clamp(y, 0, boardRect.height - brickRect.height)}px`;
   }
 
-  function resetBrick() { placeBrick(startPosition.x, startPosition.y); }
+  function resetBrick() { placeBrick(startPosition.x, startPosition.y); if(save.deliveryLevel>=2)deliveryGame.reset(); }
 
   function rectsOverlap(a, b, padding = 0) {
     return !(a.right - padding <= b.left + padding || a.left + padding >= b.right - padding || a.bottom - padding <= b.top + padding || a.top + padding >= b.bottom - padding);
@@ -788,6 +821,7 @@ const MUSIC_COVERS = [
       mobileLayout?.86:.90,mobileLayout?.83:.50];
   }
   function buildMaze(){
+    if(save.deliveryLevel!==1)return;
     const r=board.getBoundingClientRect();if(!r.width||!r.height)return;
     const plan=mazePlan();
     plan.xs.forEach((x,i)=>{
@@ -812,6 +846,7 @@ const MUSIC_COVERS = [
     return pairs[pairs.length-1][1];
   }
   function randomizeLasers(){
+    if(save.deliveryLevel!==1)return;
     buildMaze();
     const b=board.getBoundingClientRect(),brick=brickElement.getBoundingClientRect();
     if(!b.width||!b.height)return;
@@ -837,6 +872,8 @@ const MUSIC_COVERS = [
   function setStatus(text, type = '') {
     $('statusMessage').textContent = text;
     $('statusMessage').className = `status-message${type ? ` ${type}` : ''}`;
+    $('deliveryStatus').textContent=text;
+    $('deliveryStatus').dataset.tone=type;
   }
 
   function stopDrag() {
@@ -854,6 +891,7 @@ const MUSIC_COVERS = [
   function laserHit() {
     if (resetting) return;
     resetting = true;
+    const hitGeneration=deliveryGeneration;
     stopDrag();
     save.balance -= 500;
     persist();
@@ -861,7 +899,7 @@ const MUSIC_COVERS = [
     showTaunt();
     setStatus('Лазер! −500 UAH. Лазери змінили позицію.', 'bad');
     randomizeLasers();
-    setTimeout(() => { resetBrick(); resetting = false; }, 280);
+    setTimeout(() => { if(hitGeneration!==deliveryGeneration)return;resetBrick();resetting=false; }, 280);
   }
 
   function applyOrderDelivery(count) {
@@ -879,6 +917,7 @@ const MUSIC_COVERS = [
 
   function delivered() {
     if (resetting) return;
+    const deliveredLevel=save.deliveryLevel,deliveredGeneration=deliveryGeneration;
     resetting = true;
     stopDrag();
     const reward = finalReward();
@@ -886,18 +925,19 @@ const MUSIC_COVERS = [
     const orderBonus = applyOrderDelivery(strengthTier().carry);
     persist();
     updateUI();
+    const destination=save.deliveryLevel===3?'Вікно':'Доставлено';
     if (orderBonus) {
-      setStatus(`Карман: +${money(reward)} UAH · поставка reformoti виконана +${money(orderBonus)} UAH`, 'good');
+      setStatus(`${destination}: +${money(reward)} UAH · поставка reformoti виконана +${money(orderBonus)} UAH`, 'good');
     } else {
-      setStatus(`Карман: +${money(reward)} UAH`, 'good');
+      setStatus(`${destination}: +${money(reward)} UAH · ×${DELIVERY_LEVELS[save.deliveryLevel].multiplier}`, 'good');
     }
     randomizeLasers();
-    setTimeout(() => { resetBrick(); setStatus('Новий маршрут готовий →'); resetting = false; }, 380);
+    setTimeout(() => { if(save.deliveryLevel!==deliveredLevel||deliveryGeneration!==deliveredGeneration)return;resetBrick();setStatus(DELIVERY_LEVELS[save.deliveryLevel].hint);resetting=false; }, 800);
   }
 
   function checkGameCollision() {
     const brickRect = brickElement.getBoundingClientRect();
-    for (const laser of [...lasers,...mazeWalls]) {
+    for (const laser of (save.deliveryLevel===1?[...lasers,...mazeWalls]:[])) {
       if (rectsOverlap(brickRect, laser.getBoundingClientRect(), 2)) {
         laserHit();
         return;
@@ -907,7 +947,7 @@ const MUSIC_COVERS = [
   }
 
   function pointerDown(event) {
-    if (resetting) return;
+    if (resetting || save.deliveryLevel>=2) return;
     const rect = brickElement.getBoundingClientRect();
     dragging = true;
     activePointer = event.pointerId == null ? 'mouse' : event.pointerId;
@@ -1669,6 +1709,8 @@ const MUSIC_COVERS = [
 
   function openPC() {
     if (!save.pcOwned) return;
+    stopDrag();
+    deliveryGame.cancel();
     $('phoneOverlay').classList.add('hidden');
     $('pcOverlay').classList.remove('hidden');
     showPCProgram('desktop');
@@ -1689,10 +1731,12 @@ const MUSIC_COVERS = [
     $('soundcloudPanel').classList.toggle('hidden', name !== 'soundcloud');
     $('historyPanel').classList.toggle('hidden', name !== 'history');
     $('secretPanel').classList.toggle('hidden', name !== 'secret');
+    $('pcPreviewPanel').classList.toggle('hidden', name !== 'previews');
     if (name === 'steam') {renderCsRecord();showSteamLibrary();}
     if (name === 'soundcloud') renderSoundcloud();
   }
 
+  $$('[data-pc-preview]').forEach(button=>button.addEventListener('click',()=>{showPCProgram('previews');window.BrukPcApps.open(button.dataset.pcPreview);}));
   $('pcOpenButton').addEventListener('click', openPC);
   $('pcShopOpen').addEventListener('click', openPC);
   $('pcCloseButton').addEventListener('click', closePC);
@@ -2034,6 +2078,7 @@ const MUSIC_COVERS = [
     ensureOrder();
     ensureMarket();
     persist(); // Commit sanitized data and restore a damaged main save from the backup.
+    renderDeliveryLevel();
     rememberStart();
     resetBrick();
     randomizeLasers();
@@ -2061,6 +2106,7 @@ const MUSIC_COVERS = [
       randomizeLasers(); // Rebuild only on desktop/mobile breakpoint crossing.
     }
     buildMaze();
+    deliveryGame.resize();
     if (dragging) stopDrag();
     rememberStart();
     resetBrick();
