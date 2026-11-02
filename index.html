@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#090b10" />
   <title>Бруківка — v4</title>
-  <link rel="stylesheet" href="style.css?v=20261102-paint-2" />
-  <link rel="stylesheet" href="paint.css?v=20261102-paint-2" />
+  <link rel="stylesheet" href="style.css?v=20261102-arcade-3" />
+  <link rel="stylesheet" href="paint.css?v=20261102-arcade-3" />
 </head>
 <body>
   <main class="page-shell">
@@ -33,6 +33,7 @@
       </div>
 
       <nav id="deliveryLevels" class="delivery-levels" aria-label="Рівні доставки"></nav>
+      <p class="delivery-access-note">Склад безкоштовний. Інші маршрути купуються один раз за ігрові UAH — доступ залишається назавжди.</p>
       <div class="delivery-summary"><span>ЗА ДОСТАВКУ <strong id="deliveryReward">—</strong></span><span>БАЛАНС <strong id="deliveryBalance">—</strong></span></div>
       <div id="deliveryCanvasBox" class="delivery-canvas-box hidden">
         <canvas id="deliveryCanvas" tabindex="0" width="1000" height="1000" aria-label="Рівень доставки"></canvas>
@@ -448,6 +449,8 @@
           <div id="steamLibrary" class="steam-library">
             <h2>Бібліотека ігор</h2><p>Обери гру, потім її складність.</p>
             <div class="steam-games">
+              <a href="breakout.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-breakout-art">▰ ● ▰</span><strong>БРУКІВКА · BREAKOUT</strong><small>Відбивай м'яч · розбий увесь квартал</small></a>
+              <a href="memory.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-memory-art">▦ ▦</span><strong>БРУКІВКА · MEMORY</strong><small>8 пар бруківки · тренуй пам'ять</small></a>
               <a href="runner.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-hoi-art">▰ ↟</span><strong>БРУКІВКА · ВУЛИЧНИЙ ЗАБІГ</strong><small>3 смуги · ями та паркани</small></a>
               <a href="merge.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-merge-art">2048</span><strong>БРУКІВКА · 2048</strong><small>Об'єднуй бруківку · збери плитку 2048</small></a>
               <button id="steamSelectCs" class="steam-game-tile" type="button"><span class="steam-game-art steam-cs-art">CS<b>2</b></span><strong>КС2 · AIM TRAINER</strong><small>30 секунд · цілі зникають через 2 с</small></button>
@@ -498,6 +501,7 @@
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>ЖУРНАЛ ОНОВЛЕНЬ</strong><span class="steam-online">● HISTORY</span></div>
           <h2>Історія Brukivka</h2><p class="history-note">Дати й час орієнтовні, тільки для версій, відомих із розробки.</p>
           <div class="history-timeline">
+            <article><time>02.11.2026</time><h3>Платні маршрути та нові ігри Steam</h3><p>Разова покупка рівнів доставки. Вибух при зіткненні з БПЛА. Інструкція та ціль BrukExchange. Breakout і Memory у бібліотеці Steam.</p></article>
             <article><time>02.11.2026</time><h3>BrukPaint Studio та штрафи за зіткнення</h3><p>Вільне малювання, кисті, гумка, фігури та скасування дій. Збереження робіт у папку «Мої малюнки» на ПК. Стінки й БПЛА одразу знімають 500 UAH.</p></article>
             <article><time>02.11.2026</time><h3>Нові маршрути доставки та програми ПК</h3><p>Склад ×0.1, лазери ×1, лабіринт ×3 та кидок у відкрите вікно ×10. Чотири пробні програми ПК. Астральне сяйво — найдорожчі шпалери.</p></article>
             <article><time>19.10.2026 · близько 18:00</time><h3>Випуск Music & Game 2</h3><p>П'ять обкладинок SoundCloud, шляхи mp3(1–5), посилання на другу гру.</p></article>
@@ -525,9 +529,9 @@
     <header class="steam-game-bar"><button id="steamGameBack" type="button">← До Steam</button><strong id="steamGameTitle">STEAM</strong><div><button id="steamGameMusic" type="button" aria-label="Відтворити або призупинити музику">▶ Музика</button><button id="steamGameMute" type="button" aria-label="Вимкнути звук">🔊</button></div></header>
     <iframe id="steamGameFrame" title="Гра Steam" allow="autoplay"></iframe>
   </dialog>
-  <script src="delivery.js?v=20261102-paint-2"></script>
-  <script src="script.js?v=20261102-paint-2"></script>
-  <script src="paint.js?v=20261102-paint-2"></script>
-  <script src="pc-apps.js?v=20261102-paint-2"></script>
+  <script src="delivery.js?v=20261102-arcade-3"></script>
+  <script src="script.js?v=20261102-arcade-3"></script>
+  <script src="paint.js?v=20261102-arcade-3"></script>
+  <script src="pc-apps.js?v=20261102-arcade-3"></script>
 </body>
 </html>

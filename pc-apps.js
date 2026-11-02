@@ -25,8 +25,13 @@
   function renderPaint(root){window.BrukPaint.mount(root);}
   function renderGallery(root){window.BrukPaint.gallery(root);}
   function renderExchange(root){
-    root.append(heading('BrukExchange','Спробуй торгувати будматеріалами. Купуй дешевше, перемотуй день та продавай дорожче. Демо-кредити окремі від ігрових UAH.'));
-    const summary=document.createElement('div');summary.className='preview-stats';summary.append(stat('ДЕМО-КРЕДИТИ',state.credits),stat('ДЕНЬ',state.day));root.append(summary);
+    root.append(heading('BrukExchange','Мінісимулятор торгівлі будматеріалами. Ти починаєш з 1 000 демо-кредитів; мета — довести загальну вартість грошей і товарів до 2 000.'));
+    const equity=state.credits+state.holdings.reduce((sum,count,i)=>sum+count*state.prices[i],0);
+    const summary=document.createElement('div');summary.className='preview-stats';summary.append(stat('ВІЛЬНІ КРЕДИТИ',state.credits),stat('ВЕСЬ КАПІТАЛ',equity),stat('РЕЗУЛЬТАТ',`${equity-1000>=0?'+':''}${equity-1000}`),stat('ДЕНЬ',state.day));root.append(summary);
+    const guide=document.createElement('details');guide.className='exchange-guide';guide.open=true;
+    guide.innerHTML='<summary>Як грати та навіщо ця програма?</summary><ol><li>Купи один чи кілька товарів, коли ціна здається низькою.</li><li>Натисни «Наступний день», щоб отримати нові умовні ціни. Вони можуть і зрости, і впасти.</li><li>Продай товар дорожче, ніж купував, щоб заробити демо-кредити. Якщо продаси дешевше — буде збиток.</li></ol><p><b>Приклад:</b> купив камінь за 30, продав за 45 — заробив 15 кредитів.</p><p><b>Задумка:</b> спробувати роль торговця і навчитися порівнювати ціну покупки та продажу. Капітал = вільні кредити + товари за поточними цінами. Це окрема пробна гра: кредити не переводяться в UAH і не змінюють основний баланс.</p>';
+    root.append(guide);
+    const goal=document.createElement('p');goal.className='exchange-goal';goal.textContent=equity>=2000?'Мету досягнуто: капітал перевищив 2 000! Можна продовжувати торгівлю.':`Мета: 2 000 кредитів · зараз ${equity}.`;root.append(goal);
     const list=document.createElement('div');list.className='demo-market';
     goods.forEach((g,i)=>{
       const row=document.createElement('article');const title=document.createElement('h3');title.textContent=`${g.icon} ${g.name}`;

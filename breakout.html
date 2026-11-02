@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#15212c"><title>Бруківка · Breakout</title><link rel="stylesheet" href="arcade.css"><script src="arcade.js" defer></script></head>
+<body data-game="breakout"><main class="arcade-shell">
+  <header><a href="index.html">← До Steam</a><span>BRUKIVKA ARCADE / 03</span><button id="pause" type="button" disabled>Пауза</button></header>
+  <div class="arcade-heading"><div><small>НЕ ДАЙ М'ЯЧУ ВПАСТИ.</small><h1>Бруківка <em>Breakout</em></h1></div><span class="game-tag">АРКАНОЇД</span></div>
+  <div class="arcade-hud"><div><small>ОЧКИ</small><b id="score">0</b></div><div><small>ЖИТТЯ</small><b id="lives">3</b></div><div><small>ЗАЛИШИЛОСЬ</small><b id="remaining">50</b></div><div><small>РЕКОРД</small><b id="record">0</b></div></div>
+  <section class="arcade-stage"><canvas id="arcadeCanvas" tabindex="0" width="900" height="600" aria-label="Поле Breakout: переміщуй платформу ліворуч і праворуч"></canvas>
+    <div id="overlay" class="arcade-overlay"><div><small>BRUKIVKA BREAKOUT</small><h2 id="message">Розбери квартал!</h2><p id="description">Відбивай м'яч платформою та розбий 50 бруківок. Верхні ряди міцніші. У тебе три життя.</p><button id="start" type="button">Почати →</button></div></div>
+  </section>
+  <nav class="arcade-controls" aria-label="Керування"><button id="left" type="button" aria-label="Платформа ліворуч">←</button><button id="action" type="button">Запуск / пауза</button><button id="right" type="button" aria-label="Платформа праворуч">→</button></nav>
+  <footer><p>Миша або палець — рух платформи · ← → / A D — рух · пробіл — запуск / пауза.</p><p>Кут відскоку залежить від місця удару об платформу. Рекорд зберігається на цьому пристрої.</p><span id="storageNote" role="status"></span></footer>
+</main></body></html>

@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#15212c"><title>Бруківка · Memory</title><link rel="stylesheet" href="arcade.css"><script src="arcade.js" defer></script></head>
+<body data-game="memory"><main class="arcade-shell memory-shell">
+  <header><a href="index.html">← До Steam</a><span>BRUKIVKA ARCADE / 04</span><button id="pause" type="button" disabled>Пауза</button></header>
+  <div class="arcade-heading"><div><small>ЗАПАМ'ЯТАЙ КОЖНУ БРУКІВКУ.</small><h1>Бруківка <em>Memory</em></h1></div><span class="game-tag">ЗНАЙДИ ПАРУ</span></div>
+  <div class="arcade-hud"><div><small>ПАРИ</small><b id="pairs">0 / 8</b></div><div><small>ХОДИ</small><b id="moves">0</b></div><div><small>ЧАС</small><b id="timer">0:00</b></div><div><small>РЕКОРД</small><b id="record">—</b></div></div>
+  <section class="memory-stage"><div id="memoryBoard" class="memory-board" role="group" aria-label="16 карток: знайди 8 однакових пар"></div>
+    <div id="overlay" class="arcade-overlay"><div><small>BRUKIVKA MEMORY</small><h2 id="message">Відкрий усі 8 пар</h2><p id="description">Відкривай дві картки за хід. Однакова бруківка залишається відкритою. Запам'ятовуй розташування та витрать якомога менше ходів.</p><button id="start" type="button">Почати →</button></div></div>
+  </section>
+  <div class="memory-bottom"><button id="newRound" type="button">↻ Нова розкладка</button><span id="memoryStatus" role="status" aria-live="polite">Обери дві картки.</span></div>
+  <footer><p>Клацни або торкнися картки · з клавіатури: Tab, Enter або пробіл.</p><p>Час починається з першої картки. Рекорд: менше ходів, а при рівності — швидший час.</p><span id="storageNote" role="status"></span></footer>
+</main></body></html>

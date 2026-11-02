@@ -204,6 +204,7 @@ const MUSIC_COVERS = [
     return {
       balance:0,
       deliveryLevel:0,
+      deliveryOwned:[0],
       brickTier:0,
       phoneTier:0,
       strength:0,
@@ -267,7 +268,8 @@ const MUSIC_COVERS = [
     const attempted = record(source.attempted);
     const legit = record(source.legit);
     result.balance = safeInt(source.balance, 0, -MAX_BALANCE, MAX_BALANCE); // Negative balance is intentional.
-    result.deliveryLevel = safeInt(source.deliveryLevel, 1, 0, DELIVERY_LEVELS.length - 1);
+    const access=window.BrukDelivery.restoreAccess(source);
+    result.deliveryLevel=access.selected;result.deliveryOwned=access.owned;
     result.brickTier = safeInt(source.brickTier, 0, 0, brickTiers.length - 1);
     result.phoneTier = safeInt(source.phoneTier, 0, 0, phoneTiers.length - 1);
     result.strength = safeInt(source.strength, 0, 0, strengthTiers.length - 1);
@@ -464,6 +466,7 @@ const MUSIC_COVERS = [
 
     $('deliveryReward').textContent = `+${money(finalReward())} UAH · ×${DELIVERY_LEVELS[save.deliveryLevel].multiplier}`;
     $('deliveryBalance').textContent = `${money(save.balance)} UAH`;
+    updateDeliveryButtons();
     $('brickBoardName').textContent = `${brick.name} Бруківка`;
     $('brickCountBadge').textContent = `×${strength.carry}`;
     $('brukivka').style.background = `linear-gradient(145deg,${brick.c1},${brick.c2})`;
@@ -757,7 +760,7 @@ const MUSIC_COVERS = [
   let mobileLayout = window.matchMedia('(max-width: 760px)').matches;
   const deliveryGame = window.BrukDelivery.create({
     canvas:$('deliveryCanvas'),onSuccess:delivered,onMessage:setStatus,onPenalty:deliveryPenalty,
-    isActive:()=>save.deliveryLevel>=2&&!resetting&&!document.hidden&&$('phoneOverlay').classList.contains('hidden')&&$('pcOverlay').classList.contains('hidden')
+    isActive:()=>save.deliveryLevel>=2&&save.deliveryOwned.includes(save.deliveryLevel)&&!resetting&&!document.hidden&&$('phoneOverlay').classList.contains('hidden')&&$('pcOverlay').classList.contains('hidden')
   });
   function deliveryPenalty(kind) {
     if(resetting||save.deliveryLevel<2)return;
@@ -777,13 +780,34 @@ const MUSIC_COVERS = [
     $('deliveryControls').textContent=save.deliveryLevel===2?'Тягни бруківку або керуй стрілками / WASD':'Миша / дотик: натягни й відпусти. Клавіатура: ← → — напрямок, ↑ ↓ — натяг, пробіл — кидок.';
     $('deliveryLevels').replaceChildren();
     DELIVERY_LEVELS.forEach((item,id)=>{
-      const button=document.createElement('button');button.type='button';button.className='delivery-level'+(id===save.deliveryLevel?' selected':'');button.setAttribute('aria-pressed',String(id===save.deliveryLevel));
+      const button=document.createElement('button');button.type='button';button.className='delivery-level';button.dataset.route=String(id);
       const title=document.createElement('strong');title.textContent=`${item.icon} ${id+1}. ${item.name}`;
-      const bonus=document.createElement('span');bonus.textContent=`×${item.multiplier}`;button.append(title,bonus);
-      button.addEventListener('click',()=>{if(id===save.deliveryLevel)return;stopDrag();deliveryGame.cancel();save.deliveryLevel=id;deliveryGeneration++;resetting=false;persist();renderDeliveryLevel();rememberStart();resetBrick();randomizeLasers();updateUI();setStatus(item.hint);if(id>=2)$('deliveryCanvas').focus({preventScroll:true});});
+      const bonus=document.createElement('span');bonus.textContent=`×${item.multiplier}`;
+      const access=document.createElement('small');access.className='delivery-access';button.append(title,bonus,access);
+      button.addEventListener('click',()=>selectDeliveryLevel(id));
       $('deliveryLevels').append(button);
     });
+    updateDeliveryButtons();
     deliveryGame.setLevel(save.deliveryLevel>=2?save.deliveryLevel:2);
+  }
+  function updateDeliveryButtons(){
+    $('deliveryLevels').querySelectorAll('[data-route]').forEach(button=>{
+      const id=Number(button.dataset.route),item=DELIVERY_LEVELS[id],owned=save.deliveryOwned.includes(id);
+      button.classList.toggle('selected',id===save.deliveryLevel);button.classList.toggle('locked',!owned);
+      button.setAttribute('aria-pressed',String(id===save.deliveryLevel));button.disabled=!owned&&save.balance<item.price;
+      button.querySelector('.delivery-access').textContent=id===save.deliveryLevel?'Активний маршрут':owned?'Відкрито · грати':`Купити · ${money(item.price)} UAH`;
+    });
+  }
+  function selectDeliveryLevel(id){
+    const item=DELIVERY_LEVELS[id];if(!item||id===save.deliveryLevel)return;
+    let bought=false;
+    if(!save.deliveryOwned.includes(id)){
+      if(save.balance<item.price){setStatus(`Для відкриття потрібно ${money(item.price)} UAH.`,'bad');return;}
+      save.balance-=item.price;save.deliveryOwned.push(id);bought=true;
+    }
+    stopDrag();deliveryGame.cancel();save.deliveryLevel=id;deliveryGeneration++;resetting=false;persist();renderDeliveryLevel();rememberStart();resetBrick();randomizeLasers();updateUI();
+    setStatus(bought?`Маршрут придбано назавжди за ${money(item.price)} UAH. ${item.hint}`:item.hint,'good');
+    if(id>=2)$('deliveryCanvas').focus({preventScroll:true});
   }
   $('deliveryReset').addEventListener('click',()=>{if(resetting)return;deliveryGame.reset();setStatus(DELIVERY_LEVELS[save.deliveryLevel].hint);$('deliveryCanvas').focus({preventScroll:true});});
 
@@ -1825,6 +1849,8 @@ const MUSIC_COVERS = [
     for(const key of Object.keys(SUBJECTS)){save.tests[key]=SUBJECTS[key].max;save.attempted[key]=true;}
     try{localStorage.setItem(HOI_REWARD_KEY,JSON.stringify({bestMode:3}));}catch(e){}
     save.wallpapersOwned=WALLPAPERS.slice(1).map(w=>w.id);
+    save.deliveryOwned=DELIVERY_LEVELS.map((_,i)=>i);
+    renderDeliveryLevel();
     persist();updateUI();$('archiveToolMessage').textContent='Усе прокачано та розблоковано, усі шпалери придбано.';
   });
   $('archiveFullNmt').addEventListener('click',()=>{
@@ -2126,6 +2152,8 @@ const MUSIC_COVERS = [
   const steamGames = new Map([
     ['runner.html', 'БРУКІВКА · ВУЛИЧНИЙ ЗАБІГ'],
     ['merge.html', 'БРУКІВКА · 2048'],
+    ['breakout.html', 'БРУКІВКА · BREAKOUT'],
+    ['memory.html', 'БРУКІВКА · MEMORY'],
     ['minihoi.html', 'IRON ATLAS · MINI HOI']
   ]);
   function updateSteamMusic() {

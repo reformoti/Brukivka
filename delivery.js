@@ -1,11 +1,20 @@
 (function (root) {
   'use strict';
   const LEVELS = [
-    {name:'Склад', multiplier:0.1, icon:'▰', hint:'Просто перенеси бруківку зі складу в карман. Без перешкод.'},
-    {name:'Лазерні ворота', multiplier:1, icon:'⌁', hint:'Знайомий маршрут: проведи бруківку між воротами й лазерами.'},
-    {name:'Лабіринт', multiplier:3, icon:'▦', hint:'Знайди шлях від входу ліворуч до виходу праворуч. Торкання стіни: −500 UAH.'},
-    {name:'У відкрите вікно', multiplier:10, icon:'↗', hint:'Потягни бруківку вниз і вліво та відпусти. Влуч у вікно зверху, на спаданні. Стіна чи БПЛА: −500 UAH.'}
+    {name:'Склад', multiplier:0.1, price:0, icon:'▰', hint:'Просто перенеси бруківку зі складу в карман. Без перешкод.'},
+    {name:'Лазерні ворота', multiplier:1, price:2500, icon:'⌁', hint:'Знайомий маршрут: проведи бруківку між воротами й лазерами.'},
+    {name:'Лабіринт', multiplier:3, price:35000, icon:'▦', hint:'Знайди шлях від входу ліворуч до виходу праворуч. Торкання стіни: −500 UAH.'},
+    {name:'У відкрите вікно', multiplier:10, price:250000, icon:'↗', hint:'Потягни бруківку вниз і вліво та відпусти. Влуч у вікно зверху, на спаданні. Стіна чи БПЛА: −500 UAH.'}
   ];
+  function restoreAccess(source={}){
+    const legacy=source.deliveryOwned===undefined;
+    const valid=id=>Number.isInteger(id)&&id>=0&&id<LEVELS.length;
+    const owned=new Set([0,...(Array.isArray(source.deliveryOwned)?source.deliveryOwned.filter(valid):[])]);
+    const selected=valid(source.deliveryLevel)?source.deliveryLevel:legacy?1:0;
+    // Existing players keep the original laser route and the route last in use.
+    if(legacy){owned.add(1);owned.add(selected);}
+    return {owned:[...owned].sort((a,b)=>a-b),selected:owned.has(selected)?selected:0};
+  }
   // Coordinates follow the supplied maze drawing; openings are on the left/right.
   const MAZE_LINES = [
     [0,0,10,0],[0,10,10,10],[0,0,0,4],[0,6,0,10],[10,0,10,4],[10,6,10,10],
@@ -62,12 +71,13 @@
   }
   class FlightWorld {
     constructor(onCollision=()=>{}){this.time=0;this.onCollision=onCollision;this.reset();}
-    reset(){this.ball={...THROW.anchor,vx:0,vy:0};this.phase='ready';this.elapsed=0;this.bounces=0;this.cooldown=0;this.hitDrone=false;this.wallContacts=new Set();}
+    reset(){this.ball={...THROW.anchor,vx:0,vy:0};this.phase='ready';this.elapsed=0;this.bounces=0;this.cooldown=0;this.hitDrone=false;this.wallContacts=new Set();this.explosions=[];}
     launch(pull){const shot=shotFromPull(pull);if(shot.power<.07)return false;this.ball={...shot};this.phase='flying';this.elapsed=0;return true;}
     step(dt) {
       const count=Math.max(1,Math.ceil(dt*240)),h=dt/count;
       for(let n=0;n<count;n++) {
         this.time+=h;
+        this.explosions=this.explosions.filter(effect=>(effect.age+=h)<.9);
         if(this.phase!=='flying')continue;
         this.elapsed+=h;this.cooldown=Math.max(0,this.cooldown-h);
         const b=this.ball,old={...b};
@@ -89,6 +99,7 @@
           const dx=b.x-drone.x,dy=b.y-drone.y,d=Math.hypot(dx,dy),range=THROW.radius+drone.radius;
           if(d>=range||this.cooldown>0)continue;
           this.onCollision('drone');
+          this.explosions.push({x:drone.x,y:drone.y,age:0,seed:this.time*3});
           const nx=d?dx/d:0,ny=d?dy/d:-1,dot=b.vx*nx+b.vy*ny;
           b.x=drone.x+nx*(range+2);b.y=drone.y+ny*(range+2);
           if(dot<0){b.vx-=1.7*dot*nx;b.vy-=1.7*dot*ny;}
@@ -101,8 +112,30 @@
       }
     }
   }
+  function drawExplosion(ctx,e,reduced=false){
+    const t=e.age/.9,fade=Math.max(0,1-t);
+    ctx.save();ctx.translate(e.x,e.y);
+    if(reduced){ctx.globalAlpha=fade*.65;ctx.fillStyle='#ffc16b';ctx.beginPath();ctx.arc(0,0,23,0,Math.PI*2);ctx.fill();ctx.restore();return;}
+    // One local burst: expanding flash, sparks, fragments and drifting smoke.
+    if(t<.48){
+      const r=18+70*t,glow=ctx.createRadialGradient(0,0,1,0,0,r*1.7);
+      glow.addColorStop(0,'#fff3b8');glow.addColorStop(.28,'#ffb743cc');glow.addColorStop(1,'#fa5a1700');
+      ctx.globalAlpha=1-t*1.8;ctx.fillStyle=glow;ctx.beginPath();ctx.arc(0,0,r*1.7,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#ffe3a0';ctx.beginPath();
+      for(let i=0;i<20;i++){const a=i*Math.PI/10+e.seed,radius=i%2?r*.5:r;const x=Math.cos(a)*radius,y=Math.sin(a)*radius;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fill();
+    }
+    ctx.globalAlpha=fade*.8;ctx.strokeStyle='#ffd28b';ctx.lineWidth=2*fade;ctx.beginPath();ctx.arc(0,0,18+90*t,0,Math.PI*2);ctx.stroke();
+    for(let i=0;i<16;i++){
+      const a=i*Math.PI/8+e.seed,speed=65+(i%4)*24,x=Math.cos(a)*speed*t,y=Math.sin(a)*speed*t+35*t*t;
+      ctx.globalAlpha=fade;ctx.fillStyle=i%3?'#ffc264':'#b7d3d8';ctx.save();ctx.translate(x,y);ctx.rotate(a+t*7);ctx.fillRect(-3,-2,7*fade+1,3);ctx.restore();
+    }
+    for(let i=0;i<5;i++){
+      ctx.globalAlpha=Math.max(0,t*.5*(1-t));ctx.fillStyle='#263039';ctx.beginPath();ctx.arc(Math.sin(i*2+e.seed)*26*t,-t*(24+i*12),14+23*t,0,Math.PI*2);ctx.fill();
+    }ctx.restore();
+  }
   function create(options) {
     const {canvas,onSuccess,onMessage,isActive,onPenalty=()=>{}}=options,ctx=canvas.getContext('2d');
+    const reducedMotion=root.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
     let level=2,maze={x:.65,y:5},done=false,pointer=null,offset={x:0,y:0},pull={x:-54,y:78};
     let aiming=false,keys=new Set(),previous=null,mazeContact=false,flight=new FlightWorld(kind=>onPenalty(kind));
     function notify(text,type=''){onMessage(text,type);}
@@ -210,6 +243,7 @@
       }
       if(aiming){ctx.strokeStyle='#e9c382';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(101,526);ctx.lineTo(shot.x,shot.y);ctx.lineTo(155,526);ctx.stroke();}
       brick(shown.x,shown.y,36,flight.phase==='flying'?flight.elapsed*5:0);
+      flight.explosions.forEach(effect=>drawExplosion(ctx,effect,reducedMotion));
       text('ВІДКРИТЕ ВІКНО / 04',28,37,'#c0cdd3',17);
       text(flight.phase==='flying'?'У ПОЛЬОТІ':`НАТЯГ ${Math.round(shot.power*100)}%`,28,65,'#d5f19c',17);
       ctx.fillStyle='#0d1c27';ctx.fillRect(28,78,150,7);ctx.fillStyle='#d5f19c';ctx.fillRect(28,78,150*shot.power,7);
@@ -233,7 +267,7 @@
     root.requestAnimationFrame(frame);
     return {setLevel,reset,resize,cancel:()=>{keys.clear();pointer=null;aiming=false;mazeContact=false;}};
   }
-  const api={LEVELS,MAZE_LINES,mazeBlocked,moveMaze,THROW,dronesAt,shotFromPull,catchesWindow,FlightWorld,create};
+  const api={LEVELS,restoreAccess,MAZE_LINES,mazeBlocked,moveMaze,THROW,dronesAt,shotFromPull,catchesWindow,FlightWorld,drawExplosion,create};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   root.BrukDelivery=api;
 })(typeof window==='undefined'?globalThis:window);

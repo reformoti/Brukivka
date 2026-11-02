@@ -68,3 +68,15 @@ test('drone damage is immediate and its contact cooldown prevents duplicate pena
  const hits=[],world=new FlightWorld(kind=>hits.push(kind)),d=dronesAt(0)[0];world.phase='flying';world.ball={x:d.x-33,y:d.y,vx:300,vy:0};
  world.step(.01);assert.deepEqual(hits,['drone']);world.step(.01);assert.deepEqual(hits,['drone']);
 });
+
+test('paid routes have increasing one-time prices; explicit access cannot select a locked route',()=>{
+ const {restoreAccess}=require('../delivery.js');assert.deepEqual(LEVELS.map(l=>l.price),[0,2500,35000,250000]);
+ assert.deepEqual(restoreAccess({deliveryOwned:[0,2,2,'3',99],deliveryLevel:3}),{owned:[0,2],selected:0});
+ assert.deepEqual(restoreAccess({deliveryOwned:[0,2],deliveryLevel:2}),{owned:[0,2],selected:2});
+ assert.deepEqual(restoreAccess({deliveryLevel:3}),{owned:[0,1,3],selected:3});
+});
+test('a drone collision creates a short-lived explosion at impact, without changing the penalty count',()=>{
+ const hits=[],world=new FlightWorld(kind=>hits.push(kind)),d=dronesAt(0)[0];world.phase='flying';world.ball={x:d.x-33,y:d.y,vx:300,vy:0};world.step(.01);
+ assert.equal(world.explosions.length,1);assert.equal(hits.length,1);assert(Math.abs(world.explosions[0].x-d.x)<5);
+ world.phase='ready';world.step(1);assert.equal(world.explosions.length,0);
+});
