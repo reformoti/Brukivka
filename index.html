@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#090b10" />
   <title>Бруківка — v4</title>
-  <link rel="stylesheet" href="style.css?v=20261102-expansion-4" />
-  <link rel="stylesheet" href="paint.css?v=20261102-expansion-4" />
-  <link rel="stylesheet" href="ventures.css?v=20261102-expansion-4" />
-  <link rel="stylesheet" href="exchange.css?v=20261102-expansion-4" />
+  <link rel="stylesheet" href="style.css?v=20261104-fop-1" />
+  <link rel="stylesheet" href="paint.css?v=20261104-fop-1" />
+  <link rel="stylesheet" href="ventures.css?v=20261104-fop-1" />
+  <link rel="stylesheet" href="exchange.css?v=20261104-fop-1" />
 </head>
 <body>
   <main class="page-shell">
@@ -86,6 +86,7 @@
         </div>
 
         <div class="app-grid">
+          <button id="fopApp" class="app-icon" type="button"><span class="app-square fop-icon">▤</span><small>ФОП</small></button>
           <button id="estateApp" class="app-icon" type="button"><span class="app-square estate-icon">⌂</span><small>Моя ділянка</small></button>
           <button id="garageApp" class="app-icon" type="button"><span class="app-square garage-icon">▰</span><small>Гараж</small></button>
           <button id="bankApp" class="app-icon" type="button">
@@ -231,11 +232,20 @@
           <button id="pocketUpgradeButton" class="upgrade-button" type="button">Покращити карман</button>
           <p class="pc-shop-desc">Найдорожча прокачка. Кожен рівень підвищує степінь доходу, а ціна зростає все швидше.</p>
         </div>
+        <button id="bankOpenFop" type="button" class="bank-fop-link">▤ Відкрити ФОП · острови та пасивний дохід →</button>
+      </section>
+
+      <section id="fopScreen" class="phone-screen fop-screen hidden">
+        <div class="screen-header"><button class="icon-button" data-home type="button">‹</button><span>ФОП · Bruk Business</span><span class="header-dot">▤</span></div>
+        <div class="fop-hero"><small>ВЛАСНИЙ БІЗНЕС</small><h2>Твій ФОП</h2><p>Дохід від островів надходить на окремий рахунок. Переведи його на картку, коли потрібно.</p></div>
         <div class="upgrade-card"><div class="upgrade-title"><div><small>НЕРУХОМІСТЬ</small><h3>Твої острови 🏝️</h3></div></div>
           <p class="pc-shop-desc">Острови поповнюють ФОП щосекунди. Дохід: <b id="islandIncome">0</b> UAH/с</p>
           <div class="fop-wallet"><small>БАЛАНС ФОП</small><strong id="fopBalance">0 UAH</strong><span>Переказ на картку: комісія 30%</span><button id="fopTransfer" type="button" class="upgrade-button">Переказати</button></div>
           <div id="islandList" class="island-list"></div>
         </div>
+        <div class="fop-settlement"><div><span>На рахунку</span><b id="fopGross">0 UAH</b></div><div><span>Комісія 30%</span><b id="fopFee">0 UAH</b></div><div><span>Отримаєш на картку</span><b id="fopNet">0 UAH</b></div></div>
+        <p id="fopMessage" class="fop-message" role="status" aria-live="polite"></p>
+        <button id="fopToBank" type="button" class="bank-fop-link">₴ Відкрити BrukBank →</button>
       </section>
 
       <section id="brukivkaScreen" class="phone-screen info-screen hidden">
@@ -509,6 +519,7 @@
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>ЖУРНАЛ ОНОВЛЕНЬ</strong><span class="steam-online">● HISTORY</span></div>
           <h2>Історія Brukivka</h2><p class="history-note">Дати й час орієнтовні, тільки для версій, відомих із розробки.</p>
           <div class="history-timeline">
+            <article><time>04.11.2026</time><h3>Окремий застосунок ФОП</h3><p>Рахунок, острови й пасивний дохід перенесено в окрему програму телефону. Перед переказом видно комісію та суму на картку.</p></article>
             <article><time>02.11.2026</time><h3>Ділянка, гараж та BrukExchange 2</h3><p>Будівництво з масою, навантаженнями й арматурою; купівля та кастомізація машин. Графіки, новини та лімітні заявки BrukExchange. Bruk Rally і Stack у Steam. БПЛА повністю знищує бруківку.</p></article>
             <article><time>02.11.2026</time><h3>Платні маршрути та нові ігри Steam</h3><p>Разова покупка рівнів доставки. Вибух при зіткненні з БПЛА. Інструкція та ціль BrukExchange. Breakout і Memory у бібліотеці Steam.</p></article>
             <article><time>02.11.2026</time><h3>BrukPaint Studio та штрафи за зіткнення</h3><p>Вільне малювання, кисті, гумка, фігури та скасування дій. Збереження робіт у папку «Мої малюнки» на ПК. Стінки й БПЛА одразу знімають 500 UAH.</p></article>
@@ -542,12 +553,12 @@
     <header class="steam-game-bar"><button id="steamGameBack" type="button">← До Steam</button><strong id="steamGameTitle">STEAM</strong><div><button id="steamGameMusic" type="button" aria-label="Відтворити або призупинити музику">▶ Музика</button><button id="steamGameMute" type="button" aria-label="Вимкнути звук">🔊</button></div></header>
     <iframe id="steamGameFrame" title="Гра Steam" allow="autoplay"></iframe>
   </dialog>
-  <script src="ventures-core.js?v=20261102-expansion-4"></script>
-  <script src="delivery.js?v=20261102-expansion-4"></script>
-  <script src="script.js?v=20261102-expansion-4"></script>
-  <script src="paint.js?v=20261102-expansion-4"></script>
-  <script src="ventures-ui.js?v=20261102-expansion-4"></script>
-  <script src="exchange.js?v=20261102-expansion-4"></script>
-  <script src="pc-apps.js?v=20261102-expansion-4"></script>
+  <script src="ventures-core.js?v=20261104-fop-1"></script>
+  <script src="delivery.js?v=20261104-fop-1"></script>
+  <script src="script.js?v=20261104-fop-1"></script>
+  <script src="paint.js?v=20261104-fop-1"></script>
+  <script src="ventures-ui.js?v=20261104-fop-1"></script>
+  <script src="exchange.js?v=20261104-fop-1"></script>
+  <script src="pc-apps.js?v=20261104-fop-1"></script>
 </body>
 </html>

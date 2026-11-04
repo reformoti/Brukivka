@@ -540,9 +540,7 @@ const MUSIC_COVERS = [
     $('csBoost').textContent = `×${csMultiplier().toFixed(2)}`;
     $('hoiBoost').textContent = `×${hoiMultiplier().toFixed(2)}`;
     $('allBoost').textContent = `×${activityMultiplier().toFixed(2)}`;
-    $('fopBalance').textContent = `${money(save.fopBalance)} UAH`;
-    $('fopTransfer').disabled = save.fopBalance < 1;
-    $('fopTransfer').textContent = `Переказати на картку +${money(Math.floor(save.fopBalance*.7))} UAH (комісія 30%)`;
+    renderFopWallet();
 
     $('vodoBadge').classList.toggle('hidden',!save.waiterPenalty);
     $('brickMaxLabel').textContent = brickTiers.length-1;
@@ -551,7 +549,6 @@ const MUSIC_COVERS = [
     $('pocketLevel').textContent = `${save.pocketTier}/${POCKET_MAX}`;
     $('pocketUpgradeButton').disabled = save.pocketTier >= POCKET_MAX || save.balance < pocketCost();
     $('pocketUpgradeButton').textContent = save.pocketTier >= POCKET_MAX?'МАКСИМУМ':`Покращити карман — ${money(pocketCost())} UAH`;
-    $('islandIncome').textContent = money(islandIncome());
     renderIslands();
 
     renderSubjects();
@@ -602,6 +599,16 @@ const MUSIC_COVERS = [
       copy.append(title,subtitle);card.append(copy,btn);list.append(card);
     });
   }
+  function renderFopWallet(){
+    const net=Math.floor(save.fopBalance*.7);
+    $('fopBalance').textContent=`${money(save.fopBalance)} UAH`;
+    $('fopGross').textContent=`${money(save.fopBalance)} UAH`;
+    $('fopFee').textContent=`${money(save.fopBalance-net)} UAH`;
+    $('fopNet').textContent=`${money(net)} UAH`;
+    $('islandIncome').textContent=money(Math.round(islandIncome()*incomeFactor()));
+    $('fopTransfer').disabled=net<1;
+    $('fopTransfer').textContent=`Переказати на картку +${money(net)} UAH`;
+  }
   function payIslands(){
     if(!save.lastIslandAt)save.lastIslandAt=Date.now();
     const seconds=Math.min(3600,Math.max(0,Math.floor((Date.now()-save.lastIslandAt)/1000)));
@@ -610,18 +617,17 @@ const MUSIC_COVERS = [
     if(islandIncome()>0){
       // Passive earnings remain on the separate FOP account until a taxed transfer.
       save.fopBalance=clamp(save.fopBalance+Math.round(islandIncome()*seconds*incomeFactor()),0,MAX_BALANCE);
-      const balance=$('fopBalance');if(balance)balance.textContent=`${money(save.fopBalance)} UAH`;
-      const button=$('fopTransfer');if(button){button.disabled=false;button.textContent=`Переказати на картку +${money(Math.floor(save.fopBalance*.7))} UAH (комісія 30%)`;}
+      renderFopWallet();
     }
     persist();
   }
   $('fopTransfer').addEventListener('click',()=>{
-    payIslands();if(save.fopBalance<1)return;
-    const net=Math.floor(save.fopBalance*.7);
+    payIslands();const net=Math.floor(save.fopBalance*.7);if(net<1)return;
     save.fopBalance=0;
     save.balance=clamp(save.balance+net,-MAX_BALANCE,MAX_BALANCE);
     save.totalEarned=clamp(save.totalEarned+net,0,MAX_BALANCE);
     persist();updateUI();
+    $('fopMessage').textContent=`На картку переказано ${money(net)} UAH після комісії 30%.`;
   });
 
   $('phoneUpgradeButton').addEventListener('click', () => buyUpgrade('phone'));
@@ -716,12 +722,13 @@ const MUSIC_COVERS = [
   // Phone navigation.
   const screenIds = [
     'phoneHome','bankScreen','brukivkaScreen','znoScreen','quizScreen','quizResultScreen',
-    'legitScreen','telegramScreen','reformotiChatScreen','pcShopScreen','wallpaperScreen'
+    'legitScreen','telegramScreen','reformotiChatScreen','pcShopScreen','wallpaperScreen','fopScreen'
   ];
   function showScreen(id) {
     screenIds.forEach((screenId) => $(screenId).classList.add('hidden'));
     $(id).classList.remove('hidden');
     updateUI();
+    if(id==='fopScreen'){payIslands();renderFopWallet();}
     if (id === 'wallpaperScreen') renderWallpaperShop();
     if (id === 'telegramScreen') renderTelegram();
     if (id === 'reformotiChatScreen') renderReformotiChat();
@@ -740,6 +747,9 @@ const MUSIC_COVERS = [
   $('closePhone').addEventListener('click', () => $('phoneOverlay').classList.add('hidden'));
   $('phoneHomeButton').addEventListener('click', () => showScreen('phoneHome'));
   $$('[data-home]').forEach((button) => button.addEventListener('click', () => showScreen('phoneHome')));
+  $('fopApp').addEventListener('click',()=>showScreen('fopScreen'));
+  $('bankOpenFop').addEventListener('click',()=>showScreen('fopScreen'));
+  $('fopToBank').addEventListener('click',()=>showScreen('bankScreen'));
   $('bankApp').addEventListener('click', () => showScreen('bankScreen'));
   $('brukivkaApp').addEventListener('click', () => showScreen('brukivkaScreen'));
   $('znoApp').addEventListener('click', () => showScreen('znoScreen'));
