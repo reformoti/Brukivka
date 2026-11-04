@@ -7,7 +7,7 @@
   function hero(root,kicker,title,copy){const h=el('div','venture-hero');h.append(el('small','',kicker),el('h2','',title),el('p','',copy));root.append(h);}
   function stat(label,value){const s=el('div','venture-stat');s.append(el('small','',label),el('strong','',value));return s;}
   let cleanup=null,selectedMaterial='brick',rotated=false,demolish=false,carFilter='Усі';
-  function mount(root,kind,api){if(cleanup)cleanup();root.replaceChildren();cleanup=kind==='estate'?estate(root,api):garage(root,api);}
+  function mount(root,kind,api){if(cleanup)cleanup();root.replaceChildren();cleanup=kind==='estate'?estate(root,api):garage(root,api);window.BrukHelp?.fold(root);}
   function close(){if(cleanup)cleanup();cleanup=null;}
   function estate(root,api){
     const state=api.estate();hero(root,'BRUK ESTATE / BUILD SANDBOX','Твоя ділянка','Збудуй власний будинок із секцій. Гравітація, маса, розподіл навантаження й міцність опор впливають на стійкість конструкції.');
@@ -46,11 +46,11 @@
       if(demolish){if(body){world.remove(body.id);save();}return;}
       if(selectedMaterial==='rebar'){
         if(!body||body.reinforced||!['brick','block','concrete'].includes(body.material)){api.message('Арматура підсилює існуючу бетонну, цегляну або газобетонну секцію.');return;}
-        if(api.buy(V.MATERIALS.rebar.price,()=>{world.reinforce(body.id);state.bodies=world.serialize();}))api.message('Секцію армовано: +15 кг та ×1.8 до міцності.');return;
+        const change=()=>{world.reinforce(body.id);state.bodies=world.serialize();};const ok=api.perks().rebarStock>0?api.usePerk('rebarStock',change):api.buy(V.MATERIALS.rebar.price,change);if(ok)api.message('Секцію армовано: +15 кг та ×1.8 до міцності.');return;
       }
       const x=Math.floor(p.x/20)*20,y=Math.floor(p.y/20)*20,m=V.MATERIALS[selectedMaterial];
       if(!world.canPlace(selectedMaterial,x,y,rotated)){if(body)describe(body);else api.message(`Не можна розмістити тут: перетин, межа або висота понад ${world.heightLimit}.`);return;}
-      if(api.buy(m.price,()=>{world.place(selectedMaterial,x,y,rotated);state.bodies=world.serialize();}))api.message(`${m.name}: розміщено, маса ${m.mass} кг.`);
+      const change=()=>{if(!world.place(selectedMaterial,x,y,rotated))return false;state.bodies=world.serialize();};const free=selectedMaterial==='brick'&&api.perks().brickStock>0;const ok=free?api.usePerk('brickStock',change):api.buy(m.price,change);if(ok)api.message(`${m.name}: розміщено${free?' зі складу майстерні':''}, маса ${m.mass} кг.`);
     });
     function describe(b){detail.textContent=`${V.MATERIALS[b.material].name} · маса ${V.mass(b)} кг · навантаження ${Math.round(b.load)} / ${Math.round(world.capacity(b))} кг · ${b.grounded?'є опора':'немає стійкої опори'}${b.reinforced?' · армовано':''}`;}
     function draw(){
@@ -71,7 +71,7 @@
     }
     function frame(time){const dt=previous===null?0:Math.min(.035,(time-previous)/1000);previous=time;
       if(running&&$('businessHost').open&&!document.hidden){world.step(dt);dirty=true;if(time-lastSave>1200){save();lastSave=time;}}
-      const m=world.analyze(),values=[`${world.bodies.length}/${V.MAX_BODIES}`,`${money(m.totalMass)} кг`,Math.round(m.height),m.stable?'Стійко':m.overloaded?'Перевантаження':'Перевір опори'];metrics.querySelectorAll('strong').forEach((b,i)=>b.textContent=values[i]);if(selected){const b=world.bodies.find(b=>b.id===selected);if(b&&running)describe(b);}draw();frameId=requestAnimationFrame(frame);
+      const inventory=api.perks();palette.querySelectorAll('button small').forEach((node,i)=>{const [id,m]=Object.entries(V.MATERIALS)[i];node.textContent=`${m.mass} кг · ${money(m.price)} UAH`+((id==='brick'&&inventory.brickStock)?` · склад ${inventory.brickStock}`:(id==='rebar'&&inventory.rebarStock)?` · склад ${inventory.rebarStock}`:'');});const m=world.analyze(),values=[`${world.bodies.length}/${V.MAX_BODIES}`,`${money(m.totalMass)} кг`,Math.round(m.height),m.stable?'Стійко':m.overloaded?'Перевантаження':'Перевір опори'];metrics.querySelectorAll('strong').forEach((b,i)=>b.textContent=values[i]);if(selected){const b=world.bodies.find(b=>b.id===selected);if(b&&running)describe(b);}draw();frameId=requestAnimationFrame(frame);
     }
     updateTools();draw();frameId=requestAnimationFrame(frame);return ()=>{cancelAnimationFrame(frameId);if(dirty)save();};
   }
@@ -90,7 +90,7 @@
         if(api.buy(c.price,()=>{state.owned.push(c.id);state.custom[c.id]=V.defaultStyle(c);state.active=c.id;})){api.message(`${c.name} придбано. Можна змінювати стиль.`);refresh();renderCards();}
       },'buyCar',!owned&&api.balance()<c.price));
       custom.replaceChildren();if(!owned){custom.append(el('p','venture-caption','Кастомізація стане доступною після покупки цієї машини.'));return;}
-      const s=style(),paint=el('div','garage-option');paint.append(el('strong','','Фарбування · 800 UAH'));const picker=el('input','');picker.id='carColor';picker.type='color';picker.value=s.color;picker.addEventListener('input',()=>previewColor=picker.value);paint.append(picker,button('Пофарбувати',()=>{const next=picker.value;if(next===s.color)return;if(api.buy(800,()=>s.color=next)){api.message('Колір кузова змінено.');refresh();}},'paintCar'));custom.append(paint);
+      const s=style(),paint=el('div','garage-option');paint.append(el('strong','',api.perks().paintVouchers>0?`Фарбування · талонів ${api.perks().paintVouchers}`:'Фарбування · 800 UAH'));const picker=el('input','');picker.id='carColor';picker.type='color';picker.value=s.color;picker.addEventListener('input',()=>previewColor=picker.value);paint.append(picker,button(api.perks().paintVouchers>0?'Фарбування · 1 талон':'Пофарбувати · 800 UAH',()=>{const next=picker.value;if(next===s.color)return;const ok=api.perks().paintVouchers>0?api.usePerk('paintVouchers',()=>s.color=next):api.buy(800,()=>s.color=next);if(ok){api.message('Колір кузова змінено.');refresh();}},'paintCar'));custom.append(paint);
       const rims=el('div','garage-option');rims.append(el('strong','','Диски'));for(const [i,title,cost] of [[0,'Заводські',0],[1,'Sport',2500],[2,'Mesh',6000]])rims.append(button(`${title}${i&&!s.unlocks.includes('rims'+i)?' · '+money(cost)+' UAH':''}`,()=>{
         if(s.rims===i)return;const key='rims'+i,price=i&&!s.unlocks.includes(key)?cost:0;if(api.buy(price,()=>{if(i&&!s.unlocks.includes(key))s.unlocks.push(key);s.rims=i;}))refresh();
       },'carRims'+i));custom.append(rims);
@@ -98,7 +98,7 @@
         const ownedStyle=s.unlocks.includes(key),b=button(`${s[key]?'✓ ':''}${title}${ownedStyle?' · перемкнути':' · '+money(cost)+' UAH'}`,()=>{const alreadyOwned=s.unlocks.includes(key);if(api.buy(alreadyOwned?0:cost,()=>{if(!alreadyOwned)s.unlocks.push(key);s[key]=!s[key];})){refresh();}},'carStyle-'+key);custom.append(b);
       }
       const cost=Math.round(c.price*.15*2**s.engine);custom.append(button(s.engine>=3?'Двигун · максимум':`Двигун ${s.engine}/3 → +1 · ${money(cost)} UAH`,()=>{if(s.engine<3&&api.buy(Math.round(c.price*.15*2**s.engine),()=>s.engine++))refresh();},'carEngine',s.engine>=3||api.balance()<cost),button(testDrive?'Ⅱ Зупинити тест':'▶ Тест-драйв',()=>{testDrive=!testDrive;refresh();},'carTest'));
-      custom.append(el('p','venture-caption','Деталі купуються один раз і потім перемикаються безкоштовно. Перефарбування оплачується за кожний новий колір. Ціни та динаміка — ігрові.'));
+      custom.append(el('p','venture-caption','Талони фарбування з BrukExchange або логістики замінюють оплату 800 UAH. Деталі купуються один раз і потім перемикаються безкоштовно. Перефарбування оплачується за кожний новий колір. Ціни та динаміка — ігрові.'));window.BrukHelp?.fold(custom);
     }
     function renderCards(){cards.replaceChildren();for(const c of V.CARS.filter(c=>carFilter==='Усі'||c.tier===carFilter)){
       const card=el('article','garage-car-card'),icon=el('canvas','');icon.width=440;icon.height=180;icon.getContext('2d').fillStyle='#1a303e';icon.getContext('2d').fillRect(0,0,440,180);V.drawCar(icon.getContext('2d'),220,115,1.05,c,state.custom[c.id]||{});card.append(icon,el('h3','',c.name),el('small','',c.tier),el('strong','',state.owned.includes(c.id)?'У гаражі ✓':money(c.price)+' UAH'),button('Переглянути',()=>{previewId=c.id;testDrive=false;refresh();},'view-car-'+c.id));cards.append(card);

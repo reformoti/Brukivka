@@ -205,6 +205,7 @@ const MUSIC_COVERS = [
       balance:0,
       deliveryLevel:0,
       deliveryOwned:[0],
+      perks:window.BrukRewardShop.normalize(),
       estate:window.BrukVentures.defaultEstate(),
       garage:window.BrukVentures.defaultGarage(),
       brickTier:0,
@@ -270,6 +271,7 @@ const MUSIC_COVERS = [
     const attempted = record(source.attempted);
     const legit = record(source.legit);
     result.balance = safeInt(source.balance, 0, -MAX_BALANCE, MAX_BALANCE); // Negative balance is intentional.
+    result.perks=window.BrukRewardShop.normalize(source.perks);
     result.estate=window.BrukVentures.normalizeEstate(source.estate);
     result.garage=window.BrukVentures.normalizeGarage(source.garage);
     const access=window.BrukDelivery.restoreAccess(source);
@@ -606,12 +608,13 @@ const MUSIC_COVERS = [
     $('fopFee').textContent=`${money(save.fopBalance-net)} UAH`;
     $('fopNet').textContent=`${money(net)} UAH`;
     $('islandIncome').textContent=money(Math.round(islandIncome()*incomeFactor()));
+    $('fopOfflineLimit').textContent=`${(3600+1800*save.perks.logisticsTier)/3600} год` ;
     $('fopTransfer').disabled=net<1;
     $('fopTransfer').textContent=`Переказати на картку +${money(net)} UAH`;
   }
   function payIslands(){
     if(!save.lastIslandAt)save.lastIslandAt=Date.now();
-    const seconds=Math.min(3600,Math.max(0,Math.floor((Date.now()-save.lastIslandAt)/1000)));
+    const seconds=Math.min(3600+1800*save.perks.logisticsTier,Math.max(0,Math.floor((Date.now()-save.lastIslandAt)/1000)));
     if(seconds<=0)return;
     save.lastIslandAt=Date.now()-(Date.now()-save.lastIslandAt)%1000;
     if(islandIncome()>0){
@@ -748,6 +751,7 @@ const MUSIC_COVERS = [
   $('phoneHomeButton').addEventListener('click', () => showScreen('phoneHome'));
   $$('[data-home]').forEach((button) => button.addEventListener('click', () => showScreen('phoneHome')));
   $('fopApp').addEventListener('click',()=>showScreen('fopScreen'));
+  $('fopQuickOpen').addEventListener('click',()=>showScreen('fopScreen'));
   $('bankOpenFop').addEventListener('click',()=>showScreen('fopScreen'));
   $('fopToBank').addEventListener('click',()=>showScreen('bankScreen'));
   $('bankApp').addEventListener('click', () => showScreen('bankScreen'));
@@ -2174,6 +2178,8 @@ const MUSIC_COVERS = [
     ['memory.html', 'БРУКІВКА · MEMORY'],
     ['rally.html', 'BRUK RALLY'],
     ['stack.html', 'БРУКІВКА · STACK'],
+    ['chess.html', 'BRUK CHESS'],
+    ['realms.html', 'BRUKLANDS'],
     ['minihoi.html', 'IRON ATLAS · MINI HOI']
   ]);
   function updateSteamMusic() {
@@ -2203,6 +2209,7 @@ const MUSIC_COVERS = [
     steamLaunchLink = link;
     $('steamGameTitle').textContent = steamGames.get(file);
     steamFrame.title = steamGames.get(file);
+    url.searchParams.set('v',window.BrukRelease.version);
     steamFrame.src = url.href;
     updateSteamMusic();
     steamHost.showModal();
@@ -2236,7 +2243,8 @@ const MUSIC_COVERS = [
   });
 
   const businessAPI={
-    estate:()=>save.estate,garage:()=>save.garage,balance:()=>save.balance,
+    estate:()=>save.estate,garage:()=>save.garage,balance:()=>save.balance,perks:()=>({...save.perks}),
+    usePerk:(key,change)=>{if(!['brickStock','rebarStock','paintVouchers'].includes(key)||save.perks[key]<1)return false;if(change()===false)return false;save.perks[key]--;persist();updateUI();return true;},
     message:text=>$('businessMessage').textContent=text,
     commit:()=>{persist();updateUI();},
     buy:(cost,change)=>{
@@ -2257,5 +2265,7 @@ const MUSIC_COVERS = [
   $('businessBack').addEventListener('click',closeBusiness);
   $('businessHost').addEventListener('cancel',event=>{event.preventDefault();closeBusiness();});
   window.BrukGarageSnapshot=()=>window.BrukVentures.normalizeGarage(save.garage);
+  window.BrukRewardShop.configure({get:()=>save.perks,set:value=>save.perks=value,save:persist,changed:updateUI});
+  window.BrukMusic={state:()=>({playing:!scAudio().paused,track:MUSIC_TRACKS[save.audio.track],volume:save.audio.volume/100}),toggle:()=>$('scPlay').click(),next:()=>$('scNext').click(),volume:value=>{save.audio.volume=Math.round(clamp(value,0,1)*100);scApplyVolume();persist();renderSoundcloud();}};
   init();
 })();

@@ -21,6 +21,10 @@
     {id:'accord',name:'Accord',tier:'Середній клас',price:175000,shape:'sedan',rating:2.1,color:'#d4d5d1'},
     {id:'m3',name:'BMW M3',tier:'Преміум',price:680000,shape:'coupe',rating:2.5,color:'#6586c7'},
     {id:'carrera',name:'911 Carrera',tier:'Преміум',price:2500000,shape:'sport',rating:2.8,color:'#d7ae63'},
+    {id:'matiz',name:'Daewoo Matiz',tier:'Бюджетні',price:18000,shape:'micro',rating:1.1,color:'#d7c878'},
+    {id:'niva',name:'Lada Niva',tier:'Бюджетні',price:38000,shape:'suv',rating:1.3,color:'#8eaa86'},
+    {id:'volvo',name:'Volvo Estate',tier:'Середній клас',price:245000,shape:'wagon',rating:2.0,color:'#83a4ae'},
+    {id:'roadster',name:'Aurora Roadster',tier:'Преміум',price:1450000,shape:'roadster',rating:2.7,color:'#d79080'},
     {id:'hyperion',name:'Hyperion GT',tier:'Гіперкари',price:12000000,shape:'super',rating:3.3,color:'#d56f75'}
   ];
   function defaultEstate(){return {owned:false,upgrades:{foundation:0,quality:0,crane:0},bodies:[],claimed:false};}
@@ -113,16 +117,37 @@
       conditions:[['Щонайменше 12 секцій',this.bodies.length>=12],['Висота від 160',s.height>=160],['8 несучих секцій',m.filter(x=>['brick','block','concrete'].includes(x)).length>=8],['Покрівля та вікно',m.includes('roof')&&m.includes('glass')],['Стійкість понад 1.2 секунди',s.stable&&this.stableTime>=1.2]]};}
   }
   function drawCar(ctx,x,y,scale,car,style={},time=0){
-    const s={...defaultStyle(car),...style};ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
-    ctx.fillStyle='#0005';ctx.beginPath();ctx.ellipse(0,38,157,15,0,0,Math.PI*2);ctx.fill();
-    if(s.neon){ctx.shadowColor='#55edf0';ctx.shadowBlur=20;ctx.strokeStyle='#55edf0';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-110,31);ctx.lineTo(110,31);ctx.stroke();ctx.shadowBlur=0;}
-    const sporty=['sport','super','coupe'].includes(car.shape),low=s.lowered?7:0;ctx.translate(0,low);
-    ctx.fillStyle=s.color;ctx.strokeStyle='#ffffff44';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-155,9);ctx.lineTo(-142,-23);ctx.lineTo(-83,-31);ctx.lineTo(sporty?-37:-65,sporty?-64:-76);ctx.lineTo(sporty?55:44,sporty?-62:-76);ctx.lineTo(95,-31);ctx.lineTo(149,-18);ctx.lineTo(160,17);ctx.lineTo(146,32);ctx.lineTo(-145,32);ctx.closePath();ctx.fill();ctx.stroke();
-    ctx.fillStyle='#183748';ctx.beginPath();ctx.moveTo(-77,-34);ctx.lineTo(sporty?-34:-58,sporty?-59:-69);ctx.lineTo(39,sporty?-57:-69);ctx.lineTo(79,-33);ctx.closePath();ctx.fill();ctx.strokeStyle='#b7d9e055';ctx.beginPath();ctx.moveTo(-12,-68);ctx.lineTo(-12,-33);ctx.stroke();
-    if(s.wrap){ctx.fillStyle='#eee3c8';ctx.fillRect(-133,-9,268,7);ctx.fillStyle='#17313c';ctx.fillRect(-133,0,268,4);}
-    ctx.fillStyle='#f7dfa0';ctx.fillRect(143,-12,13,11);ctx.fillStyle='#da6964';ctx.fillRect(-149,-12,10,10);
-    if(s.spoiler){ctx.fillStyle='#2a333b';ctx.fillRect(-146,-46,8,20);ctx.fillRect(-161,-51,58,7);}
-    for(const wx of [-101,105]){ctx.save();ctx.translate(wx,29-low);ctx.fillStyle='#111b22';ctx.beginPath();ctx.arc(0,0,29,0,Math.PI*2);ctx.fill();ctx.fillStyle=s.rims===2?'#dfc384':s.rims===1?'#d4dce0':'#819099';ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();ctx.rotate(time*5);ctx.strokeStyle='#25333c';ctx.lineWidth=s.rims===2?2:4;for(let i=0;i<(s.rims===2?10:5);i++){const a=i*Math.PI*2/(s.rims===2?10:5);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*18,Math.sin(a)*18);ctx.stroke();}ctx.restore();}
+    const s={...defaultStyle(car),...style};
+    const profiles={sedan:[160,76,204,27],hatch:[149,79,182,27],micro:[136,82,163,25],suv:[162,94,204,31],wagon:[174,77,216,28],coupe:[166,66,210,28],sport:[170,62,214,29],super:[177,55,222,30],roadster:[163,51,205,28]};
+    const [length,roof,base,radius]=profiles[car.shape]||profiles.sedan,low=s.lowered?6:0;
+    function round(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+    ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.lineJoin=ctx.lineCap='round';
+    ctx.fillStyle='#0005';ctx.beginPath();ctx.ellipse(0,39,length+4,13,0,0,Math.PI*2);ctx.fill();
+    if(s.neon){ctx.shadowColor='#69e8e0';ctx.shadowBlur=19;ctx.strokeStyle='#69e8e0';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-base/2,31);ctx.lineTo(base/2,31);ctx.stroke();ctx.shadowBlur=0;}
+    ctx.save();ctx.translate(0,low);
+    const hatch=['hatch','micro','suv','wagon'].includes(car.shape),backRoof=car.shape==='wagon'?-94:hatch?-83:-58;
+    ctx.beginPath();ctx.moveTo(-length+9,23);ctx.quadraticCurveTo(-length-1,18,-length+2,-2);
+    ctx.quadraticCurveTo(-length+3,-21,-length+21,hatch?-36:-27);
+    ctx.bezierCurveTo(hatch?-length+25:-99,hatch?-roof+10:-31,backRoof-20,-roof,backRoof,-roof);
+    ctx.bezierCurveTo(-25,-roof-4,29,-roof-2,45,-roof+5);
+    ctx.quadraticCurveTo(71,-roof+10,95,-30);ctx.bezierCurveTo(112,-29,length-10,-27,length,-9);
+    ctx.quadraticCurveTo(length+8,3,length-2,23);ctx.quadraticCurveTo(length-5,32,length-20,32);
+    ctx.lineTo(-length+24,32);ctx.quadraticCurveTo(-length+12,31,-length+9,23);ctx.closePath();
+    const paint=ctx.createLinearGradient(0,-roof,0,35);paint.addColorStop(0,s.color);paint.addColorStop(.65,s.color);paint.addColorStop(1,'#263e45');ctx.fillStyle=paint;ctx.fill();ctx.strokeStyle='#e8eeee60';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.save();ctx.clip();ctx.fillStyle='#ffffff19';ctx.beginPath();ctx.moveTo(-length,-25);ctx.quadraticCurveTo(10,-40,length,-22);ctx.lineTo(length,-16);ctx.quadraticCurveTo(-10,-33,-length,-18);ctx.closePath();ctx.fill();
+    if(s.wrap){ctx.strokeStyle='#e9e4cd';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(-length,1);ctx.quadraticCurveTo(0,-8,length,-2);ctx.stroke();ctx.strokeStyle='#223d45';ctx.lineWidth=2;ctx.translate(0,7);ctx.stroke();}ctx.restore();
+    ctx.fillStyle='#193945';ctx.beginPath();ctx.moveTo(backRoof-15,-34);ctx.quadraticCurveTo(backRoof-7,-roof+8,backRoof+7,-roof+7);ctx.lineTo(32,-roof+7);ctx.quadraticCurveTo(51,-roof+3,79,-34);ctx.quadraticCurveTo(0,-31,backRoof-15,-34);ctx.fill();
+    ctx.strokeStyle='#8eb4c16b';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(backRoof+9,-roof+10);ctx.quadraticCurveTo(10,-roof+7,48,-roof+14);ctx.stroke();
+    if(car.shape!=='roadster'){ctx.strokeStyle=s.color;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-9,-roof+5);ctx.lineTo(-5,-32);ctx.stroke();}
+    ctx.strokeStyle='#102d3855';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-12,-30);ctx.lineTo(-12,21);ctx.stroke();
+    ctx.fillStyle='#d2e0dc';round(-30,-20,14,3,1.5);ctx.fill();round(59,-19,13,3,1.5);ctx.fill();
+    ctx.fillStyle='#f6e9bf';round(length-16,-15,15,9,4);ctx.fill();ctx.fillStyle='#e47871';round(-length+2,-13,11,10,3);ctx.fill();
+    ctx.strokeStyle='#14323d';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(length-10,12);ctx.lineTo(length-34,12);ctx.stroke();
+    if(s.spoiler){ctx.strokeStyle='#1b3038';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-length+17,-22);ctx.lineTo(-length+17,-42);ctx.moveTo(-length+1,-46);ctx.quadraticCurveTo(-length+25,-52,-length+61,-47);ctx.stroke();}
+    ctx.restore();
+    for(const wx of [-base/2,base/2]){ctx.save();ctx.translate(wx,24);ctx.fillStyle='#111f28';ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#4a6068';ctx.lineWidth=2;ctx.stroke();
+      const wheel=ctx.createRadialGradient(-5,-6,1,0,0,radius-6);wheel.addColorStop(0,s.rims===2?'#f3d599':'#e1e8e6');wheel.addColorStop(1,s.rims===0?'#728b97':'#9aaeb4');ctx.fillStyle=wheel;ctx.beginPath();ctx.arc(0,0,radius-6,0,Math.PI*2);ctx.fill();ctx.rotate(time*5);
+      const spokes=s.rims===2?10:s.rims===1?6:4;ctx.strokeStyle='#263b45';ctx.lineWidth=s.rims===2?2:3;for(let i=0;i<spokes;i++){const angle=i*Math.PI*2/spokes;ctx.beginPath();ctx.moveTo(Math.cos(angle)*5,Math.sin(angle)*5);ctx.lineTo(Math.cos(angle)*(radius-9),Math.sin(angle)*(radius-9));ctx.stroke();}ctx.fillStyle='#556e79';ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();ctx.restore();}
     ctx.restore();
   }
   const api={MATERIALS,PLOT_PRICE,FLOOR,MAX_BODIES,CARS,defaultEstate,defaultGarage,normalizeEstate,normalizeGarage,defaultStyle,upgradeCost,BuildingWorld,mass,drawCar};

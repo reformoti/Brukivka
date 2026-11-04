@@ -4,18 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#090b10" />
-  <title>Бруківка — v4</title>
-  <link rel="stylesheet" href="style.css?v=20261104-fop-1" />
-  <link rel="stylesheet" href="paint.css?v=20261104-fop-1" />
-  <link rel="stylesheet" href="ventures.css?v=20261104-fop-1" />
-  <link rel="stylesheet" href="exchange.css?v=20261104-fop-1" />
+  <title>Бруківка</title>
+  <link rel="stylesheet" href="style.css?v=5.0.0" />
+  <link rel="stylesheet" href="paint.css?v=5.0.0" />
+  <link rel="stylesheet" href="ventures.css?v=5.0.0" />
+  <link rel="stylesheet" href="exchange.css?v=5.0.0" />
+  <link rel="stylesheet" href="desktop.css?v=5.0.0" />
 </head>
 <body>
   <main class="page-shell">
     <header class="main-header">
       <div>
         <div class="eyebrow">BRUKIVKA</div>
-        <h1>Бруківка</h1>
+        <h1>Бруківка <span class="release-pill" data-game-version></span></h1>
       </div>
       <div class="main-actions">
         <button id="pcOpenButton" class="pc-open-button hidden" type="button">💻 ПК</button>
@@ -85,6 +86,8 @@
           <small id="homeSummary">Середній NMT · бонус ×1.0</small>
         </div>
 
+        <button id="fopQuickOpen" class="fop-home-shortcut" type="button"><span>▤</span><b>ФОП</b><small>Рахунок · острови · дохід</small><i>↗</i></button>
+        <div class="phone-apps-label">ЗАСТОСУНКИ <span data-game-version></span></div>
         <div class="app-grid">
           <button id="fopApp" class="app-icon" type="button"><span class="app-square fop-icon">▤</span><small>ФОП</small></button>
           <button id="estateApp" class="app-icon" type="button"><span class="app-square estate-icon">⌂</span><small>Моя ділянка</small></button>
@@ -243,7 +246,7 @@
           <div class="fop-wallet"><small>БАЛАНС ФОП</small><strong id="fopBalance">0 UAH</strong><span>Переказ на картку: комісія 30%</span><button id="fopTransfer" type="button" class="upgrade-button">Переказати</button></div>
           <div id="islandList" class="island-list"></div>
         </div>
-        <div class="fop-settlement"><div><span>На рахунку</span><b id="fopGross">0 UAH</b></div><div><span>Комісія 30%</span><b id="fopFee">0 UAH</b></div><div><span>Отримаєш на картку</span><b id="fopNet">0 UAH</b></div></div>
+        <div class="fop-settlement"><div><span>На рахунку</span><b id="fopGross">0 UAH</b></div><div><span>Комісія 30%</span><b id="fopFee">0 UAH</b></div><div><span>Ліміт офлайн-доходу</span><b id="fopOfflineLimit">1 год</b></div><div><span>Отримаєш на картку</span><b id="fopNet">0 UAH</b></div></div>
         <p id="fopMessage" class="fop-message" role="status" aria-live="polite"></p>
         <button id="fopToBank" type="button" class="bank-fop-link">₴ Відкрити BrukBank →</button>
       </section>
@@ -255,6 +258,7 @@
           <span class="header-dot brick-dot">●</span>
         </div>
 
+        <div class="release-card"><div><small>ВЕРСІЯ ГРИ</small><strong data-game-version></strong></div><span data-release-date></span><p>Play & Progress · шахи, пригоди та корисні валюти.</p></div>
         <div class="brick-info-hero">
           <div class="hero-brick">■</div>
           <div>
@@ -439,7 +443,8 @@
       <main class="pc-desktop">
         <div id="monitorBlackScreen" class="monitor-black" aria-label="Монітор вимкнений"></div>
         <section id="pcDesktop" class="pc-desktop-home">
-          <div class="pc-desktop-title"><small>BRUKIVKA SYSTEM</small><h2>Вітаємо!</h2><p>Обери програму</p></div>
+          <div class="desktop-topline"><span>BRUK OS <b data-game-version></b></span><span>● Система готова</span></div>
+          <div class="pc-desktop-title"><small>ТВІЙ ЦИФРОВИЙ ПРОСТІР</small><h2>Добре бути вдома.</h2><p>Твори, грай та розвивай свій світ.</p></div>
           <div class="pc-apps">
             <button class="pc-app" data-business="estate" type="button"><span class="pc-app-icon estate-icon">⌂</span><strong>Bruk Estate</strong><small>Власний будинок</small></button>
             <button class="pc-app" data-business="garage" type="button"><span class="pc-app-icon garage-icon">▰</span><strong>Bruk Garage</strong><small>Машини та стиль</small></button>
@@ -456,7 +461,7 @@
           <div class="pc-desktop-foot">Комп'ютер придбано ✓ <span id="pcDesktopPower"></span> <b id="pcMonitorBadge">—</b></div>
         </section>
         <section id="pcPreviewPanel" class="pc-program pc-preview-panel hidden">
-          <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← На робочий стіл</button><strong id="pcPreviewTitle">ПРОГРАМА</strong><span id="pcPreviewBadge" class="preview-badge">ПРОБНА ВЕРСІЯ</span></div>
+          <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← На робочий стіл</button><strong id="pcPreviewTitle">ПРОГРАМА</strong><span id="pcPreviewBadge" class="preview-badge">СТУДІЯ</span></div>
           <div id="pcPreviewContent"></div>
           <p id="pcPreviewNotice" class="preview-notice" role="status" aria-live="polite"></p>
         </section>
@@ -465,6 +470,8 @@
           <div id="steamLibrary" class="steam-library">
             <h2>Бібліотека ігор</h2><p>Обери гру, потім її складність.</p>
             <div class="steam-games">
+              <a href="chess.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-chess-art">♜ ♞</span><strong>BRUK CHESS</strong><small>Бот або друг · емоції · аналіз ходів</small></a>
+              <a href="realms.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-realms-art">⚔</span><strong>BRUKLANDS</strong><small>Відкритий світ · монстри · спорядження</small></a>
               <a href="rally.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-rally-art">▰ ⇢</span><strong>BRUK RALLY</strong><small>Керуй активною машиною з гаража</small></a>
               <a href="stack.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-stack-art">▰<br>▰▰</span><strong>БРУКІВКА · STACK</strong><small>Збудуй найвищу вежу</small></a>
               <a href="breakout.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-breakout-art">▰ ● ▰</span><strong>БРУКІВКА · BREAKOUT</strong><small>Відбивай м'яч · розбий увесь квартал</small></a>
@@ -506,19 +513,20 @@
         </section>
         <section id="soundcloudPanel" class="pc-program soundcloud-program hidden">
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>SOUNDCLOUD</strong><span class="sc-badge">MIX</span></div>
-          <div class="sc-banner"><div class="sc-banner-glyph">☁</div><div><small>BRUKIVKA PLAYLIST · 5 TRACKS</small><h2>Музика</h2><p>Треки з папки <code>music/</code> у GitHub</p></div></div>
+          <div class="sc-banner"><div class="sc-banner-glyph">☁</div><div><small>BRUKIVKA PLAYLIST · 5 TRACKS</small><h2>Музика</h2><p>Обери настрій для свого вечора.</p></div></div>
           <div id="scTracks" class="sc-tracks"></div>
           <div class="sc-player"><div class="sc-playing"><div id="scCurrentArt" class="sc-art">♫</div><div class="sc-now"><small>ЗАРАЗ ГРАЄ</small><strong id="scCurrentTitle">Тікі Тікі</strong><span id="scStatus">Готово до відтворення</span></div></div>
             <div class="sc-progress-bar"><span id="scElapsed">0:00</span><input id="scSeek" aria-label="Позиція треку" type="range" min="0" max="100" value="0" step="0.1" /><span id="scDuration">0:00</span></div>
             <div class="sc-controls"><button id="scRepeat" type="button" aria-label="Повтор треку" title="Зациклити трек">↻</button><button id="scShuffle" type="button" aria-label="Випадковий порядок" title="Випадковий порядок">⇄</button><button id="scPrevious" type="button" aria-label="Попередній трек">⏮</button><button id="scPlay" class="sc-play-btn" type="button" aria-label="Відтворити або пауза">▶</button><button id="scNext" type="button" aria-label="Наступний трек">⏭</button><button id="scMute" type="button" aria-label="Увімкнути або вимкнути звук">🔊</button></div>
             <div class="sc-volume"><label for="scVolume">Гучність</label><input id="scVolume" type="range" min="0" max="100" value="70" step="1" /><output id="scVolumeLabel">70%</output></div>
-            <p class="sc-path-note">Назви MP3 у GitHub: <code>music/mp3(1).mp3</code> … <code>music/mp3(5).mp3</code>. Відтворення триває після закриття ПК. Обкладинки підвантажуються за посиланнями.</p>
+            <p class="sc-path-note">Музика продовжує грати в іграх Steam і після закриття ПК. Керуй нею в плеєрі або на верхній панелі гри.</p>
           </div>
         </section>
         <section id="historyPanel" class="pc-program changelog-program hidden">
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>ЖУРНАЛ ОНОВЛЕНЬ</strong><span class="steam-online">● HISTORY</span></div>
           <h2>Історія Brukivka</h2><p class="history-note">Дати й час орієнтовні, тільки для версій, відомих із розробки.</p>
           <div class="history-timeline">
+            <article><time>04.11.2026 · v5.0.0</time><h3>Play & Progress</h3><p>Версія гри в застосунку «Бруківка», закріплений ФОП, новий стиль програм ПК та плавніші форми машин. Магазини користі для валют. Bruk Chess і Bruklands у Steam.</p></article>
             <article><time>04.11.2026</time><h3>Окремий застосунок ФОП</h3><p>Рахунок, острови й пасивний дохід перенесено в окрему програму телефону. Перед переказом видно комісію та суму на картку.</p></article>
             <article><time>02.11.2026</time><h3>Ділянка, гараж та BrukExchange 2</h3><p>Будівництво з масою, навантаженнями й арматурою; купівля та кастомізація машин. Графіки, новини та лімітні заявки BrukExchange. Bruk Rally і Stack у Steam. БПЛА повністю знищує бруківку.</p></article>
             <article><time>02.11.2026</time><h3>Платні маршрути та нові ігри Steam</h3><p>Разова покупка рівнів доставки. Вибух при зіткненні з БПЛА. Інструкція та ціль BrukExchange. Breakout і Memory у бібліотеці Steam.</p></article>
@@ -541,7 +549,7 @@
           </div>
         </section>
       </main>
-      <footer class="pc-taskbar"><button id="pcTaskHome" type="button">⊞ <span>Пуск</span></button><span>Brukivka OS · v1</span><span id="pcTaskTime">00:00</span></footer>
+      <footer class="pc-taskbar"><button id="pcTaskHome" type="button">⊞ <span>Пуск</span></button><span>Bruk OS · <b data-game-version></b></span><span id="pcTaskTime">00:00</span></footer>
     </div>
   </div>
 
@@ -553,12 +561,15 @@
     <header class="steam-game-bar"><button id="steamGameBack" type="button">← До Steam</button><strong id="steamGameTitle">STEAM</strong><div><button id="steamGameMusic" type="button" aria-label="Відтворити або призупинити музику">▶ Музика</button><button id="steamGameMute" type="button" aria-label="Вимкнути звук">🔊</button></div></header>
     <iframe id="steamGameFrame" title="Гра Steam" allow="autoplay"></iframe>
   </dialog>
-  <script src="ventures-core.js?v=20261104-fop-1"></script>
-  <script src="delivery.js?v=20261104-fop-1"></script>
-  <script src="script.js?v=20261104-fop-1"></script>
-  <script src="paint.js?v=20261104-fop-1"></script>
-  <script src="ventures-ui.js?v=20261104-fop-1"></script>
-  <script src="exchange.js?v=20261104-fop-1"></script>
-  <script src="pc-apps.js?v=20261104-fop-1"></script>
+  <script src="release.js?v=5.0.0"></script>
+  <script src="benefits.js?v=5.0.0"></script>
+  <script src="ventures-core.js?v=5.0.0"></script>
+  <script src="delivery.js?v=5.0.0"></script>
+  <script src="script.js?v=5.0.0"></script>
+  <script src="paint.js?v=5.0.0"></script>
+  <script src="ventures-ui.js?v=5.0.0"></script>
+  <script src="exchange.js?v=5.0.0"></script>
+  <script src="desktop.js?v=5.0.0"></script>
+  <script src="pc-apps.js?v=5.0.0"></script>
 </body>
 </html>

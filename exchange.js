@@ -76,6 +76,7 @@
   const button=(text,fn,disabled=false)=>{const b=el('button','exchange-button',text);b.type='button';b.disabled=disabled;b.addEventListener('click',fn);return b;};
   function act(result){const saved=persist();render();if(saved)notice(result?.message||'Оновлено.');}
   function chart(canvas,values,color){const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.fillStyle='#142735';ctx.fillRect(0,0,w,h);if(values.length<2)values=[values[0],values[0]];const min=Math.min(...values)*.95,max=Math.max(...values)*1.05,range=max-min||1;ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();values.forEach((v,i)=>{const x=i/(values.length-1)*(w-12)+6,y=h-8-(v-min)/range*(h-16);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();}
+  function benefitWallet(){return {balance:()=>model.state.cash,snapshot:()=>JSON.stringify(model.state),debit:cost=>{if(model.state.cash<cost)return false;model.state.cash-=cost;return persist();},restore:snapshot=>{model.state=JSON.parse(snapshot);persist();}};}
   function render(){
     const s=model.state;container.replaceChildren();
     const hero=el('div','exchange-terminal');hero.innerHTML='<small>BRUKEXCHANGE / PAPER MARKET</small><h2>Будуй свій капітал.</h2><p>Умовний ринок матеріалів: новини, графіки, портфель та відкладені заявки.</p>';container.append(hero);
@@ -84,7 +85,7 @@
     const news=el('div','exchange-news');news.append(el('b','','НОВИНИ СЕСІЇ'),el('span','',s.news),button('Наступна сесія →',()=>{const count=model.nextDay();act({message:`Сесію завершено. Виконано заявок: ${count}.`});}));container.append(news);
     const tabs=el('div','exchange-tabs');for(const [id,label] of [['market','Ринок'],['orders',`Заявки (${s.orders.length})`],['history','Історія']]){const b=button(label,()=>{selectedTab=id;render();});b.classList.toggle('active',selectedTab===id);tabs.append(b);}container.append(tabs);
     const guide=el('details','exchange-guide');guide.open=guideOpen;guide.addEventListener('toggle',()=>guideOpen=guide.open);
-    guide.innerHTML='<summary>Як працює біржа?</summary><ol><li>Купуй матеріали дешевше, а продавай дорожче. Кількість за угоду: 1–100.</li><li>«Наступна сесія» оновлює ціни. Новини впливають на різні матеріали; графік показує останні 30 сесій.</li><li>Комісія брокера — 1%, після поліпшень — 0.5% та 0.25%. Продаж нижче собівартості дає збиток.</li><li>Лімітна купівля чекає ціни не вище вказаної й резервує кредити. Лімітний продаж чекає ціни не нижче вказаної та резервує товар. Заявку можна скасувати.</li></ol><p>Демо-кредити окремі від UAH гри. Капітал включає вільні та зарезервовані гроші й товари за поточними цінами. Перша мета — 2 000 кредитів. Для товарів зі старої версії невідома собівартість позначена «—».</p>';container.append(guide);
+    guide.innerHTML='<summary>Як працює біржа?</summary><ol><li>Купуй матеріали дешевше, а продавай дорожче. Кількість за угоду: 1–100.</li><li>«Наступна сесія» оновлює ціни. Новини впливають на різні матеріали; графік показує останні 30 сесій.</li><li>Комісія брокера — 1%, після поліпшень — 0.5% та 0.25%. Продаж нижче собівартості дає збиток.</li><li>Лімітна купівля чекає ціни не вище вказаної й резервує кредити. Лімітний продаж чекає ціни не нижче вказаної та резервує товар. Заявку можна скасувати.</li></ol><p>Біржові кредити окремі від UAH гри, але купують талони фарбування та матеріали у магазині нижче. Капітал включає вільні та зарезервовані гроші й товари за поточними цінами. Перша мета — 2 000 кредитів. Для товарів зі старої версії невідома собівартість позначена «—».</p>';container.append(guide);
     if(selectedTab==='market'){
       const controls=el('div','exchange-volume');controls.append(el('label','','Обсяг угоди:'));const input=el('input','');input.type='number';input.min=1;input.max=100;input.value=quantity;input.setAttribute('aria-label','Кількість товару');input.addEventListener('change',()=>{quantity=Math.max(1,Math.min(100,Math.floor(Number(input.value)||1)));render();});controls.append(input);
       for(const q of [1,5,10])controls.append(button('×'+q,()=>{quantity=q;render();}));container.append(controls);
@@ -105,6 +106,8 @@
     }else{
       const list=el('div','exchange-history');for(const t of s.trades.slice().reverse()){const row=el('div','');row.append(el('b','',`Сесія ${t.day} · ${t.side==='buy'?'Купівля':'Продаж'} ${ASSETS[t.asset].symbol} ×${t.qty}`),el('span','',`${t.price} кр. / шт. · комісія ${t.fee}${t.profit!==null?' · результат '+t.profit.toFixed(1):''}`));list.append(row);}if(!s.trades.length)list.append(el('p','exchange-empty','Тут з’являться виконані угоди.'));container.append(list);
     }
+    if(root.BrukRewardShop?.mount)root.BrukRewardShop.mount(container,'exchange',benefitWallet(),render);
+    root.BrukHelp?.fold(container);
   }
   root.BrukExchange={mount(target){container=target;render();},model};
 })(typeof window==='undefined'?globalThis:window);
