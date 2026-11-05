@@ -1,0 +1,80 @@
+name: Recover stalled Pages deployment
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/recover-pages.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+  pages: write
+concurrency:
+  group: recover-stalled-pages
+  cancel-in-progress: false
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Cancel the known stalled deployment and verify its status
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import time
+          import urllib.error
+          import urllib.request
+          
+          REPOSITORY = os.environ["GITHUB_REPOSITORY"]
+          API_URL = os.environ.get("GITHUB_API_URL", "https://api.github.com")
+          TOKEN = os.environ["GITHUB_TOKEN"]
+          STALLED_DEPLOYMENT = "1861dc8655135eafaf65ee527cf19679089c944b"
+          STALLED_RUN = 42071048703
+          
+          def api(method, path, allowed):
+              request = urllib.request.Request(
+                  API_URL + "/repos/" + REPOSITORY + path,
+                  method=method,
+                  headers={
+                      "Accept": "application/vnd.github+json",
+                      "Authorization": "Bearer " + TOKEN,
+                      "X-GitHub-Api-Version": "2022-11-28",
+                      "User-Agent": "Brukivka-Pages-recovery",
+                  },
+              )
+              try:
+                  response = urllib.request.urlopen(request, timeout=30)
+                  status, payload = response.status, response.read()
+              except urllib.error.HTTPError as error:
+                  status, payload = error.code, error.read()
+              if status not in allowed:
+                  raise RuntimeError(f"GitHub returned HTTP {status} for {method} {path}: " + payload.decode()[:600])
+              return status, json.loads(payload) if payload else {}
+          
+          def main():
+              if REPOSITORY != "reformoti/Brukivka":
+                  raise RuntimeError("This recovery is scoped to reformoti/Brukivka.")
+              status, _ = api("POST", f"/actions/runs/{STALLED_RUN}/cancel", {202, 404, 409})
+              print(f"Old workflow cancellation: HTTP {status}", flush=True)
+              path = "/pages/deployments/" + STALLED_DEPLOYMENT
+              status, _ = api("POST", path + "/cancel", {204, 404})
+              print(f"Stalled Pages deployment cancellation: HTTP {status}", flush=True)
+              terminal = {"succeed", "deployment_failed", "deployment_content_failed", "deployment_cancelled", "deployment_lost"}
+              for attempt in range(18):
+                  status, deployment = api("GET", path, {200, 404})
+                  current = deployment.get("status")
+                  print(f"Old Pages deployment: HTTP {status}, status={current}", flush=True)
+                  if status == 404 or current in terminal:
+                      print("Recovery completed. The old deployment is no longer active.", flush=True)
+                      return
+                  if attempt < 17:
+                      time.sleep(5)
+              raise RuntimeError("The Pages service still reports an active deployment after cancellation.")
+          
+          if __name__ == "__main__":
+              main()
+          PY
