@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'5.0.0',date:'2026-11-04',name:'Play & Progress'};
+  const release={version:'5.1.0',date:'2026-11-05',name:'Forges & Frontiers'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
