@@ -1,0 +1,8 @@
+(() => {
+  'use strict';if(window.BrukDevice?.blocked)return;
+  // Secondary information is available without covering the playfield on opening.
+  if(document.getElementById('europeMap')){document.body.classList.add('strategy-workspace');const d=document.createElement('dialog');d.className='os-dialog';const b=document.createElement('button');b.type='button';b.textContent='Журнал / правила';b.onclick=()=>d.showModal();const close=document.createElement('button');close.type='button';close.textContent='Закрити';close.onclick=()=>d.close();d.append(close,...document.querySelectorAll('.bottom,.rules'));document.body.append(d);document.querySelector('.top').append(b);const list=document.getElementById('actions');const update=()=>window.BrukFit.pages(list,':scope>button',3);new MutationObserver(update).observe(list,{childList:true});update();}
+  const root=document.querySelector('.runner-shell,.merge-shell,.arcade-shell,.extra-shell,.hoi-shell');if(!root)return;
+  const help=[...root.querySelectorAll(':scope>footer,:scope>details,:scope>.game-help,:scope>.app-help')];if(!help.length)return;
+  const dialog=document.createElement('dialog');dialog.className='os-dialog';const h=document.createElement('header');h.className='os-dialog-head';h.innerHTML='<h2>Підказки та статистика</h2>';const close=document.createElement('button');close.type='button';close.textContent='✕';close.onclick=()=>dialog.close();h.append(close);dialog.append(h,...help);document.body.append(dialog);const b=document.createElement('button');b.type='button';b.className='game-info-button';b.textContent='?';b.setAttribute('aria-label','Підказки та статистика');b.onclick=()=>dialog.showModal();root.querySelector('header')?.append(b);
+})();

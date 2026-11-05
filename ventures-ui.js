@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  if(typeof window!=='undefined'&&window.BrukDevice?.blocked)return;
   const V=window.BrukVentures,$=id=>document.getElementById(id);
   const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
   const money=n=>Math.round(n).toLocaleString('uk-UA');
@@ -7,7 +8,7 @@
   function hero(root,kicker,title,copy){const h=el('div','venture-hero');h.append(el('small','',kicker),el('h2','',title),el('p','',copy));root.append(h);}
   function stat(label,value){const s=el('div','venture-stat');s.append(el('small','',label),el('strong','',value));return s;}
   let cleanup=null,selectedMaterial='brick',rotated=false,demolish=false,carFilter='Усі';
-  function mount(root,kind,api){if(cleanup)cleanup();root.replaceChildren();cleanup=kind==='estate'?estate(root,api):garage(root,api);window.BrukHelp?.fold(root);}
+  function mount(root,kind,api){if(cleanup)cleanup();root.replaceChildren();cleanup=kind==='estate'?estate(root,api):garage(root,api);window.BrukHelp?.fold(root);window.BrukWorkspace?.business(root,kind);}
   function close(){if(cleanup)cleanup();cleanup=null;}
   function estate(root,api){
     const state=api.estate();hero(root,'BRUK ESTATE / BUILD SANDBOX','Твоя ділянка','Збудуй власний будинок із секцій. Гравітація, маса, розподіл навантаження й міцність опор впливають на стійкість конструкції.');
@@ -102,7 +103,7 @@
     }
     function renderCards(){cards.replaceChildren();for(const c of V.CARS.filter(c=>carFilter==='Усі'||c.tier===carFilter)){
       const card=el('article','garage-car-card'),icon=el('canvas','');icon.width=440;icon.height=180;icon.getContext('2d').fillStyle='#1a303e';icon.getContext('2d').fillRect(0,0,440,180);V.drawCar(icon.getContext('2d'),220,115,1.05,c,state.custom[c.id]||{});card.append(icon,el('h3','',c.name),el('small','',c.tier),el('strong','',state.owned.includes(c.id)?'У гаражі ✓':money(c.price)+' UAH'),button('Переглянути',()=>{previewId=c.id;testDrive=false;refresh();},'view-car-'+c.id));cards.append(card);
-    }}
+    }window.BrukFit?.pages(cards,':scope>.garage-car-card',3);}
     const ctx=canvas.getContext('2d');function frame(t){const dt=last===null?0:Math.min(.04,(t-last)/1000);last=t;if(testDrive&&!document.hidden)time+=dt;ctx.fillStyle='#142635';ctx.fillRect(0,0,1000,400);ctx.fillStyle='#243a47';ctx.fillRect(0,310,1000,90);ctx.strokeStyle='#7e9b9b44';for(let x=-100;x<1100;x+=150){ctx.beginPath();ctx.moveTo(x-(testDrive?time*260%150:0),360);ctx.lineTo(x+70-(testDrive?time*260%150:0),360);ctx.stroke();}ctx.strokeStyle='#72859433';ctx.strokeRect(115,38,770,224);V.drawCar(ctx,500,255,2.35,car(),{...style(),color:previewColor||style().color},testDrive?time:0);ctx.fillStyle='#adc5ce';ctx.font='600 15px system-ui';ctx.fillText(car().name.toUpperCase(),35,40);if(testDrive){ctx.fillStyle='#d3eca8';ctx.fillText('ТЕСТ-ДРАЙВ · '+Math.round((car().rating+style().engine*.25)*time*18)+' м',35,67);}frameId=requestAnimationFrame(frame);}
     renderCards();refresh();frameId=requestAnimationFrame(frame);return ()=>cancelAnimationFrame(frameId);
   }

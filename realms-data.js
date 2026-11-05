@@ -56,5 +56,40 @@
     packmaster:{name:'Вантажник',branch:'Ремісник',description:'+25 місткості сумки за ранг.',max:5,parent:'smith'}
   };
   const CONTRACTS={trail:{name:'Стежка має бути вільною',description:'Здолай 5 лісових слизів.',target:5,silver:120,xp:60},miner:{name:'Перший метал',description:'Видобудь 12 одиниць руди.',target:12,silver:180,xp:80,tool:true},hunter:{name:'Вовчий слід',description:'Здолай 5 вовків.',target:5,silver:300,xp:120},artisan:{name:'Руки майстра',description:'Створи або перероби 8 предметів.',target:8,silver:350,xp:120},warden:{name:'Серце старих руїн',description:'Переможи Прадавнього охоронця.',target:1,silver:750,xp:260}};
-  return {WIDTH,HEIGHT,CAMP,SPAWN,TYPES,SPAWNS,OBSTACLES,WEAPONS,ARMOR,FAMILIES,ARMOR_KINDS,SUPPORTS,EXTRAS,RESOURCES,NODE_TYPES,NODES,TOOLS,RECIPES,TALENTS,CONTRACTS};
+  const VARIANTS={},DEFAULT_VARIANTS={};
+  const variantRows={
+    sword:[['broadsword','Палаш',1,1,1,1],['claymore','Клеймор',2,1.23,1.18,1.16],['dual','Парні мечі',2,.88,1,.76]],
+    axe:[['battleaxe','Бойова сокира',1,1,1,1],['greataxe','Велика сокира',2,1.28,1.1,1.2],['halberd','Алебарда',2,1.08,1.52,1.16]],
+    spear:[['spear','Спис',1,1,1,1],['pike','Піка',2,1.21,1.4,1.17],['glaive','Глефа',2,1.1,1.18,.92]],
+    daggers:[['dagger','Кинджал',1,1,1,1],['pair','Парні кинджали',2,.9,1.05,.76],['claws','Бойові пазурі',2,1.18,.9,1.06]],
+    bow:[['longbow','Довгий лук',2,1,1,1],['warbow','Бойовий лук',2,1.3,1.2,1.28],['crossbow','Арбалет',2,1.45,.95,1.5]],
+    staff:[['fire','Вогняний посох',1,1,1,1],['greatfire','Великий посох',2,1.32,1.15,1.2],['frost','Морозний посох',1,.88,1.12,.88]]
+  };
+  for(const [family,rows] of Object.entries(variantRows))rows.forEach(([key,name,hands,damage,reach,interval],index)=>{const id=family+'_'+key;VARIANTS[id]={id,family,name,hands,damage,reach,interval,index,icon:family,description:(hands===2?'Дворучна зброя. Друга рука не діє.':'Одноручна зброя. Працює разом із другою рукою.')};if(index===0)DEFAULT_VARIANTS[family]=id;});
+  const OUTFITS={
+    soldier_helm:{name:'Шолом вартового',slot:'head',icon:'plate',defence:1.5,hp:8,description:'Захист і запас здоров’я.'},
+    hunter_hood:{name:'Каптур мисливця',slot:'head',icon:'leather',dodge:.01,crit:.01,description:'Ухилення та шанс критичного удару.'},
+    scholar_cowl:{name:'Ковпак знавця',slot:'head',icon:'cloth',mana:12,damage:.01,description:'Мана та сила ударів.'},
+    soldier_boots:{name:'Чоботи вартового',slot:'feet',icon:'boots',hp:10,defence:.7,description:'Міцність для ближнього бою.'},
+    hunter_boots:{name:'Черевики мисливця',slot:'feet',icon:'boots',speed:.025,dodge:.007,description:'Рухливість і ухилення.'},
+    scholar_sandals:{name:'Сандалі знавця',slot:'feet',icon:'boots',mana:8,speed:.015,description:'Мана та швидкість.'},
+    guardian_cape:{name:'Плащ охоронця',slot:'cloak',icon:'cape',hp:12,defence:.5,description:'Додатковий запас здоров’я.'},
+    scout_cape:{name:'Плащ розвідника',slot:'cloak',icon:'cape',speed:.015,crit:.01,description:'Швидкість і критичні удари.'},
+    sage_cape:{name:'Плащ мудреця',slot:'cloak',icon:'cape',mana:10,damage:.015,description:'Мана та сила зброї.'}
+  };
+  Object.assign(TALENTS,{
+    power:{name:'Сила зброї',branch:'Вартовий',description:'+3% шкоди за ранг.',max:5},
+    fortitude:{name:'Витривалість',branch:'Вартовий',description:'+18 здоров’я за ранг.',max:5,parent:'vitality'},
+    armourTraining:{name:'Знавець обладунків',branch:'Вартовий',description:'+2 захисту за ранг.',max:5,parent:'guard'},
+    precision:{name:'Точність',branch:'Вартовий',description:'+2% шансу критичного удару за ранг. Критичний удар завдає ×1.5 шкоди.',max:5,parent:'power'},
+    evasion:{name:'Ухилення',branch:'Дослідник',description:'+1.5% шансу ухилитися від удару за ранг.',max:5},
+    quickstep:{name:'Легка хода',branch:'Дослідник',description:'+2% швидкості руху за ранг.',max:5,parent:'agility'},
+    windrunner:{name:'Крок вітру',branch:'Дослідник',description:'+0.8% ухилення та +0.8% швидкості за ранг.',max:5,parent:'evasion'},
+    weaponFlow:{name:'Темп бою',branch:'Дослідник',description:'+2% швидкості звичайних атак за ранг.',max:5,parent:'quickstep'},
+    focusMastery:{name:'Внутрішнє джерело',branch:'Ремісник',description:'+10 мани за ранг.',max:5},
+    endurance:{name:'Загартування',branch:'Ремісник',description:'+8 здоров’я та +15 місткості за ранг.',max:5,parent:'smith'},
+    recovery:{name:'Відновлення',branch:'Ремісник',description:'+2 здоров’я за секунду відновлення в таборі за ранг.',max:5,parent:'alchemist'},
+    balanced:{name:'Збалансована зброя',branch:'Ремісник',description:'+1% шкоди та +0.5 захисту за ранг.',max:5,parent:'endurance'}
+  });
+  return {WIDTH,HEIGHT,CAMP,SPAWN,TYPES,SPAWNS,OBSTACLES,WEAPONS,ARMOR,FAMILIES,ARMOR_KINDS,SUPPORTS,EXTRAS,RESOURCES,NODE_TYPES,NODES,TOOLS,RECIPES,TALENTS,CONTRACTS,VARIANTS,DEFAULT_VARIANTS,OUTFITS};
 });

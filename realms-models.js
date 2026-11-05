@@ -193,13 +193,13 @@
     if(cloth){shape(c,[[-14,-48+bob],[-12,-62+bob],[0,-69+bob],[13,-61+bob],[15,-46+bob],[7,-53+bob],[0,-60+bob],[-6,-51+bob]],base);rect(c,-8,-50+bob,16,5,2,'#3b4143');}
     else{oval(c,0,-55+bob,14,10,grad(c,-9,-65,-45,leather?'#a08e6b':metal,'#4b6467'));shape(c,[[-14,-55+bob],[-12,-43+bob],[-7,-40+bob],[-7,-52+bob]],base);shape(c,[[14,-55+bob],[12,-43+bob],[7,-40+bob],[7,-52+bob]],base);rect(c,-10,-53+bob,20,5,2,'#263a3e');line(c,[[-10,-58+bob],[0,-62+bob],[10,-58+bob]],trim,1.3);}
     if(s.armor>=3){gem(c,0,-60+bob,3,trim);for(const sign of [-1,1])line(c,[[sign*15,-33+bob],[sign*19,-31+bob]],trim,2);}
-    if(s.supportKind==='shield'){
+    if(world.twoHanded){}else if(s.supportKind==='shield'){
       shape(c,[[-29,-31+bob],[-13,-28+bob],[-14,-7+bob],[-22,1+bob],[-32,-8+bob]],'#536d6c',trim,2);
       shape(c,[[-27,-28+bob],[-22,-27+bob],[-22,-3+bob],[-29,-9+bob]],'#81988b',null);oval(c,-22,-16+bob,4,4,trim);
     }else if(s.supportKind==='focus'){rect(c,-31,-29+bob,18,24,2,'#5f526f',trim);line(c,[[-27,-27+bob],[-27,-7+bob]],'#b7ab98',2);gem(c,-21,-17+bob,4,'#b4b9c7');}
     else{line(c,[[-24,0],[-26,-31+bob]],'#806345',4);glow(c,-26,-35+bob,15,'#e3b16b33');oval(c,-26,-35+bob,5,9,'#edbb70');oval(c,-26,-33+bob,2.5,5,'#fff0b5');}
     const angle=Math.atan2(world.facing.y,world.facing.x),swing=world.swing>0?(1-world.swing/.3)*2-1:0;
-    c.save();c.translate(18,-17+bob);c.rotate(angle+Math.PI/2+swing);drawWeapon(c,s.weaponKind,world.time);c.restore();c.restore();
+    c.save();c.translate(18,-17+bob);c.rotate(angle+Math.PI/2+swing);drawWeapon(c,s.weaponKind,world.time,s.weaponVariant);c.restore();c.restore();
     if(world.swing>0&&!['bow','staff'].includes(s.weaponKind)){c.beginPath();c.arc(s.x,s.y-14,57,angle-.7+swing,angle+.7+swing);c.strokeStyle='#f1dfae99';c.lineWidth=4;c.stroke();}
   }
   function camp(c,world){
@@ -220,7 +220,9 @@
     c.restore();
   }
 
-  function weapon(c,kind,time){
+  let variantCatalog={};
+  function weapon(c,kind,time,variantId){
+    const v=variantCatalog[variantId];c.save();if(v?.index===1)c.scale(1.12,1.2);if(v?.index===2)c.rotate(-.12);
     if(kind==='bow'){
       line(c,[[-5,-42],[7,-34],[15,-19],[8,-4],[-5,5]],'#3b322b',6);
       line(c,[[-5,-42],[7,-34],[15,-19],[8,-4],[-5,5]],'#ba9361',3);
@@ -245,9 +247,12 @@
       line(c,[[-10,-4],[10,-4]],'#d1b780',4);rect(c,-3,-1,6,15,1,'#6c5038');oval(c,0,15,4,3,'#c2ae79');
       if(dagger){c.save();c.translate(-18,3);c.rotate(-.2);shape(c,[[0,-32],[-4,-23],[-4,-7],[0,-3],[4,-7],[4,-23]],'#c6d5cf');line(c,[[-8,-4],[8,-4]],'#b7a370',3);line(c,[[0,-1],[0,10]],'#72583b',4);c.restore();}
     }
+    if(v?.index===2&&v.hands===2&&['sword','axe','spear','daggers'].includes(kind)){c.translate(-19,8);c.rotate(-.3);c.scale(.8,.8);weapon(c,kind,time);}
+    if(v?.index===2&&kind==='bow'){rect(c,-13,-20,26,6,2,'#92744f');line(c,[[0,-19],[0,12]],'#816443',7);}
+    if(v?.index===2&&kind==='staff')gem(c,0,-46,9,'#c2e8ef');c.restore();
   }
   function drop(c,d){c.save();c.translate(d.x,d.y);oval(c,3,9,14,5,'#20322966');shape(c,[[-8,-11],[-12,4],[-6,10],[8,8],[12,1],[7,-12]],'#9f8860','#3d4a3c');line(c,[[-7,-9],[8,-10]],'#d3bc85',3);line(c,[[0,-9],[0,6]],'#c2a67a',1.5);oval(c,8,-12,4,3,'#d1bc85');c.restore();}
 
-  function decorate(art,R){art.drawMonster=monster;art.drawWeapon=weapon;art.drawNode=(c,n,w)=>node(c,n,w,R);}
+  function decorate(art,R){variantCatalog=R.VARIANTS||{};art.drawMonster=monster;art.drawWeapon=weapon;art.drawNode=(c,n,w)=>node(c,n,w,R);}
   return {monster,tree,house,rock,node,player,camp,weapon,drop,decorate};
 });

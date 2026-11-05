@@ -15,7 +15,7 @@
     $('mapAction').addEventListener('click',openMap);$('endingAction').addEventListener('click',openEnding);$('recallAction').addEventListener('click',()=>api.notice(world.beginRecall().message));
     for(const [button,dialog] of [['closeMap','mapDialog'],['closeVictory','victoryDialog']])$(button).addEventListener('click',()=>{$(dialog).close();api.focus();});
     for(const id of ['mapResources','mapEnemies'])$(id).addEventListener('change',drawMap);
-    map.addEventListener('pointerdown',event=>{const r=map.getBoundingClientRect();world.setTarget((event.clientX-r.left)/r.width*R.WIDTH,(event.clientY-r.top)/r.height*R.HEIGHT);$('mapDialog').close();api.notice('Маршрут обрано. WASD скасовує автоматичний рух.');api.focus();});
+    map.addEventListener('pointerdown',()=>api.notice('Карта показує орієнтири. Рух — WASD або стрілки.'));
     return {refresh,openMap,openEnding,open:()=>$('mapDialog').open||$('victoryDialog').open};
   }};
 })();

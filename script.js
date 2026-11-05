@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  if(typeof window!=='undefined'&&window.BrukDevice?.blocked)return;
 
   const $ = (id) => document.getElementById(id);
   const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -168,7 +169,8 @@
   const PC_UPGRADE_BASE = {cpu:18000, gpu:27000, ram:15000};
   const CS_MODES = {easy:{label:'Легкий',target:10}, medium:{label:'Середній',target:30}, hardcore:{label:'Хардкор',target:60}};
   const CS_ROUND_MS = 30000;
-  const MUSIC_TRACKS = ['Тікі Тікі', 'Манго', 'Аура Фонк', 'Наполеон', '?????'];
+  const MUSIC_TRACKS = ['Тікі Тікі', 'Манго', 'Аура Фонк', 'Наполеон', '?????',...Array.from({length:5},(_,i)=>'Трек '+String(i+6).padStart(2,'0')+' · Очікує файл')];
+  const playableTracks=()=>[0,1,2,3,4];
 const MUSIC_COVERS = [
   'https://miyzvuk.net/uploads/posts/2026-01/cover-of-tiki-tiki-slowed-by-qmiir.webp',
   'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQxz9CKitE2lpdmRYUJpThdQgkeenhIG7S890QPPNXKg&s=10',
@@ -341,7 +343,7 @@ const MUSIC_COVERS = [
     result.csHardcoreBest = safeInt(source.csHardcoreBest, 0, 0, 60);
     result.csHardcoreBestTimeMs = safeInt(source.csHardcoreBestTimeMs, 0, 0, CS_ROUND_MS);
     const audio = record(source.audio);
-    result.audio.track = safeInt(audio.track, 0, 0, MUSIC_TRACKS.length - 1);
+    result.audio.track = safeInt(audio.track, 0, 0, 4);
     result.audio.volume = safeInt(audio.volume, 70, 0, 100);
     result.audio.muted = audio.muted === true;
     result.audio.shuffle = audio.shuffle === true;
@@ -728,7 +730,7 @@ const MUSIC_COVERS = [
     'legitScreen','telegramScreen','reformotiChatScreen','pcShopScreen','wallpaperScreen','fopScreen'
   ];
   function showScreen(id) {
-    screenIds.forEach((screenId) => $(screenId).classList.add('hidden'));
+    $('designScreen')?.classList.add('hidden');screenIds.forEach((screenId) => $(screenId).classList.add('hidden'));
     $(id).classList.remove('hidden');
     updateUI();
     if(id==='fopScreen'){payIslands();renderFopWallet();}
@@ -1693,7 +1695,7 @@ const MUSIC_COVERS = [
     $('pcBuyButton').textContent = `Купити ПК — ${money(PC_PRICE)} UAH`;
     $('pcShopOpen').classList.toggle('hidden', !save.pcOwned);
     $('pcUpgradeArea').classList.toggle('hidden', !save.pcOwned);
-    $('pcOpenButton').classList.toggle('hidden', !save.pcOwned);
+    $('pcOpenButton').classList.toggle('hidden', false);
     $('pcPowerSummary').textContent = `+${pcAimBonus()} px до цілі`;
     $('pcSpecsLabel').textContent = `CPU ${save.pcUpgrades.cpu} · GPU ${save.pcUpgrades.gpu} · RAM ${save.pcUpgrades.ram}`;
     $('pcDesktopPower').textContent = `+${pcAimBonus()} px до цілі`;
@@ -1757,7 +1759,7 @@ const MUSIC_COVERS = [
   }
 
   function openPC() {
-    if (!save.pcOwned) return;
+    if (!save.pcOwned) {openPhone();showScreen('pcShopScreen');return;}
     stopDrag();
     deliveryGame.cancel();
     $('phoneOverlay').classList.add('hidden');
@@ -2030,6 +2032,7 @@ const MUSIC_COVERS = [
   function createTrackCover(index,className='sc-cover'){
     const cover=document.createElement('span');cover.className=className;
     const fallback=document.createElement('span');fallback.className='sc-cover-fallback';fallback.textContent='♫';
+    if(!MUSIC_COVERS[index]){fallback.textContent=String(index+1).padStart(2,'0');cover.append(fallback);return cover;}
     const img=document.createElement('img');img.src=MUSIC_COVERS[index];img.alt=`Обкладинка: ${MUSIC_TRACKS[index]}`;img.loading='lazy';
     img.addEventListener('error',()=>{img.remove();cover.classList.add('sc-cover-missing');});cover.append(fallback,img);return cover;
   }
@@ -2042,9 +2045,9 @@ const MUSIC_COVERS = [
     MUSIC_TRACKS.forEach((name,i)=>{const b=document.createElement('button');b.type='button';b.className=`sc-track${i===save.audio.track?' selected':''}`;
       const meta=document.createElement('span');meta.className='sc-track-meta';
       const title=document.createElement('strong');title.textContent=name;
-      const hint=document.createElement('small');hint.textContent=`mp3(${i+1}).mp3`;meta.append(title,hint);
+      const hint=document.createElement('small');hint.textContent=i<5?`mp3(${i+1}).mp3`:'Слот підготовлено · аудіо ще не додано';meta.append(title,hint);
       const play=document.createElement('span');play.className='sc-track-play';play.textContent=i===save.audio.track&&!scAudio().paused?'Ⅱ':'▶';
-      b.append(createTrackCover(i),meta,play);b.addEventListener('click',()=>selectScTrack(i,true));list.append(b);
+      b.append(createTrackCover(i),meta,play);b.disabled=i>=5;b.addEventListener('click',()=>selectScTrack(i,true));list.append(b);
     });
     $('scCurrentTitle').textContent=MUSIC_TRACKS[save.audio.track];
     const art=$('scCurrentArt');if(art.dataset.track!==String(save.audio.track)){art.replaceChildren(createTrackCover(save.audio.track,'sc-current-cover'));art.dataset.track=String(save.audio.track);}
@@ -2074,7 +2077,7 @@ const MUSIC_COVERS = [
     });
   }
   function selectScTrack(index,play=false){
-    if(index<0||index>=MUSIC_TRACKS.length)return;
+    if(index<0||index>=MUSIC_TRACKS.length||!playableTracks().includes(index))return;
     const old=scAudio(),wasPlaying=!old.paused&&!scUserPaused;
     stopFade();save.audio.track=index;scFinishedAtEnd=false;scFallbackIndex=0;
     if(play&&wasPlaying&&scCurrentTrack>=0){
@@ -2096,8 +2099,7 @@ const MUSIC_COVERS = [
     $('scStatus').textContent='Завантаження…';persist();renderSoundcloud();
   }
   function scAdvance(direction,manual=false){if(save.audio.repeat&&!manual){scAudio().currentTime=0;scFinishedAtEnd=false;if(scUserPaused)playScAudio();return;}
-    const last=save.audio.track;const next=save.audio.shuffle&&MUSIC_TRACKS.length>1
-      ?pick(MUSIC_TRACKS.map((_,i)=>i).filter(i=>i!==last)):(last+direction+MUSIC_TRACKS.length)%MUSIC_TRACKS.length;
+    const available=playableTracks(),last=save.audio.track;const next=save.audio.shuffle?pick(available.filter(i=>i!==last)):available[(Math.max(0,available.indexOf(last))+direction+available.length)%available.length];
     selectScTrack(next,true);
   }
   $('scPlay').addEventListener('click',()=>{if(!scAudio().paused){scUserPaused=true;stopFade();scDecks.forEach(a=>a.pause());renderSoundcloud();}else playScAudio();});

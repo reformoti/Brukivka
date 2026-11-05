@@ -1,5 +1,6 @@
 (function(root){
   'use strict';
+  if(typeof window!=='undefined'&&window.BrukDevice?.blocked)return;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   class BreakoutWorld{
     constructor(){this.score=0;this.lives=3;this.paddleX=450;this.bricks=[];

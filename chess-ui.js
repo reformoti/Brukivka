@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  if(typeof window!=='undefined'&&window.BrukDevice?.blocked)return;
   const $=id=>document.getElementById(id),C=window.BrukChess,KEY='brukivka_chess_v1',FILES='abcdefgh';
   const symbols={w:{k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'},b:{k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'}},names={k:'король',q:'ферзь',r:'тура',b:'слон',n:'кінь',p:'пішак'};
   const emotionArt={

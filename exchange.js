@@ -107,7 +107,7 @@
       const list=el('div','exchange-history');for(const t of s.trades.slice().reverse()){const row=el('div','');row.append(el('b','',`Сесія ${t.day} · ${t.side==='buy'?'Купівля':'Продаж'} ${ASSETS[t.asset].symbol} ×${t.qty}`),el('span','',`${t.price} кр. / шт. · комісія ${t.fee}${t.profit!==null?' · результат '+t.profit.toFixed(1):''}`));list.append(row);}if(!s.trades.length)list.append(el('p','exchange-empty','Тут з’являться виконані угоди.'));container.append(list);
     }
     if(root.BrukRewardShop?.mount)root.BrukRewardShop.mount(container,'exchange',benefitWallet(),render);
-    root.BrukHelp?.fold(container);
+    root.BrukHelp?.fold(container);root.BrukWorkspace?.prepare(container,'exchange');
   }
   root.BrukExchange={mount(target){container=target;render();},model};
 })(typeof window==='undefined'?globalThis:window);

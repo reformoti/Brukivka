@@ -1,5 +1,6 @@
 (function(root){
   'use strict';
+  if(typeof window!=='undefined'&&window.BrukDevice?.blocked)return;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   class StackWorld{
     constructor(){this.blocks=[{x:180,y:590,w:540}];this.current={x:0,y:562,w:540};this.direction=1;this.score=0;this.streak=0;this.phase='running';this.pieces=[];}

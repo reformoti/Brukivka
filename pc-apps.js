@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  if(typeof window!=='undefined'&&window.BrukDevice?.blocked)return;
   const $=id=>document.getElementById(id),KEY='brukivka_pc_apps_v1';
   const COLORS=['#e8dbc0','#dc9b65','#92c8b7','#84a9ed','#ba91d9','#27394a'];
   const goods=[{name:'Камінь',base:40,icon:'▰'},{name:'Метал',base:90,icon:'▤'},{name:'Мікросхеми',base:160,icon:'▣'}];
@@ -55,7 +56,7 @@
   function mountShop(root,source,field){window.BrukRewardShop.mount(root,source,{balance:()=>state[field],snapshot:()=>JSON.stringify(state),debit:cost=>{if(state[field]<cost)return false;state[field]-=cost;return persist();},restore:snapshot=>{state=JSON.parse(snapshot);persist();}},render);}
   const renderers={paint:renderPaint,gallery:renderGallery,exchange:renderExchange,workshop:renderWorkshop,dispatch:renderDispatch};
   const titles={paint:'BrukPaint',gallery:'Мої малюнки',exchange:'BrukExchange',workshop:'BrukWorkshop',dispatch:'BrukDispatch'};
-  function render(){window.BrukPaint.leave();const root=$('pcPreviewContent');root.replaceChildren();$('pcPreviewBadge').textContent=selected==='paint'?'СТУДІЯ':selected==='gallery'?'ПАПКА':selected==='exchange'?'TRADE HUB':selected==='workshop'?'ВИРОБНИЦТВО':'ЛОГІСТИКА';$('pcPreviewTitle').textContent=titles[selected];renderers[selected](root);window.BrukHelp?.fold(root);}
+  function render(){window.BrukPaint.leave();const root=$('pcPreviewContent');root.replaceChildren();$('pcPreviewBadge').textContent=selected==='paint'?'СТУДІЯ':selected==='gallery'?'ПАПКА':selected==='exchange'?'TRADE HUB':selected==='workshop'?'ВИРОБНИЦТВО':'ЛОГІСТИКА';$('pcPreviewTitle').textContent=titles[selected];renderers[selected](root);window.BrukHelp?.fold(root);window.BrukWorkspace?.prepare(root,selected);}
   window.BrukPcApps={open(id){if(!renderers[id])return;selected=id;notice('');render();}};
   function frame(time){if(trip&&time-lastTick>60){lastTick=time;tickDispatch();}requestAnimationFrame(frame);}requestAnimationFrame(frame);
 })();

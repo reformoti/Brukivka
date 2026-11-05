@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  if(typeof window!=='undefined'&&window.BrukDevice?.blocked)return;
   const $ = id => document.getElementById(id);
   const canvas = $('road'), ctx = canvas.getContext('2d');
   const W = 900, H = 680, LENGTH = 110, PLAYER_Z = 8;

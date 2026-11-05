@@ -1,8 +1,9 @@
 /* Reuse the desktop player so a game never interrupts the current track. */
 (() => {
-  'use strict';let bridge=null,audio=null,index=0;
+  'use strict';
+  if(typeof window!=='undefined'&&window.BrukDevice?.blocked)return;let bridge=null,audio=null,index=0;
   try{if(parent!==window&&parent.BrukMusic)bridge=parent.BrukMusic;}catch{}
-  const tracks=['music/mp3(1).mp3','music/mp3(2).mp3','music/mp3(3).mp3','music/mp3(4).mp3'];
+  const tracks=['music/mp3(1).mp3','music/mp3(2).mp3','music/mp3(3).mp3','music/mp3(4).mp3','music/mp3(5).mp3'];
   const button=document.getElementById('musicToggle'),next=document.getElementById('musicNext'),volume=document.getElementById('musicVolume'),label=document.getElementById('musicLabel');
   if(!button)return;
   if(!bridge){audio=new Audio(tracks[0]);audio.volume=.35;audio.addEventListener('ended',()=>{index=(index+1)%tracks.length;audio.src=tracks[index];audio.play().catch(()=>{});});}

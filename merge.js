@@ -1,6 +1,7 @@
 /* Pure board operations are also exported for validation outside the browser. */
 (function(root) {
   'use strict';
+  if(typeof window!=='undefined'&&window.BrukDevice?.blocked)return;
   function slide(line) {
     const values=line.filter(Boolean), out=[];let score=0;
     for(let i=0;i<values.length;i++) {

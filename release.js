@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'5.4.0',date:'2026-11-05',name:'Crimson & Craft'};
+  const release={version:'6.0.0',date:'2026-11-05',name:'Horizon Desktop'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
