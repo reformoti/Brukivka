@@ -2192,6 +2192,7 @@ const MUSIC_COVERS = [
   function returnToSteam() {
     if (!steamHost.open) return;
     steamHost.close();
+    steamHost.classList.remove('immersive-game');
     steamFrame.src = 'about:blank';
     syncHoiBonus();
     updateUI();
@@ -2207,6 +2208,7 @@ const MUSIC_COVERS = [
     if (url.origin !== location.origin || !steamGames.has(file)) return;
     event.preventDefault();
     steamLaunchLink = link;
+    steamHost.classList.toggle('immersive-game',file==='realms.html');
     $('steamGameTitle').textContent = steamGames.get(file);
     steamFrame.title = steamGames.get(file);
     url.searchParams.set('v',window.BrukRelease.version);
