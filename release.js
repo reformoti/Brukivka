@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'5.1.0',date:'2026-11-05',name:'Forges & Frontiers'};
+  const release={version:'5.2.0',date:'2026-11-05',name:'Journey Complete'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
@@ -8,3 +8,4 @@
     document.title='Бруківка · v'+release.version;
   }
 })(typeof window==='undefined'?globalThis:window);
+
