@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'5.3.0',date:'2026-11-05',name:'Destiny & Steel'};
+  const release={version:'5.4.0',date:'2026-11-05',name:'Crimson & Craft'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

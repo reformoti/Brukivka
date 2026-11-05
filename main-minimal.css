@@ -1,0 +1,89 @@
+/* Brukivka 5.4 · Crimson Minimal. Scoped to the main game, keeping purchased phone/PC themes. */
+/* Solitus © 2019–2020 J Hudson · SIL OFL 1.1 · fonts/OFL-Solitus.txt */
+@font-face{
+  font-family:Solitus;src:url("fonts/Solitus.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap;unicode-range:U+0000-024F;
+}
+body.main-minimal{background:#090909;color:#f1efed}
+body.main-minimal::before{background-image:linear-gradient(#090909ed,#090909f7),var(--wallpaper-image);opacity:1}
+body.main-minimal .page-shell{
+  --main-red:#ed3544;--main-line:#2a2728;--main-muted:#a39b9e;
+  width:min(1240px,calc(100% - 64px));padding:32px 0 42px;
+  font-family:Solitus,"Segoe UI",Arial,sans-serif;
+}
+body.main-minimal .main-header{margin:0 0 32px;align-items:center;flex-direction:row;padding:0 0 24px;border-bottom:1px solid var(--main-line)}
+body.main-minimal .main-header .eyebrow{font-size:10px;letter-spacing:.24em;color:var(--main-red);margin-bottom:10px}
+body.main-minimal .main-header h1{font-family:Solitus,"Segoe UI",Arial,sans-serif;font-size:clamp(32px,4vw,54px);letter-spacing:-.045em;line-height:1.08;font-weight:600;margin:0;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+body.main-minimal .main-header .release-pill{font-size:10px;letter-spacing:.04em;font-weight:400;color:#c9bfc2;background:transparent;border:1px solid #3c3033;border-radius:4px;padding:5px 7px;box-shadow:none}
+body.main-minimal .main-actions{width:auto;flex-wrap:nowrap;gap:8px}
+body.main-minimal .main-actions button{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:11px 17px;min-width:0;width:auto;border:1px solid #443236;border-radius:5px;background:#141112;color:#f2e9eb;font-weight:500;font-size:13px;box-shadow:none;cursor:pointer;transition:background .15s,border-color .15s}
+body.main-minimal .main-actions button:last-child{background:#d92938;border-color:#d92938;color:#fff}
+body.main-minimal .main-actions button:hover{background:#302025;border-color:#ed3544}
+body.main-minimal .main-actions button:last-child:hover{background:#ed3544}
+body.main-minimal .main-actions svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;flex-shrink:0}
+body.main-minimal .game-panel{border:0;background:transparent;padding:0;border-radius:0;box-shadow:none}
+body.main-minimal .game-title-row{padding:0;margin-bottom:18px;gap:12px}
+body.main-minimal .game-title-row h2{font-size:clamp(21px,2.3vw,30px);font-weight:600;line-height:1.22;letter-spacing:-.035em}
+body.main-minimal .game-title-row p{color:var(--main-muted);font-size:12px;line-height:1.6;margin-top:8px}
+body.main-minimal .delivery-levels{gap:0;margin:22px 0 0;counter-reset:routes;border:1px solid var(--main-line);border-radius:5px;overflow:hidden;background:#111010}
+body.main-minimal .delivery-level{position:relative;counter-increment:routes;border:0;border-right:1px solid var(--main-line);border-bottom:3px solid transparent;border-radius:0;background:#111010;color:#c1b7ba;padding:17px 18px 14px;gap:8px;box-shadow:none;min-width:0;transition:background .15s}
+body.main-minimal .delivery-level:last-child{border-right:0}
+body.main-minimal .delivery-level::before{content:"0" counter(routes);font-family:Solitus,"Segoe UI",sans-serif;font-size:10px;color:#8b7d82;letter-spacing:.08em;margin-bottom:5px}
+body.main-minimal .delivery-level strong{font-size:12px;font-weight:600;line-height:1.45;overflow-wrap:anywhere}
+body.main-minimal .delivery-level span{font-size:29px;letter-spacing:-.04em;color:#eee8e8;font-weight:400}
+body.main-minimal .delivery-level .delivery-access{font-family:"Segoe UI",Arial,sans-serif;font-size:10px;color:#a7999d;letter-spacing:0;line-height:1.6}
+body.main-minimal .delivery-level.selected{border-color:var(--main-red);background:#221316;color:#fff}
+body.main-minimal .delivery-level.selected::before,body.main-minimal .delivery-level.selected span{color:#ff6570}
+body.main-minimal .delivery-level.locked{background:#100e0f;border-right-color:var(--main-line);border-bottom-color:transparent;border-style:solid}
+body.main-minimal .delivery-level:hover{background:#24171b}
+body.main-minimal .delivery-level:disabled{opacity:.55;cursor:not-allowed}
+body.main-minimal .delivery-access-note{font-family:"Segoe UI",Arial,sans-serif;font-size:10px;line-height:1.6;color:#94888d;margin:11px 0 20px}
+body.main-minimal .delivery-summary{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--main-line);border-bottom:1px solid var(--main-line);padding:15px 0;margin-bottom:20px}
+body.main-minimal .delivery-summary>span{display:flex;flex-direction:column;align-items:flex-start;gap:8px;font-size:9px;color:#b7a7ae;letter-spacing:.14em;min-width:0}
+body.main-minimal .delivery-summary>span+span{padding-left:25px;border-left:1px solid var(--main-line)}
+body.main-minimal .delivery-summary strong{font-family:Solitus,"Segoe UI",Arial,sans-serif;font-size:clamp(19px,2.7vw,30px);font-weight:400;color:#f2e8eb;letter-spacing:-.03em;margin:0;overflow-wrap:anywhere}
+body.main-minimal .game-board{border-radius:5px;border:1px solid #35282c;background-image:linear-gradient(#100c0de8,#0c0b0be8),var(--wallpaper-image);background-size:cover;background-position:center;box-shadow:none}
+body.main-minimal .grid-overlay{background:linear-gradient(#ffffff03 1px,transparent 1px),linear-gradient(90deg,#ffffff03 1px,transparent 1px);background-size:48px 48px}
+body.main-minimal .start-zone{border:1px dashed #493039;background:#21101640;border-radius:3px;color:#b89da7;font-size:9px}
+body.main-minimal .pocket{border:1px solid #a33847;border-radius:4px;background:#41172055;color:#f4b5bd;font-size:9px;box-shadow:none}
+body.main-minimal .pocket-slot{border-radius:3px;border:1px solid #b3677544;background:#090708;box-shadow:inset 0 3px 9px #0008}
+body.main-minimal .brukivka{border-radius:7px;border:1px solid #aaa09a;background:linear-gradient(150deg,#a39b91,#605b57 60%,#464443);box-shadow:inset 2px 3px 0 #d9cfc366,inset -3px -4px 0 #2c292a88,0 7px 14px #0009}
+body.main-minimal .brukivka.dragging{box-shadow:0 0 0 3px #ed354433,0 12px 20px #000b}
+body.main-minimal .brick-face{border-radius:3px;border-color:#29282988;background:linear-gradient(90deg,transparent 47%,#25202044 48%,#25202044 52%,transparent 53%),linear-gradient(transparent 47%,#25202044 48%,#25202044 52%,transparent 53%)}
+body.main-minimal .brick-count{background:#df3442;border:1px solid #ff8c94;color:#fff;font-weight:500;font-size:12px;box-shadow:none}
+body.main-minimal .brukivka>span{color:#b2a4a7}
+body.main-minimal .maze-wall{background:#40363a;border-color:#a9868e;box-shadow:none}
+body.main-minimal .laser{box-shadow:0 0 5px #ff304888}
+body.main-minimal .status-message{border:1px solid #4e333c;border-radius:4px;background:#181013ed;color:#c8b7be;font-size:11px;box-shadow:none}
+body.main-minimal .status-message.good{border-color:#697c60;color:#d0e1c5}
+body.main-minimal .status-message.bad{border-color:#b8404c;color:#ffc4cb;background:#36141bea}
+body.main-minimal .delivery-canvas-box{border:1px solid #453037;border-radius:5px;background:#110e10}
+body.main-minimal .delivery-tools{background:#131012;border-top:1px solid #38272d;color:#bca8b1}
+body.main-minimal .delivery-tools button{border:1px solid #6d3c49;border-radius:4px;background:#28151c;color:#ffe9ee;min-height:38px}
+body.main-minimal .delivery-feedback{background:#1a1215;border:1px solid #51323d;border-radius:4px;color:#ded0d5}
+body.main-minimal .delivery-feedback[data-tone="good"]{border-color:#546c4f;color:#d0e6c4}
+body.main-minimal .delivery-feedback[data-tone="bad"]{border-color:#a63e4b;color:#ffbec8}
+body.main-minimal .page-shell :is(button,a,canvas):focus-visible{outline:2px solid #ff7781;outline-offset:4px}
+body.main-minimal .page-shell :is(button,a,canvas):disabled:focus-visible{outline-color:#9c858c}
+@media(min-width:1600px){body.main-minimal .page-shell{padding-top:46px}}
+@media(max-width:760px){
+  body.main-minimal .page-shell{width:calc(100% - 32px);padding-top:22px}
+  body.main-minimal .main-header{margin-bottom:24px;padding-bottom:19px;gap:18px}
+  body.main-minimal .main-header h1{font-size:34px;gap:9px}
+  body.main-minimal .main-actions{gap:6px}
+  body.main-minimal .main-actions button{padding:10px 12px;font-size:11px}
+  body.main-minimal .delivery-level{padding:14px 11px 11px}
+}
+@media(max-width:560px){
+  body.main-minimal .main-header{align-items:flex-start;flex-direction:column}
+  body.main-minimal .main-actions{width:100%}
+  body.main-minimal .main-actions button{flex:1;min-width:0;font-size:12px}
+  body.main-minimal .delivery-levels{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.main-minimal .delivery-level:nth-child(2){border-right:0}
+  body.main-minimal .delivery-level:nth-child(-n+2){border-top:0;border-bottom:1px solid var(--main-line)}
+  body.main-minimal .delivery-level.selected{box-shadow:inset 0 -3px #ed3544}
+  body.main-minimal .delivery-summary>span+span{padding-left:15px}
+  body.main-minimal .delivery-summary strong{font-size:22px}
+  body.main-minimal .game-title-row h2{font-size:23px}
+  body.main-minimal .delivery-tools{flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce){body.main-minimal .page-shell *{transition:none!important;animation:none!important}}

@@ -3,24 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#090b10" />
+  <meta name="theme-color" content="#090909" />
   <title>Бруківка</title>
-  <link rel="stylesheet" href="style.css?v=5.3.0" />
-  <link rel="stylesheet" href="paint.css?v=5.3.0" />
-  <link rel="stylesheet" href="ventures.css?v=5.3.0" />
-  <link rel="stylesheet" href="exchange.css?v=5.3.0" />
-  <link rel="stylesheet" href="desktop.css?v=5.3.0" />
+  <link rel="stylesheet" href="style.css?v=5.4.0" />
+  <link rel="stylesheet" href="paint.css?v=5.4.0" />
+  <link rel="stylesheet" href="ventures.css?v=5.4.0" />
+  <link rel="stylesheet" href="exchange.css?v=5.4.0" />
+  <link rel="stylesheet" href="desktop.css?v=5.4.0" />
+  <link rel="preload" href="fonts/Solitus.ttf" as="font" type="font/ttf" crossorigin />
+  <link rel="stylesheet" href="main-minimal.css?v=5.4.0" />
 </head>
-<body>
+<body class="main-minimal">
   <main class="page-shell">
     <header class="main-header">
       <div>
-        <div class="eyebrow">BRUKIVKA</div>
+        <div class="eyebrow">BRUKIVKA / PLAYGROUND</div>
         <h1>Бруківка <span class="release-pill" data-game-version></span></h1>
       </div>
       <div class="main-actions">
-        <button id="pcOpenButton" class="pc-open-button hidden" type="button">💻 ПК</button>
-        <button id="phoneButton" class="phone-button" type="button">📱 Телефон</button>
+        <button id="pcOpenButton" class="pc-open-button hidden" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1"/><path d="M8 21h8M12 16v5"/></svg><span>ПК</span></button>
+        <button id="phoneButton" class="phone-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 5h4M11 19h2"/></svg><span>Телефон</span></button>
       </div>
     </header>
 
@@ -258,7 +260,7 @@
           <span class="header-dot brick-dot">●</span>
         </div>
 
-        <div class="release-card"><div><small>ВЕРСІЯ ГРИ</small><strong data-game-version></strong></div><span data-release-date></span><p>Destiny & Steel · повноекранний Bruklands та радіальне дерево долі.</p></div>
+        <div class="release-card"><div><small>ВЕРСІЯ ГРИ</small><strong data-game-version></strong></div><span data-release-date></span><p>Crimson & Craft · нові моделі світу й мінімалістичний головний екран.</p></div>
         <div class="brick-info-hero">
           <div class="hero-brick">■</div>
           <div>
@@ -526,6 +528,7 @@
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>ЖУРНАЛ ОНОВЛЕНЬ</strong><span class="steam-online">● HISTORY</span></div>
           <h2>Історія Brukivka</h2><p class="history-note">Дати й час орієнтовні, тільки для версій, відомих із розробки.</p>
           <div class="history-timeline">
+            <article><time>05.11.2026 · v5.4.0</time><h3>Crimson & Craft</h3><p>Червоно-чорний мінімалізм головного екрана та локальний шрифт Solitus для латиниці й цифр. Оновлені силуети й анімації 10 видів монстрів, персонаж і шість видів зброї. Деталізовані будинки, дерева, родовища, рослини та табір. Прогрес і покупки збережено.</p></article>
             <article><time>05.11.2026 · v5.3.0</time><h3>Bruklands · Destiny & Steel</h3><p>Гра на весь екран, круглі іконки дій та меню, металевий інтерфейс із золотом і додаткова чорно-червона палітра. Радіальна дошка майстерства й талантів із масштабуванням, переміщенням і справжнім прогресом.</p></article>
             <article><time>05.11.2026 · v5.2.0</time><h3>Bruklands · Journey Complete</h3><p>Інтерактивна карта з маршрутами, повернення в табір поза боєм, перехід до наступного контракту та фінал кампанії з одноразовою нагородою. Збереження попереднього прогресу.</p></article>
             <article><time>05.11.2026 · v5.1.0</time><h3>Bruklands · Forges & Frontiers</h3><p>10 видів ворогів, зокрема бос, 6 типів зброї з власними прийомами, броня та аксесуари. Видобуток руд, рубка, збір рослин, переробка, кузня, продаж ресурсів і сховище. Майстерство, три гілки талантів та п’ять контрактів. Попередній прогрес Bruklands збережено.</p></article>
@@ -564,16 +567,16 @@
     <header class="steam-game-bar"><button id="steamGameBack" type="button">← До Steam</button><strong id="steamGameTitle">STEAM</strong><div><button id="steamGameMusic" type="button" aria-label="Відтворити або призупинити музику">▶ Музика</button><button id="steamGameMute" type="button" aria-label="Вимкнути звук">🔊</button></div></header>
     <iframe id="steamGameFrame" title="Гра Steam" allow="autoplay; fullscreen" allowfullscreen></iframe>
   </dialog>
-  <script src="release.js?v=5.3.0"></script>
-  <script src="benefits.js?v=5.3.0"></script>
-  <script src="ventures-core.js?v=5.3.0"></script>
-  <script src="delivery.js?v=5.3.0"></script>
-  <script src="script.js?v=5.3.0"></script>
-  <script src="paint.js?v=5.3.0"></script>
-  <script src="ventures-ui.js?v=5.3.0"></script>
-  <script src="exchange.js?v=5.3.0"></script>
-  <script src="desktop.js?v=5.3.0"></script>
-  <script src="pc-apps.js?v=5.3.0"></script>
+  <script src="release.js?v=5.4.0"></script>
+  <script src="benefits.js?v=5.4.0"></script>
+  <script src="ventures-core.js?v=5.4.0"></script>
+  <script src="delivery.js?v=5.4.0"></script>
+  <script src="script.js?v=5.4.0"></script>
+  <script src="paint.js?v=5.4.0"></script>
+  <script src="ventures-ui.js?v=5.4.0"></script>
+  <script src="exchange.js?v=5.4.0"></script>
+  <script src="desktop.js?v=5.4.0"></script>
+  <script src="pc-apps.js?v=5.4.0"></script>
 </body>
 </html>
 
