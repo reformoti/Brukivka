@@ -24,7 +24,7 @@
   function rr(c,x,y,w,h,r,color){c.fillStyle=color;c.beginPath();c.roundRect(x,y,w,h,r);c.fill();}
   function ellipse(c,x,y,rx,ry,color){c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();}
   function drawMonster(c,m,world){
-    const {x,y,type}=m,t=R.TYPES[type],bob=Math.sin(world.time*5+m.phase)*2;
+    const {x,y,type}=m,t=R.TYPES[type],bob=Math.sin((world.renderTime??world.time)*5+m.phase)*2;
     if(['slime','wolf','golem'].includes(type))return false;
     c.save();c.translate(x,y);
     if(type==='boar'||type==='bear'){

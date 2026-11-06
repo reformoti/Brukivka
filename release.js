@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.0.1',date:'2026-11-06',name:'Pocket Frame'};
+  const release={version:'6.1.0',date:'2026-11-06',name:'Quarry Economy'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

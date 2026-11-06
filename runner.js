@@ -112,10 +112,7 @@
     ctx.globalAlpha=.4;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(p.x,p.y+5,48-lift*.12,13,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
     const x=p.x,y=p.y-lift-25,bob=mode==='running'&&jumpTime<0?Math.sin(distance*1.7)*3:0;
     ctx.save();ctx.translate(x,y+bob);ctx.rotate(jumpTime<0?Math.sin(distance)*.025:-jumpHeight()*.17);
-    polygon([{x:-47,y:-17},{x:24,y:-32},{x:49,y:-13},{x:-22,y:3}],'#e2af77','#f3c58f');
-    polygon([{x:-47,y:-17},{x:-22,y:3},{x:-22,y:34},{x:-47,y:12}],'#9d6542');
-    polygon([{x:-22,y:3},{x:49,y:-13},{x:49,y:17},{x:-22,y:34}],'#c58a56','#754d37');
-    ctx.fillStyle='#382b25';ctx.fillRect(0,7,6,7);ctx.fillRect(25,1,6,7);ctx.fillRect(12,20,11,3);ctx.restore();
+    window.BrukBrick.draw(ctx,0,0,110,85);ctx.restore();
     const vignette=ctx.createLinearGradient(0,H-80,0,H);vignette.addColorStop(0,'#0c131c00');vignette.addColorStop(1,'#0c131caa');ctx.fillStyle=vignette;ctx.fillRect(0,H-80,W,80);
   }
   function frame(time) {

@@ -165,7 +165,7 @@
 
   const HOI_REWARD_KEY = 'brukivka_hoi_rewards_v1';
   const PC_PRICE = 12500;
-  const PC_UPGRADE_LIMIT = 5;
+  const PC_UPGRADE_LIMIT = {cpu:5,gpu:30,ram:5};
   const PC_UPGRADE_BASE = {cpu:18000, gpu:27000, ram:15000};
   const CS_MODES = {easy:{label:'Легкий',target:10}, medium:{label:'Середній',target:30}, hardcore:{label:'Хардкор',target:60}};
   const CS_ROUND_MS = 30000;
@@ -210,6 +210,7 @@ const MUSIC_COVERS = [
       perks:window.BrukRewardShop.normalize(),
       estate:window.BrukVentures.defaultEstate(),
       garage:window.BrukVentures.defaultGarage(),
+      mining:window.BrukMining.normalize(),
       brickTier:0,
       phoneTier:0,
       strength:0,
@@ -276,6 +277,7 @@ const MUSIC_COVERS = [
     result.perks=window.BrukRewardShop.normalize(source.perks);
     result.estate=window.BrukVentures.normalizeEstate(source.estate);
     result.garage=window.BrukVentures.normalizeGarage(source.garage);
+    result.mining=window.BrukMining.normalize(source.mining);
     const access=window.BrukDelivery.restoreAccess(source);
     result.deliveryLevel=access.selected;result.deliveryOwned=access.owned;
     result.brickTier = safeInt(source.brickTier, 0, 0, brickTiers.length - 1);
@@ -338,7 +340,7 @@ const MUSIC_COVERS = [
     result.pcOwned = source.pcOwned === true;
     const upgrades = record(source.pcUpgrades);
     for (const part of Object.keys(PC_UPGRADE_BASE)) {
-      result.pcUpgrades[part] = result.pcOwned ? safeInt(upgrades[part], 0, 0, PC_UPGRADE_LIMIT) : 0;
+      result.pcUpgrades[part] = result.pcOwned ? safeInt(upgrades[part], 0, 0, PC_UPGRADE_LIMIT[part]) : 0;
     }
     result.csHardcoreBest = safeInt(source.csHardcoreBest, 0, 0, 60);
     result.csHardcoreBestTimeMs = safeInt(source.csHardcoreBestTimeMs, 0, 0, CS_ROUND_MS);
@@ -478,7 +480,7 @@ const MUSIC_COVERS = [
     updateDeliveryButtons();
     $('brickBoardName').textContent = `${brick.name} Бруківка`;
     $('brickCountBadge').textContent = `×${strength.carry}`;
-    $('brukivka').style.background = `linear-gradient(145deg,${brick.c1},${brick.c2})`;
+    $('brukivka').style.background = 'transparent';
 
     $('homePhoneModel').textContent = phone.name;
     $('homeAverageNmt').textContent = displayNmt(avg);
@@ -1679,7 +1681,7 @@ const MUSIC_COVERS = [
   // PC Market: an owned PC unlocks a separate desktop UI.
   // ========================================================
   function pcUpgradeCost(part) {
-    return Math.round(PC_UPGRADE_BASE[part] * Math.pow(2.1, save.pcUpgrades[part]) / 50) * 50;
+    return Math.round(PC_UPGRADE_BASE[part] * Math.pow(part==='gpu'?1.65:2.1, save.pcUpgrades[part]) / 50) * 50;
   }
 
   function pcAimBonus() {
@@ -1696,7 +1698,7 @@ const MUSIC_COVERS = [
     $('pcShopOpen').classList.toggle('hidden', !save.pcOwned);
     $('pcUpgradeArea').classList.toggle('hidden', !save.pcOwned);
     $('pcOpenButton').classList.toggle('hidden', false);
-    $('pcPowerSummary').textContent = `+${pcAimBonus()} px до цілі`;
+    $('pcPowerSummary').textContent = `${window.BrukMining.GPU[save.pcUpgrades.gpu].name} · ${(window.BrukMining.rate(save.pcUpgrades.gpu)/1000*60).toFixed(2)} BRC/хв`;
     $('pcSpecsLabel').textContent = `CPU ${save.pcUpgrades.cpu} · GPU ${save.pcUpgrades.gpu} · RAM ${save.pcUpgrades.ram}`;
     $('pcDesktopPower').textContent = `+${pcAimBonus()} px до цілі`;
     const monitor=MONITORS[save.monitorTier];
@@ -1707,10 +1709,10 @@ const MUSIC_COVERS = [
     renderMonitor();
     for (const part of Object.keys(PC_UPGRADE_BASE)) {
       const level = save.pcUpgrades[part];
-      $(`pc${part[0].toUpperCase() + part.slice(1)}Level`).textContent = `${level}/${PC_UPGRADE_LIMIT}`;
+      $(`pc${part[0].toUpperCase() + part.slice(1)}Level`).textContent = `${level}/${PC_UPGRADE_LIMIT[part]}`;
       const btn = $(`pc${part[0].toUpperCase() + part.slice(1)}Upgrade`);
-      btn.disabled = !save.pcOwned || level >= PC_UPGRADE_LIMIT || save.balance < pcUpgradeCost(part);
-      btn.textContent = level >= PC_UPGRADE_LIMIT ? 'Максимум ✓' : `Прокачати — ${money(pcUpgradeCost(part))} UAH`;
+      btn.disabled = !save.pcOwned || level >= PC_UPGRADE_LIMIT[part] || save.balance < pcUpgradeCost(part);
+      btn.textContent = level >= PC_UPGRADE_LIMIT[part] ? 'Максимум ✓' : `Прокачати — ${money(pcUpgradeCost(part))} UAH`;
     }
   }
 
@@ -1728,7 +1730,7 @@ const MUSIC_COVERS = [
   }
 
   function upgradePC(part) {
-    if (!save.pcOwned || save.pcUpgrades[part] >= PC_UPGRADE_LIMIT) return;
+    if (!save.pcOwned || save.pcUpgrades[part] >= PC_UPGRADE_LIMIT[part]) return;
     const cost = pcUpgradeCost(part);
     if (save.balance < cost) {
       $('pcShopMessage').textContent = 'Недостатньо UAH для покращення.';
@@ -1853,7 +1855,7 @@ const MUSIC_COVERS = [
     save.phoneTier=phoneTiers.length-1;
     save.strength=strengthTiers.length-1;
     save.pcOwned=true;save.monitorTier=MONITORS.length-1;
-    Object.keys(save.pcUpgrades).forEach(part=>save.pcUpgrades[part]=PC_UPGRADE_LIMIT);
+    Object.keys(save.pcUpgrades).forEach(part=>save.pcUpgrades[part]=PC_UPGRADE_LIMIT[part]);
     save.pocketTier=POCKET_MAX;
     ISLANDS.forEach(i=>save.islands[i.id]=5);
     save.csBestHits=60;save.csHardcoreBest=60;save.csHardcoreBestTimeMs=1500;
@@ -2181,7 +2183,10 @@ const MUSIC_COVERS = [
     ['rally.html', 'BRUK RALLY'],
     ['stack.html', 'БРУКІВКА · STACK'],
     ['chess.html', 'BRUK CHESS'],
-    ['realms.html', 'BRUKLANDS'],
+    ['realms.html', 'HoMoW'],
+    ['homow.html', 'HOLD MONSTERS WORLD · HoMoW'],
+    ['quarry.html', 'QUARRY · MINES'],
+    ['orbit.html', 'BRUK ORBIT'],
     ['minihoi.html', 'IRON ATLAS · MINI HOI']
   ]);
   function updateSteamMusic() {
@@ -2209,8 +2214,10 @@ const MUSIC_COVERS = [
     const file = url.pathname.split('/').pop();
     if (url.origin !== location.origin || !steamGames.has(file)) return;
     event.preventDefault();
+    const license=Object.entries(window.BrukMining.GAMES).find(([,g])=>g.file===file)?.[0];
+    if(license&&!save.mining.licenses.includes(license)){window.BrukMinerUI?.purchase(license);return;}
     steamLaunchLink = link;
-    steamHost.classList.toggle('immersive-game',file==='realms.html');
+    steamHost.classList.toggle('immersive-game',['realms.html','homow.html'].includes(file));
     $('steamGameTitle').textContent = steamGames.get(file);
     steamFrame.title = steamGames.get(file);
     url.searchParams.set('v',window.BrukRelease.version);
@@ -2246,6 +2253,15 @@ const MUSIC_COVERS = [
     renderSoundcloud();
   });
 
+  window.BrukEconomy={
+    snapshot:()=>({...save.mining,licenses:[...save.mining.licenses],gpu:save.pcUpgrades.gpu,pcOwned:save.pcOwned}),
+    toggle:()=>{if(!save.pcOwned)return false;save.mining.running=!save.mining.running;persist();return save.mining.running;},
+    unlock:id=>{const ok=window.BrukMining.unlock(save.mining,id);if(ok){persist();updateUI();}return ok;},
+    exchange:coins=>{if(!Number.isSafeInteger(coins)||coins<1||coins*window.BrukMining.UAH_PER_COIN>MAX_BALANCE-save.balance)return 0;const amount=window.BrukMining.exchange(save.mining,coins);if(amount){save.balance+=amount;persist();updateUI();}return amount;}
+  };
+  let mineLast=performance.now(),mineSave=mineLast;
+  setInterval(()=>{const now=performance.now(),dt=(now-mineLast)/1000;mineLast=now;if(document.hidden||!save.pcOwned)return;const earned=window.BrukMining.tick(save.mining,dt,save.pcUpgrades.gpu,save.pcOwned);if(earned&&now-mineSave>5000){persist();mineSave=now;}window.dispatchEvent(new Event('bruk-mining'));},1000);
+  window.addEventListener('pagehide',()=>persist());
   const businessAPI={
     estate:()=>save.estate,garage:()=>save.garage,balance:()=>save.balance,perks:()=>({...save.perks}),
     usePerk:(key,change)=>{if(!['brickStock','rebarStock','paintVouchers'].includes(key)||save.perks[key]<1)return false;if(change()===false)return false;save.perks[key]--;persist();updateUI();return true;},

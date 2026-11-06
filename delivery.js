@@ -193,9 +193,7 @@
     root.document.addEventListener('keyup',event=>{keys.delete(codeMap[event.code]);if(!keys.size)mazeContact=false;});
     root.addEventListener('blur',()=>{keys.clear();pointer=null;aiming=false;});
     function brick(x,y,size=34,rotation=0) {
-      ctx.save();ctx.translate(x,y);ctx.rotate(rotation);ctx.fillStyle='#d7a676';ctx.strokeStyle='#f8d7ae';ctx.lineWidth=2;
-      ctx.fillRect(-size/2,-size/2,size,size);ctx.strokeRect(-size/2,-size/2,size,size);
-      ctx.strokeStyle='#8b654a';ctx.beginPath();ctx.moveTo(-size/2,0);ctx.lineTo(size/2,0);ctx.moveTo(0,-size/2);ctx.lineTo(0,size/2);ctx.stroke();ctx.restore();
+      if(root.BrukBrick)root.BrukBrick.draw(ctx,x,y,size,size,rotation);
     }
     function text(copy,x,y,color='#b7c5cf',size=14,align='left'){ctx.fillStyle=color;ctx.font=`600 ${size}px system-ui`;ctx.textAlign=align;ctx.fillText(copy,x,y);}
     function drawMaze() {

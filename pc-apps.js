@@ -54,9 +54,9 @@
     if(p>=1){state.deliveries++;state.points+=trip.points;const name=trip.name;trip=null;persist();if(selected==='dispatch'&&!$('pcPreviewPanel').classList.contains('hidden'))render();notice(`Доставлено: ${name}!`);}
   }
   function mountShop(root,source,field){window.BrukRewardShop.mount(root,source,{balance:()=>state[field],snapshot:()=>JSON.stringify(state),debit:cost=>{if(state[field]<cost)return false;state[field]-=cost;return persist();},restore:snapshot=>{state=JSON.parse(snapshot);persist();}},render);}
-  const renderers={paint:renderPaint,gallery:renderGallery,exchange:renderExchange,workshop:renderWorkshop,dispatch:renderDispatch};
-  const titles={paint:'BrukPaint',gallery:'Мої малюнки',exchange:'BrukExchange',workshop:'BrukWorkshop',dispatch:'BrukDispatch'};
-  function render(){window.BrukPaint.leave();const root=$('pcPreviewContent');root.replaceChildren();$('pcPreviewBadge').textContent=selected==='paint'?'СТУДІЯ':selected==='gallery'?'ПАПКА':selected==='exchange'?'TRADE HUB':selected==='workshop'?'ВИРОБНИЦТВО':'ЛОГІСТИКА';$('pcPreviewTitle').textContent=titles[selected];renderers[selected](root);window.BrukHelp?.fold(root);window.BrukWorkspace?.prepare(root,selected);}
+  const renderers={miner:root=>window.BrukMinerUI.mount(root),paint:renderPaint,gallery:renderGallery,exchange:renderExchange,workshop:renderWorkshop,dispatch:renderDispatch};
+  const titles={miner:'BrukCoin Miner',paint:'BrukPaint',gallery:'Мої малюнки',exchange:'BrukExchange',workshop:'BrukWorkshop',dispatch:'BrukDispatch'};
+  function render(){window.BrukPaint.leave();const root=$('pcPreviewContent');root.replaceChildren();$('pcPreviewBadge').textContent=selected==='miner'?'GPU / BRC':selected==='paint'?'СТУДІЯ':selected==='gallery'?'ПАПКА':selected==='exchange'?'TRADE HUB':selected==='workshop'?'ВИРОБНИЦТВО':'ЛОГІСТИКА';$('pcPreviewTitle').textContent=titles[selected];renderers[selected](root);window.BrukHelp?.fold(root);window.BrukWorkspace?.prepare(root,selected);}
   window.BrukPcApps={open(id){if(!renderers[id])return;selected=id;notice('');render();}};
   function frame(time){if(trip&&time-lastTick>60){lastTick=time;tickDispatch();}requestAnimationFrame(frame);}requestAnimationFrame(frame);
 })();
