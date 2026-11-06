@@ -1,0 +1,41 @@
+/* The in-game handset keeps its physical shape in every desktop theme. */
+#phoneShell.phone-shell{width:min(410px,calc((100dvh - 32px)*.51))!important;height:min(820px,calc(100dvh - 32px))!important;max-width:410px!important;border:7px solid #272a32!important;border-radius:44px!important;box-shadow:0 32px 100px #000b,inset 0 0 0 2px #555b68!important;isolation:isolate}
+#phoneShell:before{content:'';position:absolute;inset:0;pointer-events:none;border-radius:36px;box-shadow:inset 0 0 0 1px #ffffff26;z-index:90}
+#phoneShell .phone-statusbar{height:34px;padding:0 22px;background:var(--ui-panel);font-size:10px}
+#phoneShell .camera-dot{display:block;top:9px;width:64px;height:17px;border-radius:20px;background:#08090b;box-shadow:inset 0 0 0 1px #ffffff12}
+#phoneShell .camera-dot:after{content:'';position:absolute;right:7px;top:5px;width:7px;height:7px;border-radius:50%;background:#172b46}
+#phoneShell .phone-screen{inset:34px 0 37px!important;padding:10px 15px!important;gap:9px;overflow-y:auto!important;overflow-x:hidden!important;scrollbar-width:none;border-radius:0!important}
+#phoneShell .phone-screen::-webkit-scrollbar{display:none}
+#phoneShell .screen-header{flex:0 0 35px;padding-right:24px;font-size:11px}
+#phoneShell .close-phone{top:36px;right:10px;width:27px;height:27px;font-size:18px;background:var(--ui-soft);color:var(--ui-text)}
+#phoneShell .phone-nav{bottom:5px;height:28px;align-items:center;background:var(--ui-panel)}
+#phoneShell .phone-nav button{width:110px;height:24px;font-size:0;position:relative}
+#phoneShell .phone-nav button:after{content:'';position:absolute;left:10px;right:10px;top:12px;height:4px;border-radius:8px;background:var(--ui-text);opacity:.65}
+#phoneShell .home-heading{font-size:19px!important;margin:8px 0 0!important}
+#phoneShell .home-widget{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:12px!important;flex-shrink:0}
+#phoneShell .home-widget strong{font-size:24px!important;grid-column:2;grid-row:1/3}
+#phoneShell .home-widget small{font-size:9px}
+#phoneShell .fop-home-shortcut{display:none!important}
+#phoneShell .app-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:16px 5px!important;padding:10px 0}
+#phoneShell .app-square{width:48px!important;height:48px!important;border-radius:14px!important;font-size:21px}
+#phoneShell .app-icon{min-width:0;gap:5px}
+#phoneShell .app-icon small{font-size:9px;line-height:1.3;text-align:center}
+#phoneShell .phone-apps-label{font-size:9px}
+#phoneShell .section-switch{gap:6px;font-size:9px;flex-shrink:0}
+#phoneShell .section-switch select{min-width:0;max-width:none;width:100%;font-size:10px}
+#phoneShell .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px}
+#phoneShell .stats-grid>div{padding:10px}
+#phoneShell .upgrade-card{padding:12px!important;flex-shrink:0}
+#phoneShell .upgrade-title h3{font-size:17px}
+#phoneShell .upgrade-row{padding:7px 0;font-size:10px}
+#phoneShell .wallpaper-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px}
+#phoneShell .wallpaper-thumb{aspect-ratio:.85}
+#phoneShell .design-grid{grid-template-columns:minmax(0,1fr);gap:10px;flex:1;min-height:330px}
+#phoneShell .design-card{gap:10px;padding:14px;min-height:265px}
+#phoneShell .design-preview{height:115px;flex-shrink:0}
+#phoneShell .design-card small{font-size:11px;line-height:1.5}
+#phoneShell .design-note{font-size:9px;flex-shrink:0}
+#phoneShell .fit-nav{flex-shrink:0;min-height:32px;gap:15px}
+#phoneShell .gear-grid{grid-template-columns:minmax(0,1fr)!important}
+#phoneShell .bank-balance strong{font-size:26px}
+#phoneShell .release-card{flex-wrap:wrap}
