@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="uk">
-<head>
+<head><script src="cloud-guard.js?v=6.3.0" data-cloud-main="1"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#090909" />
   <title>Бруківка</title>
-  <link rel="stylesheet" href="style.css?v=6.1.0" />
-  <link rel="stylesheet" href="paint.css?v=6.1.0" />
-  <link rel="stylesheet" href="ventures.css?v=6.1.0" />
-  <link rel="stylesheet" href="exchange.css?v=6.1.0" />
-  <link rel="stylesheet" href="desktop.css?v=6.1.0" />
+  <link rel="stylesheet" href="style.css?v=6.3.0" />
+  <link rel="stylesheet" href="paint.css?v=6.3.0" />
+  <link rel="stylesheet" href="ventures.css?v=6.3.0" />
+  <link rel="stylesheet" href="exchange.css?v=6.3.0" />
+  <link rel="stylesheet" href="desktop.css?v=6.3.0" />
   <link rel="preload" href="fonts/Manrope.ttf" as="font" type="font/ttf" crossorigin />
-  <link rel="stylesheet" href="main-minimal.css?v=6.1.0" />
-<script src="device-gate.js?v=6.1.0"></script><script src="design.js?v=6.1.0"></script><link rel="stylesheet" href="workspace.css?v=6.1.0"><script src="fit-ui.js?v=6.1.0"></script><link rel="stylesheet" href="phone-frame.css?v=6.1.0"><link rel="stylesheet" href="update-61.css?v=6.1.0"></head>
+  <link rel="stylesheet" href="main-minimal.css?v=6.3.0" />
+<script src="device-gate.js?v=6.3.0"></script><script src="design.js?v=6.3.0"></script><link rel="stylesheet" href="workspace.css?v=6.3.0"><script src="fit-ui.js?v=6.3.0"></script><link rel="stylesheet" href="phone-frame.css?v=6.3.0"><link rel="stylesheet" href="update-61.css?v=6.3.0"><link rel="stylesheet" href="cloud-account.css?v=6.3.0"></head>
 <body class="main-minimal">
   <main class="page-shell">
     <header class="main-header">
@@ -473,7 +473,7 @@
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>STEAM</strong><span class="steam-online">● ONLINE</span></div>
           <div id="steamLibrary" class="steam-library">
             <h2>Бібліотека ігор</h2><p>Обери гру, потім її складність.</p>
-            <div class="steam-games"><a class="steam-game" href="quarry.html"><span class="steam-game-art">⚒</span><span><strong>QUARRY · MINES</strong><small>Відкрий кар’єр без вибухів · 35 BRC</small></span></a><a class="steam-game" href="orbit.html"><span class="steam-game-art">◉</span><span><strong>BRUK ORBIT</strong><small>Космічний шутер · 60 BRC</small></span></a>
+            <div class="steam-games"><a class="steam-game" href="quarry.html"><span class="steam-game-art">⚒</span><span><strong>QUARRY · MINES</strong><small>3 складності · перемоги · 35 BRC</small></span></a><a class="steam-game" href="orbit.html"><span class="steam-game-art">◉</span><span><strong>BRUK ORBIT</strong><small>Космічний шутер · 60 BRC</small></span></a>
               <a href="chess.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-chess-art">♜ ♞</span><strong>BRUK CHESS</strong><small>Бот або друг · емоції · аналіз ходів</small></a>
               <a href="homow.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-realms-art">⚔</span><strong>HoMoW</strong><small>Зброя · майстерство · видобуток · кузня</small></a>
               <a href="rally.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-rally-art">▰ ⇢</span><strong>BRUK RALLY</strong><small>Керуй активною машиною з гаража</small></a>
@@ -483,16 +483,16 @@
               <a href="runner.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-hoi-art">▰ ↟</span><strong>БРУКІВКА · ВУЛИЧНИЙ ЗАБІГ</strong><small>3 смуги · ями та паркани</small></a>
               <a href="merge.html" class="steam-game-tile steam-game-link"><span class="steam-game-art steam-merge-art">2048</span><strong>БРУКІВКА · 2048</strong><small>Об'єднуй бруківку · збери плитку 2048</small></a>
               <button id="steamSelectCs" class="steam-game-tile" type="button"><span class="steam-game-art steam-cs-art">CS<b>2</b></span><strong>КС2 · AIM TRAINER</strong><small>30 секунд · цілі зникають через 2 с</small></button>
-              <button id="steamSelectHoi" class="steam-game-tile" type="button"><span class="steam-game-art steam-hoi-art">🌍</span><strong>IRON ATLAS · Mini HOI</strong><small>Стратегія · країни та дипломатія</small></button>
+              <button id="steamSelectHoi" class="steam-game-tile" type="button"><span class="steam-game-art steam-hoi-art">🌍</span><strong>IRON ATLAS · Mini HOI</strong><small>Світ · області · інфраструктура · дипломатія</small></button>
             </div>
           </div>
           <div id="steamHoiPane" class="hidden">
             <button id="steamBackHoiLibrary" class="steam-library-back" type="button">← До бібліотеки</button>
-            <div class="steam-hero"><div class="steam-cover hoi-cover">🌍</div><div><small>IRON ATLAS</small><h2>Mini HOI · вибери складність</h2><p>За повну перемогу: ×1.5, ×3 або ×6 до доходу від доставки.</p></div></div>
+            <div class="steam-hero"><div class="steam-cover hoi-cover">🌍</div><div><small>IRON ATLAS</small><h2>Mini HOI · світова кампанія</h2><p>Виконай мету кампанії: ×1.5, ×3 або ×6 до доходу від доставки. Світ однаковий на всіх складностях.</p></div></div>
             <div class="cs-difficulty-list">
-              <a class="cs-mode" href="minihoi.html?mode=easy"><span class="cs-mode-icon">🟢</span><span><b>Легкий</b><small>8 країн · ×1.5 після перемоги</small></span><span>↗</span></a>
-              <a class="cs-mode" href="minihoi.html?mode=medium"><span class="cs-mode-icon medium">🟠</span><span><b>Середній</b><small>15 країн · ×3 після перемоги</small></span><span>↗</span></a>
-              <a class="cs-mode" href="minihoi.html?mode=hardcore"><span class="cs-mode-icon hard">🔴</span><span><b>Хардкор</b><small>25 країн · ×6 після перемоги</small></span><span>↗</span></a>
+              <a class="cs-mode" href="minihoi.html?mode=easy"><span class="cs-mode-icon">🟢</span><span><b>Легкий</b><small>Повільніший ШІ · ×1.5 після перемоги</small></span><span>↗</span></a>
+              <a class="cs-mode" href="minihoi.html?mode=medium"><span class="cs-mode-icon medium">🟠</span><span><b>Середній</b><small>Розвиток і тактика · ×3 після перемоги</small></span><span>↗</span></a>
+              <a class="cs-mode" href="minihoi.html?mode=hardcore"><span class="cs-mode-icon hard">🔴</span><span><b>Хардкор</b><small>Сильніший і агресивніший ШІ · ×6 після перемоги</small></span><span>↗</span></a>
             </div>
           </div>
           <div id="steamCsPane" class="hidden">
@@ -530,9 +530,11 @@
           <div class="pc-program-header"><button class="pc-back-button" data-pc-home type="button">← Назад</button><strong>ЖУРНАЛ ОНОВЛЕНЬ</strong><span class="steam-online">● HISTORY</span></div>
           <h2>Історія Brukivka</h2><p class="history-note">Дати й час орієнтовні, тільки для версій, відомих із розробки.</p>
           <div class="history-timeline">
+<article><time>07.11.2026 · v6.3.0</time><h3>Cloud Account</h3><p>Аккаунт у телефоні, вхід через ChatGPT, унікальні логіни та перенесення всього збереженого прогресу між пристроями. Ручне хмарне збереження з перевіркою версій, резервні копії перед завантаженням та експорт / імпорт файлом. Баланси, покупки, валюти, ігри й малюнки Paint переносяться разом.</p></article>
+<article><time>06.11.2026 · v6.2.0</time><h3>Worlds &amp; Sound</h3><p>QUARRY: три складності та постійний лічильник перемог. Кольорові Memory й 2048. Підключено треки 6–10 з обкладинками. Лабіринт: руйнування бруківки, повернення на старт і Metal.mp3; штрафи маршрутів 500 / 1 500 / 4 500 UAH. Детальний рівень із БПЛА та вікном. Iron Atlas: карта світу й області, дороги, заводи, черги будівництва, ігровий час, дослідження, десанти та розумніший ШІ. HoMoW: 18 окремих іконок зброї, детальна снаряга й ресурси. Старі кампанії, покупки та баланси збережено.</p></article>
 <article><time>06.11.2026 · v6.1.0</time><h3>HoMoW · Quarry Economy</h3><p>Бруківка за фото, Telegram і Discord автора, прокрутка телефонних застосунків та горизонтальний Legit Check. BrukCoin Miner і 30 рівнів GPU, покупки нових ігор у Steam та обмін на ігрові UAH. Гараж: 19 машин, 7 дисків, 3 спойлери, лівреї, колір неону, 10 рівнів двигуна. HoMoW: окремий HTML-файл, чотири мови, налаштування графіки та музики. Збереження й покупки збережено.</p></article>
 <article><time>06.11.2026 · v6.0.1</time><h3>Телефон у корпусі</h3><p>Вертикальний корпус, камера, домашня смужка та компактні застосунки. Оформлення й шпалери перемикаються сторінками.</p></article>
-<article><time>05.11.2026 · v6.0.0</time><h3>Horizon Desktop</h3><p>Компактний головний екран, п’ять тем у застосунку оформлення, Manrope, програми без прокрутки та бібліотека Steam з попереднім переглядом. Доступ лише на ПК. 10 слотів музики. Велика шахова дошка й окремі меню. HoMoW: просторовий відбір об’єктів, кэш оточення, рух лише клавішами, 18 варіантів зброї зі спільними бонусами, дев’ять нових предметів та 21 талант. Старі покупки та прогрес збережено.</p></article>
+<article><time>05.11.2026 · v6.0.0</time><h3>Horizon Desktop</h3><p>Компактний головний екран, п’ять тем у застосунку оформлення, Manrope, програми без прокрутки та бібліотека Steam з попереднім переглядом. Доступ лише на ПК. 10 треків музики. Велика шахова дошка й окремі меню. HoMoW: просторовий відбір об’єктів, кэш оточення, рух лише клавішами, 18 варіантів зброї зі спільними бонусами, дев’ять нових предметів та 21 талант. Старі покупки та прогрес збережено.</p></article>
             <article><time>05.11.2026 · v5.4.0</time><h3>Crimson & Craft</h3><p>Червоно-чорний мінімалізм головного екрана та локальний шрифт Solitus для латиниці й цифр. Оновлені силуети й анімації 10 видів монстрів, персонаж і шість видів зброї. Деталізовані будинки, дерева, родовища, рослини та табір. Прогрес і покупки збережено.</p></article>
             <article><time>05.11.2026 · v5.3.0</time><h3>HoMoW · Destiny & Steel</h3><p>Гра на весь екран, круглі іконки дій та меню, металевий інтерфейс із золотом і додаткова чорно-червона палітра. Радіальна дошка майстерства й талантів із масштабуванням, переміщенням і справжнім прогресом.</p></article>
             <article><time>05.11.2026 · v5.2.0</time><h3>HoMoW · Journey Complete</h3><p>Інтерактивна карта з маршрутами, повернення в табір поза боєм, перехід до наступного контракту та фінал кампанії з одноразовою нагородою. Збереження попереднього прогресу.</p></article>
@@ -550,14 +552,6 @@
             <article><time>19.10.2026 · близько 21:00</time><h3>Бонуси та ФОП</h3><p>Серії Legit Check, телефонні множники, нагороди КС2 та Iron Atlas, секундна оренда островів, оновлений лабіринт і Steam.</p></article>
             <article><time>20.10.2026 · близько 21:30</time><h3>Магазин шпалер</h3><p>Шість платних фонів, тематичні кольори гри та телефону, перехід до другої гри з телефону, повне скидання і тестове поповнення балансу.</p></article>
           </div>
-          <div class="history-locks"><button data-secret="captain" type="button">♛ Архів I</button><button data-secret="navigator" type="button">⚓ Архів II</button><button data-secret="team" type="button">✦ Архів III</button></div>
-        </section>
-        <section id="secretPanel" class="pc-program secret-program hidden">
-          <div class="pc-program-header"><button id="secretBack" class="pc-back-button" type="button">← Назад до журналу</button><strong>ЗАКРИТИЙ АРХІВ</strong></div>
-          <form id="secretForm" class="secret-gate"><div id="secretGate"><h2>Потрібен код доступу</h2><label for="secretInput">Код</label><input id="secretInput" type="password" autocomplete="off" required maxlength="80"><button class="cs-primary" type="submit">Відкрити</button><small id="secretError" role="status"></small></div></form>
-          <div id="secretCredits" class="secret-credits hidden"><div class="secret-crown">✦ ✧ ✦</div><h1 id="secretName"></h1><h2 id="secretTitle"></h2><p id="secretBio"></p><span>LEGENDS NEVER LOG OFF</span>
-            <div id="archiveTools" class="archive-tools hidden"><h3>ПАНЕЛЬ РОЗРОБНИКА</h3><div class="archive-actions"><button id="archiveMaxAll" type="button">✦ Максимум усього</button><button id="archiveFullNmt" type="button">✦ Повний NMT</button><button id="archiveResetAll" type="button" class="archive-danger">↻ Повне скидання</button><button id="archiveAdd100M" type="button">+100 млн грн</button></div><p id="archiveToolMessage" role="status"></p></div>
-          </div>
         </section>
       </main>
       <footer class="pc-taskbar"><button id="pcTaskHome" type="button">⊞ <span>Пуск</span></button><span>Bruk OS · <b data-game-version></b></span><span id="pcTaskTime">00:00</span></footer>
@@ -572,17 +566,17 @@
     <header class="steam-game-bar"><button id="steamGameBack" type="button">← До Steam</button><strong id="steamGameTitle">STEAM</strong><div><button id="steamGameMusic" type="button" aria-label="Відтворити або призупинити музику">▶ Музика</button><button id="steamGameMute" type="button" aria-label="Вимкнути звук">🔊</button></div></header>
     <iframe id="steamGameFrame" title="Гра Steam" allow="autoplay; fullscreen" allowfullscreen></iframe>
   </dialog>
-  <script src="release.js?v=6.1.0"></script>
-  <script src="benefits.js?v=6.1.0"></script>
-  <script src="ventures-core.js?v=6.1.0"></script>
-  <script src="brick-art.js?v=6.1.0"></script><script src="delivery.js?v=6.1.0"></script>
-  <script src="mining-core.js?v=6.1.0"></script><script src="script.js?v=6.1.0"></script>
-  <script src="paint.js?v=6.1.0"></script>
-  <script src="ventures-ui.js?v=6.1.0"></script>
-  <script src="exchange.js?v=6.1.0"></script>
-  <script src="desktop.js?v=6.1.0"></script>
-  <script src="pc-apps.js?v=6.1.0"></script>
-  <script src="workspace-tools.js?v=6.1.0"></script><script src="steam-icons.js?v=6.1.0"></script><script src="desktop-v6.js?v=6.1.0"></script>
-<script src="mining-ui.js?v=6.1.0"></script><script src="phone-social.js?v=6.1.0"></script></body>
+  <script src="release.js?v=6.3.0"></script>
+  <script src="benefits.js?v=6.3.0"></script>
+  <script src="ventures-core.js?v=6.3.0"></script>
+  <script src="brick-art.js?v=6.3.0"></script><script src="delivery.js?v=6.3.0"></script>
+  <script src="music-catalog.js?v=6.3.0"></script><script src="effects-audio.js?v=6.3.0"></script><script src="mining-core.js?v=6.3.0"></script><script src="script.js?v=6.3.0"></script>
+  <script src="paint.js?v=6.3.0"></script>
+  <script src="ventures-ui.js?v=6.3.0"></script>
+  <script src="exchange.js?v=6.3.0"></script>
+  <script src="desktop.js?v=6.3.0"></script>
+  <script src="pc-apps.js?v=6.3.0"></script>
+  <script src="workspace-tools.js?v=6.3.0"></script><script src="steam-icons.js?v=6.3.0"></script><script src="desktop-v6.js?v=6.3.0"></script>
+<script src="mining-ui.js?v=6.3.0"></script><script src="phone-social.js?v=6.3.0"></script><script src="cloud-core.js?v=6.3.0"></script><script src="cloud-account.js?v=6.3.0"></script></body>
 </html>
 

@@ -20,6 +20,7 @@
   }catch{}
   let selected='paint',color=COLORS[1],trip=null,lastTick=-1;
   function notice(text){$('pcPreviewNotice').textContent=text;}
+  window.addEventListener('bruk-cloud-snapshot',persist);
   function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));return true;}catch{notice('Не вдалося зберегти прогрес у браузері.');return false;}}
   function button(text,action,disabled=false){const el=document.createElement('button');el.type='button';el.textContent=text;el.disabled=disabled;el.addEventListener('click',action);return el;}
   function heading(title,description){const box=document.createElement('div');box.className='preview-hero';const h=document.createElement('h2');h.textContent=title;const p=document.createElement('p');p.textContent=description;box.append(h,p);return box;}

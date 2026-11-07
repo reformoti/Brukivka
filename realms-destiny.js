@@ -10,8 +10,8 @@
       for(let rank=1;rank<=10;rank++){const id='mastery-'+key+'-'+rank;add({id,kind:'mastery',key,rank,current:m.level,label:name,icon,color,status:rank<=m.level?'learned':rank===m.level+1?'available':'locked',xp:m.xp,goal:R.masteryGoal(m.level),...point(490+rank*70,angle)},parent,color,rank<=m.level);parent=id;}
       if(family)for(const v of Object.values(R.VARIANTS).filter(v=>v.family===key)){
         const a=angle+(v.index-1)*9,branch='variant-'+v.id,vm=s.variantMastery[v.id],owned=s.variantArsenal[v.id]>=0;
-        add({id:branch,kind:'branch',key:v.id,label:v.name,icon:key,status:owned?'learned':'locked',color,description:v.description,...point(1380,a)},'mastery-'+key+'-1',color,owned);
-        let previous=branch;for(let rank=1;rank<=20;rank++){const id='specialization-'+v.id+'-'+rank;add({id,kind:'specialization',key:v.id,family:key,rank,current:vm.level,label:v.name,icon:key,color,status:rank<=vm.level?'learned':owned&&rank===vm.level+1?'available':'locked',xp:vm.xp,goal:R.variantGoal(vm.level),description:'+0.6% шкоди цьому варіанту і +0.3% усьому типу зброї за рівень.',...point(1450+rank*65,a)},previous,color,rank<=vm.level);previous=id;}
+        add({id:branch,kind:'branch',key:v.id,label:v.name,icon:v.id,status:owned?'learned':'locked',color,description:v.description,...point(1380,a)},'mastery-'+key+'-1',color,owned);
+        let previous=branch;for(let rank=1;rank<=20;rank++){const id='specialization-'+v.id+'-'+rank;add({id,kind:'specialization',key:v.id,family:key,rank,current:vm.level,label:v.name,icon:v.id,color,status:rank<=vm.level?'learned':owned&&rank===vm.level+1?'available':'locked',xp:vm.xp,goal:R.variantGoal(vm.level),description:'+0.6% шкоди цьому варіанту і +0.3% усьому типу зброї за рівень.',...point(1450+rank*65,a)},previous,color,rank<=vm.level);previous=id;}
       }
     });
     ['Вартовий','Дослідник','Ремісник'].forEach((branch,i)=>{

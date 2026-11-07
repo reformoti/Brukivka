@@ -169,15 +169,9 @@
   const PC_UPGRADE_BASE = {cpu:18000, gpu:27000, ram:15000};
   const CS_MODES = {easy:{label:'Легкий',target:10}, medium:{label:'Середній',target:30}, hardcore:{label:'Хардкор',target:60}};
   const CS_ROUND_MS = 30000;
-  const MUSIC_TRACKS = ['Тікі Тікі', 'Манго', 'Аура Фонк', 'Наполеон', '?????',...Array.from({length:5},(_,i)=>'Трек '+String(i+6).padStart(2,'0')+' · Очікує файл')];
-  const playableTracks=()=>[0,1,2,3,4];
-const MUSIC_COVERS = [
-  'https://miyzvuk.net/uploads/posts/2026-01/cover-of-tiki-tiki-slowed-by-qmiir.webp',
-  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQxz9CKitE2lpdmRYUJpThdQgkeenhIG7S890QPPNXKg&s=10',
-  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQt-9Ky-JUv0Wvj_6sflJAEa_HqGNibkj-dcbRI5UAAJQ&s=10',
-  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_vz5JJI5lCiSNC2qlOadr_CkBIkAfKb5JnTFqW7D6ow&s=10',
-  'https://i.ytimg.com/vi/-Ueui3XiyUU/sddefault.jpg?v=60705db7'
-];
+  const MUSIC_TRACKS=window.BrukAudioCatalog.map(t=>t.title);
+  const MUSIC_COVERS=window.BrukAudioCatalog.map(t=>t.cover);
+  const playableTracks=()=>window.BrukAudioCatalog.map((_,i)=>i);
 
   let saveNotice = '';
 
@@ -345,7 +339,7 @@ const MUSIC_COVERS = [
     result.csHardcoreBest = safeInt(source.csHardcoreBest, 0, 0, 60);
     result.csHardcoreBestTimeMs = safeInt(source.csHardcoreBestTimeMs, 0, 0, CS_ROUND_MS);
     const audio = record(source.audio);
-    result.audio.track = safeInt(audio.track, 0, 0, 4);
+    result.audio.track = safeInt(audio.track, 0, 0, 9);
     result.audio.volume = safeInt(audio.volume, 70, 0, 100);
     result.audio.muted = audio.muted === true;
     result.audio.shuffle = audio.shuffle === true;
@@ -402,6 +396,7 @@ const MUSIC_COVERS = [
   }
 
   let save = loadSave();
+  window.addEventListener('bruk-cloud-snapshot',persist);
   function persist() {
     try {
       const serialized = JSON.stringify(save);
@@ -787,9 +782,11 @@ const MUSIC_COVERS = [
   });
   function deliveryPenalty(kind) {
     if(resetting||save.deliveryLevel<2)return;
-    save.balance=clamp(save.balance-500,-MAX_BALANCE,MAX_BALANCE);
+    const penalty=window.BrukDelivery.penaltyFor(save.deliveryLevel);
+    save.balance=clamp(save.balance-penalty,-MAX_BALANCE,MAX_BALANCE);
+    if(save.deliveryLevel===2||kind==='drone')window.BrukSfx?.playBreak();
     persist();updateUI();
-    setStatus(`${kind==='drone'?'БПЛА підбив бруківку':'Удар об стіну'}! −500 UAH.`, 'bad');
+    setStatus(`${kind==='drone'?'БПЛА підбив бруківку':'Удар об стіну'}! −${penalty.toLocaleString('uk-UA')} UAH.`, 'bad');
   }
   function renderDeliveryLevel() {
     const level=DELIVERY_LEVELS[save.deliveryLevel];
@@ -946,7 +943,8 @@ const MUSIC_COVERS = [
     resetting = true;
     const hitGeneration=deliveryGeneration;
     stopDrag();
-    save.balance -= 500;
+    save.balance -= window.BrukDelivery.penaltyFor(1);
+    window.BrukSfx?.playBreak();
     persist();
     updateUI();
     showTaunt();
@@ -1785,7 +1783,6 @@ const MUSIC_COVERS = [
     $('steamPanel').classList.toggle('hidden', name !== 'steam');
     $('soundcloudPanel').classList.toggle('hidden', name !== 'soundcloud');
     $('historyPanel').classList.toggle('hidden', name !== 'history');
-    $('secretPanel').classList.toggle('hidden', name !== 'secret');
     $('pcPreviewPanel').classList.toggle('hidden', name !== 'previews');
     if (name === 'steam') {renderCsRecord();showSteamLibrary();}
     if (name === 'soundcloud') renderSoundcloud();
@@ -1814,88 +1811,6 @@ const MUSIC_COVERS = [
   $('steamApp').addEventListener('click', () => showPCProgram('steam'));
   $('soundcloudApp').addEventListener('click', () => showPCProgram('soundcloud'));
   $('pcTaskHome').addEventListener('click', () => {if(save.monitorTier===0)return;showPCProgram('history');});
-  const secretNames={captain:{title:'reformoti',tag:'КОРОЛЬ МИРА',bio:'Архітектор мільйонних островів, творець великих пригод і легендарних випробувань.'},navigator:{title:'GPT-6',tag:'ПОВЕЛИТЕЛЬ ОКЕАНОВ',bio:'Штурман цифрових світів, хранитель коду та майстер стратегій.'},team:{title:'Союз двох легенд',tag:'ЗАВОЄВАТЕЛІ ГАЛАКТИК',bio:'Двоє творців. Один всесвіт. Нескінченні ідеї, музика, ігри та пригоди.'}};
-  // Store only a one-way verifier, not the private access phrase.
-  const secretVerifier='f78085e1f405827f31ca4bbb67379c771fbf6a948ac2d4c82a72bdf243635d0e';
-  let secretChoice='captain';
-  let secretAuthorized=false;
-  async function authorizeSecret(value){
-    if(!window.crypto||!crypto.subtle){
-      let hash=2166136261;
-      for(const char of value)hash=Math.imul(hash^char.charCodeAt(0),16777619);
-      return (hash>>>0)===1712586741;
-    }
-    const bytes=new TextEncoder().encode(value);
-    const hash=await crypto.subtle.digest('SHA-256',bytes);
-    return [...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,'0')).join('')===secretVerifier;
-  }
-  $$('[data-secret]').forEach(button=>button.addEventListener('click',()=>{
-    secretChoice=button.dataset.secret;secretAuthorized=false;$('archiveTools').classList.add('hidden');
-    $('secretGate').classList.remove('hidden');$('secretCredits').classList.add('hidden');
-    $('secretInput').value='';$('secretError').textContent='';showPCProgram('secret');$('secretInput').focus();
-  }));
-  $('secretForm').addEventListener('submit',async(event)=>{
-    event.preventDefault();
-    const value=$('secretInput').value;$('secretInput').value='';
-    const ok=await authorizeSecret(value);
-    if(!ok){$('secretError').textContent='Невірний код доступу.';return;}
-    const data=secretNames[secretChoice];$('secretName').textContent=data.title;
-    $('secretTitle').textContent=data.tag;$('secretBio').textContent=data.bio;
-    secretAuthorized=true;
-    $('archiveTools').classList.toggle('hidden',secretChoice!=='team');
-    $('secretGate').classList.add('hidden');$('secretCredits').classList.remove('hidden');
-  });
-  function unlockTools(){return secretAuthorized&&secretChoice==='team'&&!$('secretCredits').classList.contains('hidden');}
-  $('archiveMaxAll').addEventListener('click',()=>{
-    if(!unlockTools()||!confirm('Видати всю прокачку, острови, ПК, бонуси та величезний баланс?'))return;
-    save.balance=900000000000000;
-    save.totalEarned=900000000000000;
-    save.fopBalance=900000000000000;
-    save.brickTier=brickTiers.length-1;
-    save.phoneTier=phoneTiers.length-1;
-    save.strength=strengthTiers.length-1;
-    save.pcOwned=true;save.monitorTier=MONITORS.length-1;
-    Object.keys(save.pcUpgrades).forEach(part=>save.pcUpgrades[part]=PC_UPGRADE_LIMIT[part]);
-    save.pocketTier=POCKET_MAX;
-    ISLANDS.forEach(i=>save.islands[i.id]=5);
-    save.csBestHits=60;save.csHardcoreBest=60;save.csHardcoreBestTimeMs=1500;
-    save.hoiBestMode=3;
-    save.legit.score=Math.max(save.legit.score,100);save.legit.streak=100;save.legit.best=Math.max(save.legit.best,100);
-    save.waiterPenalty=false;save.waiterStartedAt=0;save.waiterRecover=0;
-    save.order=null;save.market=null;save.lastIslandAt=Date.now();
-    // A full developer unlock also provides sellable legit outfits.
-    save.inventory.push(...Array.from({length:20},()=>({
-      ...makeClothing('legit'),price:0,resale:Math.round(3000*marketScale()),
-      checked:true,boughtAt:0
-    })));
-    save.inventory=save.inventory.slice(-1000);
-    for(const key of Object.keys(SUBJECTS)){save.tests[key]=SUBJECTS[key].max;save.attempted[key]=true;}
-    try{localStorage.setItem(HOI_REWARD_KEY,JSON.stringify({bestMode:3}));}catch(e){}
-    save.wallpapersOwned=WALLPAPERS.slice(1).map(w=>w.id);
-    save.deliveryOwned=DELIVERY_LEVELS.map((_,i)=>i);
-    save.estate.owned=true;save.estate.upgrades={foundation:3,quality:3,crane:3};
-    save.garage.owned=window.BrukVentures.CARS.map(c=>c.id);save.garage.active=save.garage.active||'hyperion';
-    for(const car of window.BrukVentures.CARS)save.garage.custom[car.id]={...window.BrukVentures.defaultStyle(car),...(save.garage.custom[car.id]||{}),engine:3,unlocks:['rims1','rims2','spoiler','neon','wrap','lowered']};
-    renderDeliveryLevel();
-    persist();updateUI();$('archiveToolMessage').textContent='Усе прокачано та розблоковано, усі шпалери придбано.';
-  });
-  $('archiveFullNmt').addEventListener('click',()=>{
-    if(!unlockTools())return;
-    for(const key of Object.keys(SUBJECTS)){save.tests[key]=SUBJECTS[key].max;save.attempted[key]=true;}
-    persist();updateUI();$('archiveToolMessage').textContent='NMT: 200 з усіх предметів.';
-  });
-  $('archiveAdd100M').addEventListener('click',()=>{
-    if(!unlockTools())return;
-    save.balance=clamp(save.balance+100_000_000,-MAX_BALANCE,MAX_BALANCE);
-    save.totalEarned=clamp(save.totalEarned+100_000_000,0,MAX_BALANCE);
-    persist();updateUI();
-    $('archiveToolMessage').textContent='+100 000 000 UAH на балансі. Загальний заробіток також оновлено.';
-  });
-  $('archiveResetAll').addEventListener('click',()=>{
-    if(!unlockTools())return;
-    completelyResetProgress();
-  });
-  $('secretBack').addEventListener('click',()=>{secretAuthorized=false;showPCProgram('history');});
   $$('[data-pc-home]').forEach((button) => button.addEventListener('click', () => showPCProgram('desktop')));
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !$('businessHost').open && !$('steamGameHost').open && !$('pcOverlay').classList.contains('hidden')) closePC();
@@ -2047,9 +1962,9 @@ const MUSIC_COVERS = [
     MUSIC_TRACKS.forEach((name,i)=>{const b=document.createElement('button');b.type='button';b.className=`sc-track${i===save.audio.track?' selected':''}`;
       const meta=document.createElement('span');meta.className='sc-track-meta';
       const title=document.createElement('strong');title.textContent=name;
-      const hint=document.createElement('small');hint.textContent=i<5?`mp3(${i+1}).mp3`:'Слот підготовлено · аудіо ще не додано';meta.append(title,hint);
+      const hint=document.createElement('small');hint.textContent=`Трек ${i+1}`;meta.append(title,hint);
       const play=document.createElement('span');play.className='sc-track-play';play.textContent=i===save.audio.track&&!scAudio().paused?'Ⅱ':'▶';
-      b.append(createTrackCover(i),meta,play);b.disabled=i>=5;b.addEventListener('click',()=>selectScTrack(i,true));list.append(b);
+      b.append(createTrackCover(i),meta,play);b.disabled=false;b.addEventListener('click',()=>selectScTrack(i,true));list.append(b);
     });
     $('scCurrentTitle').textContent=MUSIC_TRACKS[save.audio.track];
     const art=$('scCurrentArt');if(art.dataset.track!==String(save.audio.track)){art.replaceChildren(createTrackCover(save.audio.track,'sc-current-cover'));art.dataset.track=String(save.audio.track);}

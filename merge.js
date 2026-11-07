@@ -25,9 +25,10 @@
   if(!root.document)return;
   const $=id=>document.getElementById(id),KEY='brukivka_2048_v1';
   const materials=['','Камінь','Бруківка','Граніт','Мармур','Сталь','Титан','Срібло','Золото','Платина','Сапфір','Легенда'];
-  const colors=[['#c0b4a2','#8d8377','#262c2d'],['#cda57c','#986e4d','#251d15'],['#d99462','#ad643b','#fff3d9'],['#e3ad65','#b77838','#fff5d8'],['#a7b7c0','#5d7684','#fff'],['#889cae','#435d73','#fff'],['#d8e2e9','#8fa4b4','#233440'],['#f0d676','#b88b29','#392c13'],['#d0e6e7','#88adb9','#24434a'],['#78b5f0','#2f62a6','#fff'],['#ce9bee','#8050a6','#fff']];
+  const colors=[['#e7e6df','#c4c5c3','#263140'],['#b7d7fb','#80a9e0','#152e51'],['#a2e6df','#54b8b8','#103e43'],['#b2e3ab','#6bb482','#173e2c'],['#f4d884','#e6ad4d','#583b12'],['#ffa679','#e36c4c','#411e19'],['#e3697d','#b94360','#fff4f3'],['#e493c5','#ac58a7','#fff5ff'],['#b29bf3','#7861bc','#fff5ff'],['#7da9eb','#3a62b2','#f6f9ff'],['#ffe9a3','#c5993f','#46350e'],['#c3e9f2','#759ad6','#162c55']];
   let state={board:Array(16).fill(0),score:0,best:0,continued:false},busy=false;
   function spawn() {const free=state.board.flatMap((v,i)=>v?[]:[i]);if(free.length)state.board[free[Math.floor(Math.random()*free.length)]]=Math.random()<.9?2:4;}
+  window.addEventListener('bruk-cloud-snapshot',persist);
   function persist() {try{localStorage.setItem(KEY,JSON.stringify(state));}catch{$('storageNote').textContent='Не вдалося зберегти гру. Прогрес залишиться до закриття сторінки.';}}
   function fresh() {state={board:Array(16).fill(0),score:0,best:state.best,continued:false};spawn();spawn();persist();render();$('status').textContent='Новий майданчик готовий.';}
   function render() {

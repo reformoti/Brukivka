@@ -83,6 +83,7 @@
     }
   }catch{storageProblem='Не вдалося прочитати частину малюнків. Поточне полотно можна зберегти як PNG.';}
   function notice(text){$('pcPreviewNotice').textContent=text;}
+  window.addEventListener('bruk-cloud-snapshot',persistDraft);
   function persistDraft(){try{localStorage.setItem(DRAFT,JSON.stringify({name,fileId,dirty,document:doc}));return true;}catch{notice('Чернетку не збережено: у сховищі браузера бракує місця. Завантаж PNG або звільни місце в папці.');return false;}}
   function folderIcon(){
     const folder=$('paintFolderApp');if(!folder)return;

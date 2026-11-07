@@ -18,6 +18,7 @@
     if(worker)return new Promise(resolve=>{const id=++requestId;pending.set(id,resolve);worker.postMessage({id,type,fen,move,options});});
     return new Promise(resolve=>setTimeout(()=>{try{const fallback={...options,depth:1,timeMs:150,maxNodes:800};resolve(type==='analyze'?C.analyze(fen,move,fallback):C.search(fen,fallback));}catch{resolve(null);}},25));
   }
+  window.addEventListener('bruk-cloud-snapshot',store);
   function store(){try{localStorage.setItem(KEY,JSON.stringify({mode,player,level,flipped,moves:game.history({verbose:true}).map(C.moveData)}));$('saveStatus').textContent='Партія зберігається на цьому пристрої.';}catch{$('saveStatus').textContent='Партія триває, але браузер не зберіг прогрес.';}}
   function restore(){try{const s=JSON.parse(localStorage.getItem(KEY));if(!s||typeof s!=='object')return;const restored=new C.Chess();if(!Array.isArray(s.moves)||s.moves.length>1000)return;for(const move of s.moves)restored.move(C.moveData(move));game=restored;mode=s.mode==='local'?'local':'bot';player=s.player==='b'?'b':'w';level=[1,2,3].includes(s.level)?s.level:2;flipped=!!s.flipped;}catch{game=new C.Chess();}}
   function coord(square){const file=FILES.indexOf(square[0]),rank=Number(square[1])-1;return {x:(flipped?7-file:file)*100+50,y:(flipped?rank:7-rank)*100+50};}

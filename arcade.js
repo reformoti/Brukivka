@@ -104,7 +104,7 @@
     document.addEventListener('visibilitychange',()=>{if(document.hidden&&!paused)pause();});root.addEventListener('blur',()=>{keys.clear();if(!paused)pause();});hud();draw();requestAnimationFrame(frame);
   }else if(game==='memory'){
     const KEY='brukivka_memory_best_v1',names=['Звичайна','Гранітна','Мармурова','Золота','Сапфірова','Рубінова','Смарагдова','Легендарна'];
-    const colors=[['#b0b9c2','#627483','#ffffff'],['#b8b0a4','#7c766c','#ffffff'],['#ece1cc','#bfae8b','#303b38'],['#f1d07c','#b48732','#382a16'],['#87b4ef','#45639d','#ffffff'],['#ec8c97','#a5405f','#ffffff'],['#89d2ac','#3a8069','#ffffff'],['#c7a5f0','#7856a6','#ffffff']];
+    const colors=[['#d9e7eb','#9faebc','#162a37'],['#aacbfa','#6799d7','#152b48'],['#a0e5df','#4eb6ae','#123a37'],['#ffe28d','#d6aa48','#47330a'],['#b69aef','#795ab0','#fff6ff'],['#ef94a7','#c9516c','#fff5f5'],['#ace0af','#5eae83','#163b29'],['#eeafdc','#a866bc','#fff5ff']];
     let world=new MemoryWorld(),intro=true,paused=false,started=false,elapsed=0,mismatch=0,previous=null,best=read(KEY);
     if(!best||!Number.isInteger(best.moves)||best.moves<8||!Number.isFinite(best.seconds)||best.seconds<0)best=null;
     const clock=seconds=>`${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`;

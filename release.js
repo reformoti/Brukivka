@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.1.0',date:'2026-11-06',name:'Quarry Economy'};
+  const release={version:'6.3.0',date:'2026-11-07',name:'Cloud Account'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

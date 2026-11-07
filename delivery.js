@@ -1,11 +1,12 @@
 (function (root) {
   'use strict';
   const LEVELS = [
-    {name:'Склад', multiplier:0.1, price:0, icon:'▰', hint:'Просто перенеси бруківку зі складу в карман. Без перешкод.'},
-    {name:'Лазерні ворота', multiplier:1, price:2500, icon:'⌁', hint:'Знайомий маршрут: проведи бруківку між воротами й лазерами.'},
-    {name:'Лабіринт', multiplier:3, price:35000, icon:'▦', hint:'Знайди шлях від входу ліворуч до виходу праворуч. Торкання стіни: −500 UAH.'},
-    {name:'У відкрите вікно', multiplier:10, price:250000, icon:'↗', hint:'Потягни бруківку вниз і вліво та відпусти. Влуч у вікно зверху, на спаданні. Стіна чи БПЛА: −500 UAH.'}
+    {name:'Склад', multiplier:0.1, price:0, penalty:0, icon:'▰', hint:'Просто перенеси бруківку зі складу в карман. Без перешкод.'},
+    {name:'Лазерні ворота', multiplier:1, price:2500, penalty:500, icon:'⌁', hint:'Знайомий маршрут: проведи бруківку між воротами й лазерами.'},
+    {name:'Лабіринт', multiplier:3, price:35000, penalty:1500, icon:'▦', hint:'Знайди шлях від входу ліворуч до виходу праворуч. Стіна руйнує бруківку й повертає на старт: −1 500 UAH.'},
+    {name:'У відкрите вікно', multiplier:10, price:250000, penalty:4500, icon:'↗', hint:'Потягни бруківку вниз і вліво та відпусти. Влуч у вікно зверху, на спаданні. Стіна чи БПЛА: −4 500 UAH. БПЛА повністю знищує бруківку.'}
   ];
+  const penaltyFor=level=>LEVELS[level]?.penalty||0;
   function restoreAccess(source={}){
     const legacy=source.deliveryOwned===undefined;
     const valid=id=>Number.isInteger(id)&&id>=0&&id<LEVELS.length;
@@ -41,6 +42,19 @@
       x+=dx;y+=dy;
     }
     return {x,y,blocked,won:x>9.05&&y>4.35&&y<5.65};
+  }
+  class MazeWorld {
+    constructor(onCollision=()=>{}){this.onCollision=onCollision;this.reset();}
+    reset(){this.x=.65;this.y=5;this.phase='ready';this.remaining=0;this.effect=null;}
+    move(target){
+      if(this.phase!=='ready')return {x:this.x,y:this.y,blocked:false,won:false};
+      const next=moveMaze(this,target);
+      if(next.blocked){
+        this.effect={x:next.x,y:next.y,age:0};this.x=.65;this.y=5;this.phase='broken';this.remaining=.65;this.onCollision('wall');
+      }else{this.x=next.x;this.y=next.y;if(next.won)this.phase='success';}
+      return next;
+    }
+    step(dt){if(this.effect){this.effect.age+=dt;if(this.effect.age>.65)this.effect=null;}if(this.phase==='broken'&&(this.remaining-=dt)<=0)this.phase='ready';}
   }
   const THROW = {
     width:1000,height:700,gravity:640,radius:18,anchor:{x:128,y:530},maxPull:155,
@@ -133,30 +147,28 @@
   function create(options) {
     const {canvas,onSuccess,onMessage,isActive,onPenalty=()=>{}}=options,ctx=canvas.getContext('2d');
     const reducedMotion=root.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
-    let level=2,maze={x:.65,y:5},done=false,pointer=null,offset={x:0,y:0},pull={x:-54,y:78};
-    let aiming=false,keys=new Set(),previous=null,mazeContact=false,flight=new FlightWorld(kind=>onPenalty(kind));
+    let level=2,maze=new MazeWorld(kind=>{onPenalty(kind);keys.clear();pointer=null;notify('Бруківка розбилась об стіну. −1 500 UAH. Почни зі входу.','bad');}),done=false,pointer=null,offset={x:0,y:0},pull={x:-54,y:78};
+    let aiming=false,keys=new Set(),previous=null,flight=new FlightWorld(kind=>onPenalty(kind));
     function notify(text,type=''){onMessage(text,type);}
-    function reset() {maze={x:.65,y:5};done=false;pointer=null;aiming=false;keys.clear();flight.reset();mazeContact=false;draw();}
+    function reset() {maze.reset();done=false;pointer=null;aiming=false;keys.clear();flight.reset();draw();}
     function setLevel(id){level=id;canvas.style.aspectRatio=id===2?'1 / 1':'10 / 7';reset();resize();}
     function resize() {
       const r=canvas.getBoundingClientRect(),ratio=Math.min(root.devicePixelRatio||1,2);
-      canvas.width=Math.max(1,Math.round(r.width*ratio));canvas.height=Math.max(1,Math.round(r.height*ratio));draw();
+      const w=Math.max(1,Math.round(r.width*ratio)),h=Math.max(1,Math.round(r.height*ratio));if(canvas.width!==w)canvas.width=w;if(canvas.height!==h)canvas.height=h;draw();
     }
     function point(event){const r=canvas.getBoundingClientRect();return {x:(event.clientX-r.left)/r.width*1000,y:(event.clientY-r.top)/r.height*(level===2?1000:700)};}
     const mazePoint=p=>({x:(p.x-75)/85,y:(p.y-75)/85});
     function finishMaze(target) {
-      const next=moveMaze(maze,target);maze={x:next.x,y:next.y};
+      const next=maze.move(target);
       if(next.won&&!done){done=true;keys.clear();onSuccess();}
-      else if(next.blocked){if(!mazeContact)onPenalty('wall');mazeContact=true;}
-      else mazeContact=false;
     }
     function setPull(p){const shot=shotFromPull({x:p.x-THROW.anchor.x,y:p.y-THROW.anchor.y});pull={x:shot.x-THROW.anchor.x,y:shot.y-THROW.anchor.y};}
     canvas.addEventListener('pointerdown',event=>{
       if(!isActive()||done)return;
       const p=point(event);
       if(level===2) {
-        const m=mazePoint(p);if(Math.hypot(m.x-maze.x,m.y-maze.y)>.85)return;
-        offset={x:m.x-maze.x,y:m.y-maze.y};mazeContact=false;
+        if(maze.phase!=='ready')return;const m=mazePoint(p);if(Math.hypot(m.x-maze.x,m.y-maze.y)>.85)return;
+        offset={x:m.x-maze.x,y:m.y-maze.y};
       } else {
         if(flight.phase==='flying'||flight.phase==='destroyed')return;
         if(Math.hypot(p.x-THROW.anchor.x,p.y-THROW.anchor.y)>95)return;
@@ -190,7 +202,7 @@
       }
       if(level===3&&event.code==='Space'){event.preventDefault();if(!event.repeat&&flight.phase!=='flying'&&flight.phase!=='destroyed'){flight.reset();aiming=false;flight.launch(pull);}}
     });
-    root.document.addEventListener('keyup',event=>{keys.delete(codeMap[event.code]);if(!keys.size)mazeContact=false;});
+    root.document.addEventListener('keyup',event=>{keys.delete(codeMap[event.code]);});
     root.addEventListener('blur',()=>{keys.clear();pointer=null;aiming=false;});
     function brick(x,y,size=34,rotation=0) {
       if(root.BrukBrick)root.BrukBrick.draw(ctx,x,y,size,size,rotation);
@@ -206,31 +218,23 @@
       text('ВХІД',108,427,'#92c9c0',16,'center');text('ВИХІД',879,427,'#c4f58a',16,'center');
       text('ПЛАН КВАРТАЛУ / 03',75,42,'#92a7b9',15);text('×3',925,44,'#d6f69e',25,'right');
       text('Миша / дотик — тягни бруківку · WASD / стрілки — рух',500,975,'#91a5b3',15,'center');
-      brick(75+maze.x*85,75+maze.y*85,MAZE_RADIUS*170);
+      if(maze.phase!=='broken')brick(75+maze.x*85,75+maze.y*85,MAZE_RADIUS*170);
+      if(maze.effect){const e=maze.effect,t=e.age/.65;ctx.save();ctx.globalAlpha=1-t;ctx.translate(75+e.x*85,75+e.y*85);for(let i=0;i<12;i++){const a=i*Math.PI/6;ctx.save();ctx.translate(Math.cos(a)*t*85,Math.sin(a)*t*85+40*t*t);ctx.rotate(i+t*5);ctx.fillStyle=i%3?'#c5c7c6':'#7e8586';ctx.fillRect(-5,-4,10,8);ctx.restore();}ctx.restore();text('РОЗБИТО · НА СТАРТ',500,42,'#ff9b9b',17,'center');}
     }
     function drawThrow() {
-      const sky=ctx.createLinearGradient(0,0,0,700);sky.addColorStop(0,'#1d354b');sky.addColorStop(1,'#34474e');ctx.fillStyle=sky;ctx.fillRect(0,0,1000,700);
-      ctx.fillStyle='#d9e2b0';ctx.beginPath();ctx.arc(838,84,28,0,Math.PI*2);ctx.fill();
-      for(let i=0;i<8;i++){const h=120+i*37%110;ctx.fillStyle=i%2?'#243c49':'#263f4d';ctx.fillRect(i*145-30,THROW.floor-h,110,h);}
-      ctx.fillStyle='#56635b';ctx.fillRect(0,THROW.floor,1000,28);
-      for(const wall of THROW.walls){ctx.fillStyle='#666f6a';ctx.fillRect(wall.x,wall.y,wall.w,wall.h);ctx.strokeStyle='#9aa190';ctx.strokeRect(wall.x,wall.y,wall.w,wall.h);for(let y=wall.y+18;y<THROW.floor;y+=22){ctx.beginPath();ctx.moveTo(wall.x,y);ctx.lineTo(wall.x+wall.w,y);ctx.stroke();}}
-      ctx.fillStyle='#39484d';ctx.fillRect(834,380,155,THROW.floor-380);
-      ctx.fillStyle='#a1aba0';ctx.fillRect(THROW.window.left-9,273,9,108);ctx.fillRect(THROW.window.right,273,9,108);ctx.fillRect(THROW.window.left-9,374,128,12);
-      ctx.fillStyle='#12212b';ctx.fillRect(THROW.window.left,285,110,89);
-      ctx.strokeStyle='#95dfe1';ctx.lineWidth=3;ctx.strokeRect(THROW.window.left-22,276,22,96);ctx.strokeRect(THROW.window.right+1,276,20,96);
-      ctx.strokeStyle='#d1f590';ctx.setLineDash([5,6]);ctx.beginPath();ctx.moveTo(THROW.window.left+6,THROW.window.plane);ctx.lineTo(THROW.window.right-6,THROW.window.plane);ctx.stroke();ctx.setLineDash([]);
-      text('↓ ВЛУЧ ЗВЕРХУ',914,251,'#d6f69e',16,'center');text('×10',918,421,'#d6f69e',26,'center');
-      THROW.zones.forEach((z,i)=>{
-        ctx.strokeStyle='#9bc8d944';ctx.lineWidth=1;ctx.setLineDash([6,6]);ctx.strokeRect(z.left-44,z.top-44,z.right-z.left+88,z.bottom-z.top+88);
-        ctx.beginPath();ctx.ellipse((z.left+z.right)/2,(z.top+z.bottom)/2,(z.right-z.left)/2,(z.bottom-z.top)/2,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
-        text(`ЗОНА БПЛА ${i+1}`,z.left-42,z.top-52,'#9cb6c9',12);
-      });
-      dronesAt(flight.time).forEach(d=>{
-        ctx.strokeStyle='#e3b782';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(d.x-28,d.y-9);ctx.lineTo(d.x+28,d.y+9);ctx.moveTo(d.x-28,d.y+9);ctx.lineTo(d.x+28,d.y-9);ctx.stroke();
-        ctx.fillStyle='#d7e5df';ctx.fillRect(d.x-13,d.y-8,26,16);ctx.strokeStyle='#a2d6df';ctx.lineWidth=2;
-        for(const dx of [-28,28])for(const dy of [-9,9]){ctx.beginPath();ctx.ellipse(d.x+dx,d.y+dy,14,3,Math.sin(flight.time*35)*.2,0,Math.PI*2);ctx.stroke();}
-      });
-      ctx.strokeStyle='#8c6747';ctx.lineWidth=12;ctx.beginPath();ctx.moveTo(128,THROW.floor);ctx.lineTo(128,554);ctx.moveTo(128,567);ctx.lineTo(101,526);ctx.moveTo(128,567);ctx.lineTo(155,526);ctx.stroke();
+      const sky=ctx.createLinearGradient(0,0,0,700);sky.addColorStop(0,'#102539');sky.addColorStop(.6,'#627180');sky.addColorStop(1,'#bea17c');ctx.fillStyle=sky;ctx.fillRect(0,0,1000,700);
+      const moon=ctx.createRadialGradient(838,84,8,838,84,110);moon.addColorStop(0,'#fff2c44d');moon.addColorStop(1,'#fff2c400');ctx.fillStyle=moon;ctx.fillRect(728,0,220,200);ctx.fillStyle='#f5e4b1';ctx.beginPath();ctx.arc(838,84,26,0,Math.PI*2);ctx.fill();
+      // Distant neighbourhood: windows, roofs, antennas and layered silhouettes.
+      for(let layer=0;layer<2;layer++)for(let i=0;i<12;i++){const h=75+(i*53+layer*79)%150,x=i*98-30+layer*27,y=THROW.floor-h-30*(1-layer);ctx.fillStyle=layer?'#283d46':'#4a5962';ctx.fillRect(x,y,85,h+35);ctx.fillStyle='#243842';ctx.fillRect(x-3,y-7,91,7);ctx.strokeStyle='#3b4d55';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+23,y);ctx.lineTo(x+23,y-23);ctx.lineTo(x+52,y-23);ctx.stroke();for(let wy=y+19;wy<THROW.floor;wy+=25)for(let wx=x+12;wx<x+75;wx+=22){ctx.fillStyle=(i+wx+wy)%7<3?'#c7b38a55':'#132c3c88';ctx.fillRect(wx,wy,10,14);}}
+      const ground=ctx.createLinearGradient(0,THROW.floor,0,700);ground.addColorStop(0,'#6e786a');ground.addColorStop(1,'#35434b');ctx.fillStyle=ground;ctx.fillRect(0,THROW.floor,1000,28);ctx.strokeStyle='#c8c1a777';ctx.beginPath();ctx.moveTo(0,THROW.floor+2);ctx.lineTo(1000,THROW.floor+2);ctx.stroke();for(let i=0;i<40;i++){ctx.strokeStyle='#263c4266';ctx.beginPath();ctx.moveTo(i*27,THROW.floor+7);ctx.lineTo(i*27-12,700);ctx.stroke();}
+      for(const wall of THROW.walls){const g=ctx.createLinearGradient(wall.x,0,wall.x+wall.w,0);g.addColorStop(0,'#b3a28c');g.addColorStop(.5,'#847b6f');g.addColorStop(1,'#4a5553');ctx.fillStyle=g;ctx.fillRect(wall.x,wall.y,wall.w,wall.h);ctx.strokeStyle='#3e4544';ctx.lineWidth=1;for(let y=wall.y+18,row=0;y<THROW.floor;y+=20,row++){ctx.beginPath();ctx.moveTo(wall.x,y);ctx.lineTo(wall.x+wall.w,y);ctx.moveTo(wall.x+(row%2?8:18),y-20);ctx.lineTo(wall.x+(row%2?8:18),y);ctx.stroke();}ctx.fillStyle='#c8bda5';ctx.fillRect(wall.x-3,wall.y-4,wall.w+6,6);ctx.fillStyle='#162c3244';ctx.fillRect(wall.x+wall.w,wall.y+4,8,wall.h-4);ctx.fillStyle='#c8b783';ctx.fillRect(wall.x+4,wall.y+38,wall.w-8,26);text('!',wall.x+wall.w/2,wall.y+59,'#384649',20,'center');}
+      // Open apartment window: target plane stays aligned with the physics model.
+      const facade=ctx.createLinearGradient(826,0,1000,0);facade.addColorStop(0,'#9c8878');facade.addColorStop(1,'#625d5a');ctx.fillStyle=facade;ctx.fillRect(826,265,174,407);ctx.strokeStyle='#3d41434d';ctx.lineWidth=1;for(let y=275,row=0;y<672;y+=22,row++){ctx.beginPath();ctx.moveTo(826,y);ctx.lineTo(1000,y);ctx.stroke();for(let x=826+(row%2?19:0);x<1000;x+=38){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+22);ctx.stroke();}}ctx.fillStyle='#c1b6a0';ctx.fillRect(820,258,180,10);ctx.fillStyle='#25323b';ctx.fillRect(852,280,130,99);const room=ctx.createLinearGradient(866,290,972,371);room.addColorStop(0,'#192a32');room.addColorStop(1,'#695d46');ctx.fillStyle=room;ctx.fillRect(862,285,110,89);ctx.fillStyle='#ae8a5b55';ctx.fillRect(890,354,56,20);ctx.fillStyle='#ded4ad';ctx.fillRect(THROW.window.left-9,273,9,108);ctx.fillRect(THROW.window.right,273,9,108);ctx.fillRect(THROW.window.left-12,374,140,10);ctx.fillStyle='#3c4947';ctx.fillRect(THROW.window.left-12,384,140,7);
+      ctx.fillStyle='#79bbc044';ctx.strokeStyle='#c6e2d6';ctx.lineWidth=3;for(const [x,w] of [[840,19],[974,20]]){ctx.fillRect(x,279,w,91);ctx.strokeRect(x,279,w,91);ctx.beginPath();ctx.moveTo(x,324);ctx.lineTo(x+w,324);ctx.stroke();}ctx.strokeStyle='#6e7b7a';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(842,406);ctx.lineTo(842,652);ctx.lineTo(826,663);ctx.stroke();ctx.fillStyle='#b4b6aa';ctx.fillRect(891,466,83,41);ctx.fillStyle='#727b77';ctx.fillRect(897,472,36,29);ctx.strokeStyle='#404e51';ctx.lineWidth=2;ctx.beginPath();ctx.arc(915,486,12,0,Math.PI*2);ctx.stroke();for(let y=475;y<499;y+=5)ctx.fillRect(941,y,26,2);text('ДОСТАВКА',914,428,'#e9d8ae',15,'center');text('×10',914,453,'#dbf5a7',24,'center');
+      ctx.strokeStyle='#d1f590';ctx.lineWidth=2;ctx.setLineDash([5,6]);ctx.beginPath();ctx.moveTo(THROW.window.left+6,THROW.window.plane);ctx.lineTo(THROW.window.right-6,THROW.window.plane);ctx.stroke();ctx.setLineDash([]);text('↓ ВЛУЧ ЗВЕРХУ',914,240,'#e7f6bb',15,'center');
+      THROW.zones.forEach((z,i)=>{ctx.strokeStyle='#b1ced22e';ctx.lineWidth=1;ctx.setLineDash([5,9]);ctx.strokeRect(z.left-38,z.top-34,z.right-z.left+76,z.bottom-z.top+68);ctx.beginPath();ctx.ellipse((z.left+z.right)/2,(z.top+z.bottom)/2,(z.right-z.left)/2,(z.bottom-z.top)/2,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);text(`ПАТРУЛЬ 0${i+1}`,z.left-35,z.top-43,'#b2c4c7',11);});
+      dronesAt(flight.time).forEach((d,i)=>{if(flight.explosions.some(e=>Math.hypot(e.x-d.x,e.y-d.y)<100))return;ctx.save();ctx.translate(d.x,d.y);ctx.rotate(Math.sin(flight.time*3+i)*.07);ctx.strokeStyle='#1c2c35';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(-28,-9);ctx.lineTo(28,9);ctx.moveTo(-28,9);ctx.lineTo(28,-9);ctx.stroke();ctx.strokeStyle='#96a6a9';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#334651';ctx.beginPath();ctx.roundRect(-14,-9,28,18,5);ctx.fill();ctx.fillStyle='#92a8a9';ctx.fillRect(-10,-6,20,4);ctx.fillStyle='#0e212d';ctx.fillRect(-7,0,14,7);ctx.fillStyle='#e8b97e';ctx.beginPath();ctx.arc(0,6,3,0,Math.PI*2);ctx.fill();for(const dx of [-28,28])for(const dy of [-9,9]){ctx.fillStyle='#182c32';ctx.beginPath();ctx.arc(dx,dy,4,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#c3d6d7aa';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(dx,dy,17,3,Math.sin(flight.time*48)*.25,0,Math.PI*2);ctx.stroke();ctx.fillStyle=dx<0?'#f98171':'#8fdaaa';ctx.fillRect(dx-2,dy+3,3,3);}ctx.restore();});
+      ctx.strokeStyle='#3f332c';ctx.lineWidth=15;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(128,THROW.floor);ctx.lineTo(128,559);ctx.moveTo(128,567);ctx.lineTo(101,526);ctx.moveTo(128,567);ctx.lineTo(155,526);ctx.stroke();ctx.strokeStyle='#a38c64';ctx.lineWidth=7;ctx.stroke();ctx.strokeStyle='#5b4330';ctx.lineWidth=2;for(let y=580;y<640;y+=8){ctx.beginPath();ctx.moveTo(122,y);ctx.lineTo(134,y+2);ctx.stroke();}
       const shot=shotFromPull(pull),shown=aiming?shot:flight.phase==='miss'?THROW.anchor:flight.ball;
       if(flight.phase!=='flying'&&flight.phase!=='success'&&flight.phase!=='miss'&&flight.phase!=='destroyed') {
         const aim=shotFromPull(pull);ctx.fillStyle='#d7f39488';
@@ -251,9 +255,10 @@
     function frame(time) {
       const dt=previous===null?0:Math.min(.04,(time-previous)/1000);previous=time;
       if(isActive()&&!done) {
+        if(level===2)maze.step(dt);
         if(level===2&&keys.size){const x=(keys.has('right')?1:0)-(keys.has('left')?1:0),y=(keys.has('down')?1:0)-(keys.has('up')?1:0),norm=Math.hypot(x,y)||1;finishMaze({x:maze.x+x/norm*dt*2.5,y:maze.y+y/norm*dt*2.5});}
         if(level===3){const before=flight.phase;flight.step(dt);
-          if(before==='flying'&&flight.phase==='destroyed')notify('БПЛА знищив бруківку! −500 UAH. Бонусу за цей кидок немає.','bad');
+          if(before==='flying'&&flight.phase==='destroyed')notify('БПЛА знищив бруківку! −4 500 UAH. Бонусу за цей кидок немає.','bad');
           if(flight.phase==='destroyed'&&!flight.explosions.length)flight.reset();
           if(before==='flying'&&flight.phase==='success'){done=true;onSuccess();}
           else if(before==='flying'&&flight.phase==='miss')notify('Не влучив. Візьми бруківку біля рогатки та спробуй ще раз.');
@@ -262,10 +267,12 @@
       } else {keys.clear();pointer=null;aiming=false;}
       root.requestAnimationFrame(frame);
     }
+    if(root.ResizeObserver)new root.ResizeObserver(resize).observe(canvas.parentElement);
+    root.requestAnimationFrame(resize);
     root.requestAnimationFrame(frame);
-    return {setLevel,reset,resize,cancel:()=>{keys.clear();pointer=null;aiming=false;mazeContact=false;}};
+    return {setLevel,reset,resize,cancel:()=>{keys.clear();pointer=null;aiming=false;}};
   }
-  const api={LEVELS,restoreAccess,MAZE_LINES,mazeBlocked,moveMaze,THROW,dronesAt,shotFromPull,catchesWindow,FlightWorld,drawExplosion,create};
+  const api={LEVELS,restoreAccess,MAZE_LINES,mazeBlocked,moveMaze,MazeWorld,penaltyFor,THROW,dronesAt,shotFromPull,catchesWindow,FlightWorld,drawExplosion,create};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   root.BrukDelivery=api;
 })(typeof window==='undefined'?globalThis:window);

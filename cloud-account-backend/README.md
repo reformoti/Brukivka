@@ -1,0 +1,1 @@
+Source mirror of the authenticated account service. Its canonical hosted repository uses Sites identity and a D1 binding named DB. Tests: npm ci && npm test. Builds also require the canonical Site hosting manifest, which is kept with that Site and is not copied here. Never embed server credentials in the game.

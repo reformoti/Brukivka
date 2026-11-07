@@ -20,7 +20,7 @@
     sickle:'<path d="M17 56l10-27" stroke="#b39766" stroke-width="6"/><path d="M29 8q35 7 11 31 10-20-13-18z" fill="#d7dfc1" stroke="#a9bbaa" stroke-width="2"/>',
     potion:'<path d="M24 6h16v14l11 14q9 25-19 25T13 34l11-14z" fill="#a5c3a3" stroke="#d6dfb9" stroke-width="2"/><path d="M17 36q15-8 30 0v11q-3 14-15 9-18 4-15-20" fill="#7aa69a"/><path d="M23 9h18" stroke="#b39c70" stroke-width="7"/>'
   };
-  function icon(kind){const shape=paths[kind]||'<path d="M10 39l8-19 25-5 13 18-9 17-26 7z" fill="currentColor"/><path d="M18 22l13 13 14-17m-14 17l-8 17m8-17l19 1" fill="none" stroke="#f0e4bc88" stroke-width="2"/>';return '<svg class="item-icon" viewBox="0 0 64 64" aria-hidden="true">'+shape+'</svg>';}
+  function icon(kind,tier=0){const detailed=window.HoMoWGearIcons?.icon(kind,tier);if(detailed)return detailed;const shape=paths[kind]||'<path d="M10 39l8-19 25-5 13 18-9 17-26 7z" fill="currentColor"/><path d="M18 22l13 13 14-17m-14 17l-8 17m8-17l19 1" fill="none" stroke="#f0e4bc88" stroke-width="2"/>';return '<svg class="item-icon" viewBox="0 0 64 64" aria-hidden="true">'+shape+'</svg>';}
   function rr(c,x,y,w,h,r,color){c.fillStyle=color;c.beginPath();c.roundRect(x,y,w,h,r);c.fill();}
   function ellipse(c,x,y,rx,ry,color){c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();}
   function drawMonster(c,m,world){
