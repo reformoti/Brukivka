@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.4.2',date:'2026-11-08',name:'Render Dependency Fix'};
+  const release={version:'6.5.0',date:'2026-11-08',name:'HoMoW Password Login'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
