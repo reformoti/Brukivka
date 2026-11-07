@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.3.0',date:'2026-11-07',name:'Cloud Account'};
+  const release={version:'6.3.1',date:'2026-11-07',name:'Visible Diver Status'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

@@ -1649,7 +1649,7 @@
     const remaining=Math.max(0,60000-(Date.now()-save.waiterStartedAt));
     b.disabled=!!save.waiterStartedAt||save.waiterPenalty;
     b.textContent=save.waiterPenalty?'Зміна завершена':save.waiterStartedAt?`Чекати ${Math.ceil(remaining/1000)} с`:'Влаштуватися Ждуном';
-    $('waiterStatus').textContent=save.waiterStartedAt?'Не рухай мишею й не натискай клавіші.':save.waiterPenalty?'Вітаємо з новим статусом!':'Витримай 1 хвилину без будь-яких дій.';
+    $('waiterStatus').textContent=save.waiterStartedAt?'Не рухай мишею й не натискай клавіші.':save.waiterPenalty?'🌊 Водолаз — хвилину зараховано!':'Витримай 1 хвилину без будь-яких дій.';
   }
   function updateWaiterJob(){
     if(!save.waiterStartedAt)return;
