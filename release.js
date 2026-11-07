@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.3.1',date:'2026-11-07',name:'Visible Diver Status'};
+  const release={version:'6.3.2',date:'2026-11-07',name:'Diver Recovery Fix'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
