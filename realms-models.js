@@ -253,6 +253,6 @@
   }
   function drop(c,d){c.save();c.translate(d.x,d.y);oval(c,3,9,14,5,'#20322966');shape(c,[[-8,-11],[-12,4],[-6,10],[8,8],[12,1],[7,-12]],'#9f8860','#3d4a3c');line(c,[[-7,-9],[8,-10]],'#d3bc85',3);line(c,[[0,-9],[0,6]],'#c2a67a',1.5);oval(c,8,-12,4,3,'#d1bc85');c.restore();}
 
-  function decorate(art,R){variantCatalog=R.VARIANTS||{};art.drawMonster=monster;art.drawWeapon=weapon;art.drawNode=(c,n,w)=>node(c,n,w,R);}
+  function decorate(art,R){variantCatalog=R.VARIANTS||{};art.drawMonster=(c,m,w)=>{const info=R.TYPES[m.type];if(!info?.model)return monster(c,m,w);c.save();c.filter=m.type==='wraith'?'hue-rotate(70deg)':m.type==='salamander'?'sepia(.6) saturate(2)':'none';monster(c,{...m,type:info.model},w);c.filter='none';c.strokeStyle=info.skin;c.fillStyle=info.skin;c.lineWidth=3;c.beginPath();if(m.type==='treant'){c.moveTo(m.x-15,m.y-70);c.lineTo(m.x-28,m.y-95);c.lineTo(m.x-39,m.y-92);c.moveTo(m.x+15,m.y-70);c.lineTo(m.x+26,m.y-97);}else if(m.type==='frostgiant'){for(let i=0;i<5;i++){c.moveTo(m.x-30+i*15,m.y-110);c.lineTo(m.x-25+i*15,m.y-135);c.lineTo(m.x-20+i*15,m.y-110);}}else{c.arc(m.x,m.y-65,9,0,Math.PI*2);}c.stroke();c.restore();};art.drawWeapon=weapon;art.drawNode=(c,n,w)=>node(c,n,w,R);}
   return {setGraphics:p=>{graphics={...graphics,...p};},monster,tree,house,rock,node,player,camp,weapon,drop,decorate};
 });

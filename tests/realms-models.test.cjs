@@ -41,6 +41,6 @@ test('environment details are deterministic and keep collision footprints untouc
   const w=world(),before=JSON.stringify(w);render(c=>M.camp(c,w));render(c=>M.drop(c,{x:10,y:20}));assert.equal(JSON.stringify(w),before);
 });
 test('model integration preserves existing art icons and telegraphs',()=>{
-  const art={icon:()=>'<svg/>',telegraphs:()=>42};const icon=art.icon,telegraphs=art.telegraphs;M.decorate(art,R);assert.equal(art.icon,icon);assert.equal(art.telegraphs,telegraphs);assert.equal(art.drawMonster,M.monster);assert.equal(art.drawWeapon,M.weapon);
+  const art={icon:()=>'<svg/>',telegraphs:()=>42};const icon=art.icon,telegraphs=art.telegraphs;M.decorate(art,R);assert.equal(art.icon,icon);assert.equal(art.telegraphs,telegraphs);assert.equal(typeof art.drawMonster,'function');assert.equal(art.drawWeapon,M.weapon);
   render(c=>art.drawNode(c,{id:0,type:'copper',x:0,y:0,charges:1},world()));
 });

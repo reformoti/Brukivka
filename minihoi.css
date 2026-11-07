@@ -4,3 +4,5 @@
 .side-content .action-list{grid-template-columns:1fr 1fr}.side-content .action-list button{align-content:start;gap:6px;min-width:0}.side-content .action-list button strong{font-size:9px}.side-content .action-list button small{font-size:8px}.stat b{font-size:14px}.map-label{stroke-width:.3}
 
 @media(max-height:700px){.province-heading{padding:11px 14px 8px}.province-heading h2{font-size:18px;margin:4px 0 9px}.province-heading select{padding:6px}.stats-grid{gap:8px;margin-bottom:12px}.side-content .action-list button small{display:none}.side-content .action-list button{padding:9px;gap:5px}.side-tabs button{padding:11px 4px}.action-notice{min-height:38px;padding:9px 14px}}
+
+.province-shape.encircled{stroke:#ff806d;stroke-dasharray:2 1;stroke-width:.6}.operation-status{border-left:3px solid #d1ab6c;padding:10px;background:#d1ab6c15}
