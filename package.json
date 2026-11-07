@@ -10,5 +10,11 @@
     "start": "node --env-file-if-exists=.env --env-file-if-exists=.env.local homow-server/server.mjs",
     "test:online": "node --test homow-server/test.mjs",
     "test:db": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/verify-online-db.mjs"
+  },
+  "workspaces": [
+    "homow-server"
+  ],
+  "engines": {
+    "node": ">=22"
   }
 }

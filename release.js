@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.4.1',date:'2026-11-07',name:'Neon Database Setup'};
+  const release={version:'6.4.2',date:'2026-11-08',name:'Render Dependency Fix'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

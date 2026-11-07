@@ -12,7 +12,7 @@
 
 У Dashboard: **New → Blueprint** → підключи репозиторій `reformoti/Brukivka` → використай кореневий `render.yaml`. Перевір план **Free**. У запитаній змінній `DATABASE_URL` встав підключення PostgreSQL. Запусти розгортання.
 
-Якщо створюєш вручну: New → Web Service; репозиторій `reformoti/Brukivka`; гілка `main`; Runtime Node; Root Directory залиш порожнім (сервер імпортує спільні модулі гри); Build Command `cd homow-server && npm ci`; Start Command `cd homow-server && npm start`; Health Check `/health`; план Free. `PORT` і `RENDER_EXTERNAL_URL` Render задає автоматично. Власний домен потребує змінної `PUBLIC_ORIGIN` з точним HTTPS origin і відповідного дозволу в сервісі акаунтів.
+Якщо створюєш вручну: New → Web Service; репозиторій `reformoti/Brukivka`; гілка `main`; Runtime Node; Root Directory залиш порожнім (сервер імпортує спільні модулі гри); Build Command `npm ci && npm run build`; Start Command `npm start`; Health Check `/health`; план Free. `PORT` і `RENDER_EXTERNAL_URL` Render задає автоматично. Власний домен потребує змінної `PUBLIC_ORIGIN` з точним HTTPS origin і відповідного дозволу в сервісі акаунтів.
 
 ## 3. Зв’язок із акаунтами — після отримання адреси
 
@@ -40,7 +40,7 @@ Popup відкриває Brukivka Cloud. Авторизований корист
 
 ## Neon та локальні команди (v6.4.1)
 
-У корені репозиторію: `npm ci`, потім `npm --prefix homow-server ci`.
+У корені репозиторію: `npm ci` встановлює залежності кореня й серверного workspace, включно з ws та pg.
 `npm run build` перевіряє сервер/клієнт і запускає тести симуляції.
 `npm start` завантажує `.env` і `.env.local`, запускає сервер і створює відсутню таблицю персонажів без видалення даних.
 `npm run test:db` перевіряє запис, читання та відновлення тестового персонажа в транзакції з ROLLBACK; запускати після першого старту сервера.
@@ -48,3 +48,7 @@ Popup відкриває Brukivka Cloud. Авторизований корист
 `neon.ts` описує лише PostgreSQL, поточна авторизація через Brukivka Cloud зберігається. `neon deploy` потребує входу в Neon CLI; SQL-підключення за виданими URL не потребує CLI-входу.
 Не коміть `.env`, `.env.local` чи `.neon` і не передавай DATABASE_URL у браузер.
 У Render можна задати обидві змінні в Environment; чинний render.yaml також працює з одним DATABASE_URL.
+
+## Render: виправлення ERR_MODULE_NOT_FOUND (v6.4.2)
+
+Root Directory залиш порожнім. Build Command: `npm ci && npm run build`. Start Command: `npm start`. Версія 6.4.2 встановлює серверні залежності також при звичайному `npm install` із кореня. Якщо сервіс створений вручну, після оновлення репозиторію запусти Manual Deploy → Clear build cache & deploy. Зміна render.yaml сама не змінює налаштування вручну створеного сервісу.
