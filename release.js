@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.3.2',date:'2026-11-07',name:'Diver Recovery Fix'};
+  const release={version:'6.4.0',date:'2026-11-07',name:'HoMoW Online Preparation'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
