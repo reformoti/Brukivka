@@ -1,7 +1,7 @@
 import http from 'node:http';import {readFile} from 'node:fs/promises';import {fileURLToPath} from 'node:url';import {WebSocketServer} from 'ws';import pg from 'pg';import {Realm} from './world.mjs';import {redeem} from './auth.mjs';
 const issuer='https://brukivka-cloud.stunningherring.chatgpt.site',origin=process.env.PUBLIC_ORIGIN||(process.env.RENDER_EXTERNAL_URL||'http://localhost:3000'),port=Number(process.env.PORT||3000);
-if(!process.env.DATABASE_URL)throw Error('DATABASE_URL is required: use a persistent PostgreSQL database.');
-const pool=new pg.Pool({connectionString:process.env.DATABASE_URL,max:3});
+if(!process.env.DATABASE_URL_POOLED&&!process.env.DATABASE_URL)throw Error('DATABASE_URL is required: use a persistent PostgreSQL database.');
+const pool=new pg.Pool({connectionString:process.env.DATABASE_URL_POOLED||process.env.DATABASE_URL,max:3,connectionTimeoutMillis:15000});
 await pool.query('CREATE TABLE IF NOT EXISTS homow_players (id TEXT PRIMARY KEY, username TEXT NOT NULL, state JSONB NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT now())');
 pool.on('error',()=>console.error('Database connection interrupted'));
 const realm=new Realm(),loading=new Set(),writes=new Map(),sockets=new Map();let closing=false;

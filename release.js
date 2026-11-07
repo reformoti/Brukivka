@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.4.0',date:'2026-11-07',name:'HoMoW Online Preparation'};
+  const release={version:'6.4.1',date:'2026-11-07',name:'Neon Database Setup'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

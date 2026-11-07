@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "@neon/config": "^1.13.0",
+    "@neon/env": "^2.1.0"
+  },
+  "name": "brukivka",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-online.mjs",
+    "start": "node --env-file-if-exists=.env --env-file-if-exists=.env.local homow-server/server.mjs",
+    "test:online": "node --test homow-server/test.mjs",
+    "test:db": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/verify-online-db.mjs"
+  }
+}
