@@ -9,7 +9,7 @@ export class WorldPvP{
   w.skill=()=>{w.dismount();return this.target(p,450)?this.skill(p):skill();};
   w.playerShotHit=(shot,ax,ay,maxT)=>this.projectile(p,shot,ax,ay,maxT);
  }
- canHit(p,q){return p!==q&&(p.duel||q.duel?!!p.duel&&p.duel===q.duel:p.pvpEnabled&&q.pvpEnabled)&&!p.w.nearCamp()&&!q.w.nearCamp()&&q.w.state.hp>0;}
+ canHit(p,q){return p!==q&&(p.duel||q.duel?!!p.duel&&p.duel===q.duel:p.pvpEnabled&&q.pvpEnabled&&!this.realm.parties.same(p,q))&&!p.w.nearCamp()&&!q.w.nearCamp()&&q.w.state.hp>0;}
  targets(p,range){const s=p.w.state;return [...this.realm.players.values()].filter(q=>this.canHit(p,q)&&Math.hypot(q.w.state.x-s.x,q.w.state.y-s.y)<=range+15&&!R.lineBlocked(s.x,s.y,q.w.state.x,q.w.state.y)).sort((a,b)=>(a.id===p.pvpTarget?-1:b.id===p.pvpTarget?1:Math.hypot(a.w.state.x-s.x,a.w.state.y-s.y)-Math.hypot(b.w.state.x-s.x,b.w.state.y-s.y)));}
  target(p,range){return this.targets(p,range)[0];}
  toggle(p,enabled){if(p.duel)return {ok:false,message:'Спочатку заверши дуель.'};if(typeof enabled!=='boolean')return {ok:false,message:'Невірний режим PvP.'};if(enabled===p.pvpEnabled)return {ok:true,message:enabled?'PvP увімкнено.':'PvP вимкнено.'};if(!enabled&&p.w.time-p.pvpLastHit<10)return {ok:false,message:'Зачекай 10 секунд після останнього PvP-удару.'};p.pvpEnabled=enabled;p.pvpTarget=null;p.w.projectiles=p.w.projectiles.filter(s=>s.owner!=='player');return {ok:true,message:enabled?'PvP увімкнено. Поза селом ти можеш бити інших учасників PvP, і вони — тебе.':'PvP вимкнено. Гравці більше не можуть завдавати тобі шкоди.'};}

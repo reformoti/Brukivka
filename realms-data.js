@@ -1,6 +1,6 @@
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.BrukRealmsData=factory();})(typeof window==='undefined'?globalThis:window,function(){
   'use strict';
-  const WIDTH=5200,HEIGHT=3600,CAMP={x:500,y:470},SPAWN={x:520,y:530};
+  const WIDTH=8000,HEIGHT=5200,CAMP={x:500,y:470},SPAWN={x:520,y:530};
   const VILLAGE={x:70,y:90,w:880,h:780,gate:{x:950,y:500},exits:[{x:950,y:500},{x:355,y:90},{x:600,y:870},{x:70,y:590}]},inVillage=(x,y)=>x>VILLAGE.x&&x<VILLAGE.x+VILLAGE.w&&y>VILLAGE.y&&y<VILLAGE.y+VILLAGE.h;
   const TYPES={
     slime:{name:'Лісовий слиз',hp:65,damage:8,speed:67,range:30,aggro:195,leash:330,cooldown:1.4,xp:20,silver:22,radius:19,color:'#9cbd70',loot:{fiber:1},respawn:18},
@@ -115,7 +115,7 @@
   const TRADERS={
     blacksmith:{name:'Коваль',role:'Зброя, лати та інструменти',icon:'sword',x:225,y:310,color:'#9c7452'},
     mage:{name:'Маг',role:'Посохи, мантії та фокуси',icon:'staff',x:475,y:290,color:'#8d80b4'},
-    enchanter:{name:'Рунний майстер',role:'Зачарування спорядження .1–.4',icon:'crystal',x:725,y:310,color:'#73b9b1'},
+    enchanter:{name:'Рунний майстер',role:'Зачарування спорядження',icon:'crystal',x:725,y:310,color:'#73b9b1'},
     armorer:{name:'Бронник',role:'Броня, шоломи, чоботи та плащі',icon:'plate',x:325,y:490,color:'#a3a798'},
     alchemist:{name:'Алхімік',role:'Зілля та рецепти лікування',icon:'potion',x:625,y:490,color:'#96b26e'},
     artificer:{name:'Ремісник',role:'Переробка, сумки та інструменти',icon:'bag',x:225,y:800,color:'#b29a6a'},
@@ -135,5 +135,29 @@
   for(const [id,x,y] of [['venomqueen',1650,2750],['warlord',3300,550],['emberlord',3300,2500],['stormseer',4800,1700]]){SPAWNS.push([id,x,y]);ZONES.push({id,x,y,name:TYPES[id].name,boss:id,level:TYPES[id].level});}
   for(const [id,a] of Object.entries(ARMOR_KINDS))Object.assign(a,{baseProtection:{plate:18,leather:12,cloth:7}[id],tierProtection:{plate:4.8,leather:3.2,cloth:2.4}[id]});
   for(const [id,o] of Object.entries(OUTFITS))o.protection=id.startsWith('soldier')||id==='guardian_cape'?3:id.startsWith('hunter')||id==='scout_cape'?2:1;
-  return {MOUNTS,APPEARANCE,SKILL_CHOICES,BOSS_SKILLS,BILLBOARD,ZONES,VILLAGE,inVillage,HOUSES,WALLS,GUARDS,TRADERS,traderStock,WIDTH,HEIGHT,CAMP,SPAWN,TYPES,SPAWNS,OBSTACLES,WEAPONS,ARMOR,FAMILIES,ARMOR_KINDS,SUPPORTS,EXTRAS,RESOURCES,NODE_TYPES,NODES,TOOLS,RECIPES,TALENTS,CONTRACTS,VARIANTS,DEFAULT_VARIANTS,OUTFITS};
+
+  const MAX_TIER=12,MAX_ENCHANT=8,MAX_MASTERY=30,MAX_SPECIALIZATION=40,STACK_SIZE=999;
+  const CITY={x:7040,y:2120,w:860,h:960},PASS={x:6490,y:2400,w:300,h:400,barrierX:6790},MONOLITH={x:6940,y:2600};
+  const inCity=(x,y)=>x>CITY.x&&x<CITY.x+CITY.w&&y>CITY.y&&y<CITY.y+CITY.h;
+  const REGIONS=[{id:'meadows',x:980,y:0,w:1020,h:1480,level:1},{id:'forest',x:980,y:1480,w:1620,h:3720,level:3},{id:'quarry',x:2020,y:0,w:2080,h:1380,level:7},{id:'ruins',x:2600,y:1380,w:1500,h:3820,level:10},{id:'wilds',x:4100,y:0,w:2350,h:5200,level:25},{id:'city',x:6800,y:0,w:1200,h:5200,level:80},{id:'pass',x:6490,y:2400,w:310,h:400,level:80}];
+  // Existing spawn IDs/types stay stable; old positions are deliberately redistributed.
+  const centers={slime:[[1140,380],[1200,1140],[1710,700]],rat:[[1690,130],[1750,1200]],wolf:[[1230,1830],[1880,1910],[2210,2370]],boar:[[1110,2820],[1880,3160]],spider:[[2180,2850],[2380,3330]],bandit:[[2350,480],[2750,950]],golem:[[2970,240],[3170,1130]],skeleton:[[2870,1650],[3070,2250]],mage:[[3550,1730],[3660,2940]],bear:[[2780,3200],[3320,3400]],rogue:[[3650,1040],[3840,2130]],wraith:[[4050,1450],[4660,1200]],salamander:[[4500,2350],[4960,2950]],treant:[[3900,3430],[4600,3690]]},seen={};
+  const SPAWN_GROUPS={};
+  for(let i=0;i<SPAWNS.length;i++){const [kind]=SPAWNS[i],list=centers[kind];if(!list)continue;const n=seen[kind]||0;seen[kind]=n+1;const g=Math.floor(n/3)%list.length,[cx,cy]=list[g],offset=[[-55,0],[55,0],[0,75]][n%3];SPAWNS[i]=[kind,cx+offset[0],cy+offset[1]];SPAWN_GROUPS[i]=kind+'-'+g;}
+  for(const t of Object.values(TYPES)){t.aggro=Math.min(t.boss?150:110,Math.round(t.aggro*.5));t.leash=Math.min(t.leash,300);}
+  const addSpawn=(kind,x,y,group)=>{const id=SPAWNS.length;SPAWNS.push([kind,x,y]);if(group)SPAWN_GROUPS[id]=group;return id;};
+  // A leader for each camp of ordinary enemies.
+  for(const [kind,list] of Object.entries(centers)){const base=TYPES[kind],id='elite_'+kind;TYPES[id]={...base,name:'Елітний · '+base.name,model:base.model||kind,elite:true,scale:1.15,hp:Math.round(base.hp*2.4),damage:Math.round(base.damage*1.35),xp:base.xp*3,silver:base.silver*3,color:'#cbb271'};for(let g=0;g<list.length;g++)if(Object.values(SPAWN_GROUPS).includes(kind+'-'+g)){const [x,y]=list[g];addSpawn(id,x,y-70,kind+'-'+g);}}
+  for(const [kind,base,level,x,y] of [['highland_wolf','wolf',30,5270,560],['iron_guard','skeleton',45,5680,1450],['ash_mage','mage',60,5300,3300],['pass_knight','bandit',72,6080,4140]]){const b=TYPES[base];TYPES[kind]={...b,model:base,name:{highland_wolf:'Гірський вовк',iron_guard:'Залізний легіонер',ash_mage:'Маг згарища',pass_knight:'Лицар перевалу'}[kind],level,hp:level*160,damage:level*14,defence:level*3,xp:level*250,silver:level*40};for(const [dx,dy] of [[-80,0],[80,0],[0,90]])addSpawn(kind,x+dx,y+dy,kind);const elite='elite_'+kind;TYPES[elite]={...TYPES[kind],name:'Елітний · '+TYPES[kind].name,elite:true,scale:1.15,hp:level*400,xp:level*750,silver:level*120};addSpawn(elite,x,y-90,kind);}
+  const minis=[['mosskeeper','treant',14,2550,4000],['crypt_lord','skeleton',24,3350,4150],['ironmaw','bear',38,4900,4400],['rime_hunter','wolf',52,5900,650],['ash_oracle','mage',66,5940,3000]];
+  for(const [id,base,level,x,y] of minis){TYPES[id]={...TYPES[base],name:{mosskeeper:'Моховий хранитель',crypt_lord:'Володар склепу',ironmaw:'Залізна паща',rime_hunter:'Крижаний мисливець',ash_oracle:'Попелястий оракул'}[id],model:TYPES[base].model||base,miniBoss:true,boss:true,bossStyle:'iron',scale:1.4,level,hp:level*360,damage:level*16,defence:level*3,xp:level*750,silver:level*150,radius:36,aggro:145,leash:260,cooldown:3.5,respawn:120,behavior:'boss'};BOSS_SKILLS[id]=BOSS_SKILLS[base==='mage'?'stormseer':'warlord'];addSpawn(id,x,y);}
+  TYPES.pass_guardian={...TYPES.ancient,name:'Титан перевалу',model:'ancient',bossStyle:'iron',scale:1.5,boss:true,level:80,hp:98000,damage:1400,defence:280,xp:100000,silver:22000,radius:58,aggro:150,leash:180,range:145,respawn:180,loot:{crystal:120,mithril_ingot:90,steel_ingot:90}};BOSS_SKILLS.pass_guardian=BOSS_SKILLS.ancient;addSpawn('pass_guardian',6600,2600);
+  for(const [id,base,level,x,y] of [['city_wraith','wraith',110,7400,800],['city_salamander','salamander',160,7470,4000]]){TYPES[id]={...TYPES[base],model:TYPES[base].model||base,name:level===110?'Привид півночі':'Саламандра глибин',level,hp:level*280,damage:level*18,defence:level*3,xp:level*1000,silver:level*100,aggro:110,leash:250};for(const [dx,dy] of [[-80,0],[80,0],[0,100]])addSpawn(id,x+dx,y+dy,id);const elite='elite_'+id;TYPES[elite]={...TYPES[id],name:'Елітний · '+TYPES[id].name,elite:true,scale:1.15,hp:level*670,xp:level*3000,silver:level*300};addSpawn(elite,x,y-90,id);}
+  OBSTACLES.push({x:6490,y:0,w:300,h:2400,type:'mountain'},{x:6490,y:2800,w:300,h:HEIGHT-2800,type:'mountain'});
+  const CITY_HOUSES=[['blacksmith',7200,2250],['mage',7530,2250],['enchanter',7530,2750],['market',7200,2750]].map(([owner,x,y])=>({owner,x,y,w:150,h:115,type:'house',name:TRADERS[owner].name,color:TRADERS[owner].color}));OBSTACLES.push(...CITY_HOUSES);
+  for(let tier=9;tier<=MAX_TIER;tier++){WEAPONS.push({name:'Клинок міста · '+tier,cost:Math.round(17000*1.75**(tier-8))});ARMOR.push({name:'Обладунок міста · '+tier,cost:Math.round(16000*1.75**(tier-8))});}
+  for(const [id,t] of Object.entries(TALENTS))if(['vitality','guard','power','fortitude','armourTraining','precision','evasion','quickstep','windrunner','weaponFlow','focusMastery','endurance','recovery','balanced'].includes(id))t.max=20;
+  TALENTS.guard.description='+0.6% захисту за ранг.';TALENTS.armourTraining.description='+0.8% захисту за ранг.';TALENTS.balanced.description='+1% шкоди та +0.3% захисту за ранг.';
+  const townTraders=s=>inCity(s.x,s.y)?Object.fromEntries(Object.entries(TRADERS).map(([id,n],i)=>[id,{...n,x:({blacksmith:7275,mage:7605,enchanter:7605,market:7275}[id]||7150+(i%3)*200),y:({blacksmith:2430,mage:2430,enchanter:2930,market:2930}[id]||2700)}])):TRADERS;
+  return {townTraders,MAX_TIER,MAX_ENCHANT,MAX_MASTERY,MAX_SPECIALIZATION,STACK_SIZE,CITY,CITY_HOUSES,PASS,MONOLITH,inCity,REGIONS,SPAWN_GROUPS,MOUNTS,APPEARANCE,SKILL_CHOICES,BOSS_SKILLS,BILLBOARD,ZONES,VILLAGE,inVillage,HOUSES,WALLS,GUARDS,TRADERS,traderStock,WIDTH,HEIGHT,CAMP,SPAWN,TYPES,SPAWNS,OBSTACLES,WEAPONS,ARMOR,FAMILIES,ARMOR_KINDS,SUPPORTS,EXTRAS,RESOURCES,NODE_TYPES,NODES,TOOLS,RECIPES,TALENTS,CONTRACTS,VARIANTS,DEFAULT_VARIANTS,OUTFITS};
 });

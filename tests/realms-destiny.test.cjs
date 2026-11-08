@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),R=require('../realms-core'),D=require('../realms-destiny');
 test('destiny graph connects every progression node once and stays within the board',()=>{
   const s=R.normalize(),before=JSON.stringify(s),g=D.model(s),ids=new Set(g.nodes.map(n=>n.id));
-  assert.equal(g.nodes.length,575);assert.equal(ids.size,g.nodes.length);assert.equal(g.edges.length,g.nodes.length-1);
+  assert.equal(g.nodes.length,1305);assert.equal(ids.size,g.nodes.length);assert.equal(g.edges.length,g.nodes.length-1);
   for(const n of g.nodes){assert(n.x>0&&n.x<g.size);assert(n.y>0&&n.y<g.size);}
   const incoming=new Map();for(const e of g.edges){assert(ids.has(e.from));assert(ids.has(e.to));assert(!incoming.has(e.to));incoming.set(e.to,e.from);}
   for(const n of g.nodes){let id=n.id;const seen=new Set();while(id!=='hero'){assert(!seen.has(id));seen.add(id);id=incoming.get(id);assert(id);}}
