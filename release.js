@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.9.0',date:'2026-11-08',name:'Camp Traders'};
+  const release={version:'6.10.0',date:'2026-11-08',name:'Village and World PvP'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

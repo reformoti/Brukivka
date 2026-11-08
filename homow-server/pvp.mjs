@@ -1,0 +1,29 @@
+import {createRequire} from 'node:module';
+const R=createRequire(import.meta.url)('../realms-core.js');
+const pointDistance=(ax,ay,bx,by,x,y)=>{const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy,t=l?Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/l)):0;return {t,d:Math.hypot(x-ax-dx*t,y-ay-dy*t)};};
+export class WorldPvP{
+ constructor(realm){this.realm=realm;}
+ attach(p){p.pvpEnabled=false;p.pvpLastHit=-100;p.pvpTarget=null;const w=p.w,attack=w.attack.bind(w),skill=w.skill.bind(w),shoot=w.shoot.bind(w);w.aimTarget=null;
+  w.shoot=(owner,...args)=>{shoot(owner,...args);if(owner==='player')w.projectiles.at(-1).pvp=p.pvpEnabled;};
+  w.attack=()=>this.target(p,R.weaponRange(w.state))?this.attack(p):attack();
+  w.skill=()=>this.target(p,R.FAMILIES[w.state.weaponKind].range+60)?this.skill(p):skill();
+  w.playerShotHit=(shot,ax,ay,maxT)=>this.projectile(p,shot,ax,ay,maxT);
+ }
+ canHit(p,q){return p!==q&&p.pvpEnabled&&q.pvpEnabled&&!p.w.nearCamp()&&!q.w.nearCamp()&&q.w.state.hp>0;}
+ targets(p,range){const s=p.w.state;return [...this.realm.players.values()].filter(q=>this.canHit(p,q)&&Math.hypot(q.w.state.x-s.x,q.w.state.y-s.y)<=range+15&&!R.lineBlocked(s.x,s.y,q.w.state.x,q.w.state.y)).sort((a,b)=>(a.id===p.pvpTarget?-1:b.id===p.pvpTarget?1:Math.hypot(a.w.state.x-s.x,a.w.state.y-s.y)-Math.hypot(b.w.state.x-s.x,b.w.state.y-s.y)));}
+ target(p,range){return this.targets(p,range)[0];}
+ toggle(p,enabled){if(typeof enabled!=='boolean')return {ok:false,message:'Невірний режим PvP.'};if(enabled===p.pvpEnabled)return {ok:true,message:enabled?'PvP увімкнено.':'PvP вимкнено.'};if(!enabled&&p.w.time-p.pvpLastHit<10)return {ok:false,message:'Зачекай 10 секунд після останнього PvP-удару.'};p.pvpEnabled=enabled;p.pvpTarget=null;p.w.projectiles=p.w.projectiles.filter(s=>s.owner!=='player');return {ok:true,message:enabled?'PvP увімкнено. Поза селом ти можеш бити інших учасників PvP, і вони — тебе.':'PvP вимкнено. Гравці більше не можуть завдавати тобі шкоди.'};}
+ select(p,id){const q=this.realm.players.get(id);if(!q||!this.canHit(p,q))return {ok:false,message:'Ціль має ввімкнути PvP й вийти за межі села.'};p.pvpTarget=id;return {ok:true,message:'PvP-ціль: '+q.name};}
+ aim(p,q){const dx=q.w.state.x-p.w.state.x,dy=q.w.state.y-p.w.state.y,len=Math.hypot(dx,dy)||1;p.w.facing={x:dx/len,y:dy/len};}
+ attack(p){const w=p.w,s=w.state,f=R.FAMILIES[s.weaponKind];if(w.attackCooldown>0||(s.weaponKind==='staff'&&s.mana<6))return false;const q=this.target(p,R.weaponRange(s));if(!q)return false;this.aim(p,q);w.recalling=null;w.gathering=null;w.selectedNode=null;w.swing=.25;w.attackCooldown=R.attackInterval(s);if(f.ranged){if(s.weaponKind==='staff')s.mana-=6;w.shoot('player',s.x,s.y,Math.atan2(w.facing.y,w.facing.x),R.attack(s),{magic:s.weaponKind==='staff'});}else for(const target of this.targets(p,R.weaponRange(s)).slice(0,s.weaponKind==='axe'?3:s.weaponKind==='spear'?2:1))this.damage(p,target,R.attack(s));return true;}
+ skill(p){const w=p.w,s=w.state,f=R.FAMILIES[s.weaponKind];if(w.skillCooldown>0)return {ok:false,message:'Прийом ще відновлюється.'};if(s.mana<20)return {ok:false,message:'Потрібно 20 енергії.'};const q=this.target(p,f.range+60);if(!q)return {ok:false,message:'PvP-ціль надто далеко.'};this.aim(p,q);const angle=Math.atan2(w.facing.y,w.facing.x);s.mana-=20;w.skillCooldown=Math.max(5,f.cooldown-s.mastery[s.weaponKind].level*.2);w.swing=.3;w.recalling=null;w.gathering=null;w.selectedNode=null;
+  if(s.weaponKind==='bow')for(const spread of [-.15,0,.15])w.shoot('player',s.x,s.y,angle+spread,R.attack(s)*1.25,{range:400});
+  else if(s.weaponKind==='staff'){const cx=q.w.state.x,cy=q.w.state.y;w.emit('burst',{x:cx,y:cy,radius:110});for(const target of this.targets(p,f.range+60))if(Math.hypot(target.w.state.x-cx,target.w.state.y-cy)<110)this.damage(p,target,R.attack(s)*1.8);}
+  else if(s.weaponKind==='daggers'){if(this.damage(p,q,R.attack(s)*3.4)){s.hp=Math.min(R.maxHp(s),s.hp+22);w.emit('heal',{x:s.x,y:s.y-35,value:22});}}
+  else{if(s.weaponKind==='spear')for(let i=0;i<6;i++)w.moveEntity(s,Math.cos(angle)*12,Math.sin(angle)*12);const range=s.weaponKind==='spear'?165:130;w.emit('burst',{x:s.x,y:s.y,radius:range});for(const target of this.targets(p,range))this.damage(p,target,R.attack(s)*(s.weaponKind==='axe'?2.15:1.8));}return {ok:true,message:f.skill};
+ }
+ damage(p,q,amount){if(!this.canHit(p,q)||q.w.dashTime>0||q.w.random()<R.dodgeChance(q.w.state))return false;const value=Math.max(1,Math.round(amount-R.defence(q.w.state)));q.w.state.hp=Math.max(0,q.w.state.hp-value);q.w.hurt=.2;for(const player of [p,q]){player.pvpLastHit=player.w.time;player.w.lastCombat=player.w.time;player.w.recalling=null;player.w.gathering=null;player.w.selectedNode=null;}q.w.emit('damage',{x:q.w.state.x,y:q.w.state.y-50,value});if(q.w.state.hp<=0){const s=q.w.state;s.x=R.SPAWN.x;s.y=R.SPAWN.y;s.hp=Math.round(R.maxHp(s)*.65);s.mana=R.maxMana(s);q.pvpEnabled=false;q.pvpTarget=null;q.input={};q.w.projectiles=[];q.w.poison=0;q.w.dashTime=0;q.w.selected=null;p.w.state.pvpWins=(p.w.state.pvpWins||0)+1;q.w.emit('notice',{message:'Поразка у PvP. Ти в селі, речі та срібло збережено. PvP вимкнено.'});p.w.emit('notice',{message:'Перемога над '+q.name+'!'});}return true;}
+ projectile(p,shot,ax,ay,maxT){if(!shot.pvp)return false;const hits=[...this.realm.players.values()].filter(q=>this.canHit(p,q)).map(q=>({q,...pointDistance(ax,ay,shot.x,shot.y,q.w.state.x,q.w.state.y)})).filter(h=>h.t<=maxT&&h.d<18+shot.radius).sort((a,b)=>a.t-b.t);if(!hits.length)return false;this.damage(p,hits[0].q,shot.damage);return true;}
+ status(p){return {enabled:p.pvpEnabled,protected:p.w.nearCamp(),disableIn:Math.max(0,Math.ceil(10-(p.w.time-p.pvpLastHit))),wins:p.w.state.pvpWins||0};}
+ leave(p){p.pvpEnabled=false;p.pvpTarget=null;}
+}

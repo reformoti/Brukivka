@@ -22,7 +22,7 @@ test('all ten monster models render distinct finite geometry without mutating mo
   assert.equal(drawings.size,10);assert.equal(JSON.stringify(w),before);
 });
 test('monster facing and animations respond to real world state',()=>{
-  const w=world(),m={type:'wolf',x:500,y:500,phase:.2,alive:true,state:'chase'};
+  const w=world();w.state.x=300;const m={type:'wolf',x:500,y:500,phase:.2,alive:true,state:'chase'};
   const a=render(c=>M.monster(c,m,w));w.time=2.4;assert.notEqual(render(c=>M.monster(c,m,w)),a);
   const b=render(c=>M.monster(c,m,w));w.state.x=700;assert.notEqual(render(c=>M.monster(c,m,w)),b);
   const c=recorder();M.monster(c,{...m,alive:false},w);assert.equal(c.commands.length,0);
@@ -45,3 +45,4 @@ test('model integration preserves existing art icons and telegraphs',()=>{
   render(c=>art.drawNode(c,{id:0,type:'copper',x:0,y:0,charges:1},world()));
 });
 test('camp NPCs have distinct finite models and leave their data unchanged',()=>{const drawings=new Set();for(const [id,n] of Object.entries(R.TRADERS)){const npc={id,...n},before=JSON.stringify(npc);drawings.add(render(c=>M.trader(c,npc)));assert.equal(JSON.stringify(npc),before);}assert.equal(drawings.size,Object.keys(R.TRADERS).length);});
+test('village walls, eight signed houses and gate guards render finite geometry',()=>{for(const wall of R.WALLS)render(c=>M.wall(c,wall));for(const h of R.HOUSES)render(c=>M.house(c,h));for(const g of R.GUARDS)render(c=>M.guard(c,g));});
