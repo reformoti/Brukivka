@@ -35,7 +35,7 @@
     function paginate(root){for(const [selector,item,size] of [['.resource-list',':scope>.resource-row',4],['.recipe-grid',':scope>.recipe-card',3],['.contract-grid',':scope>.contract-offer',2]])root.querySelectorAll(selector).forEach(n=>window.BrukFit?.pages(n,item,size));}
     let inventoryUI=null;function renderInventory(){if(!inventoryUI)inventoryUI=window.BrukInventory.mount($('inventoryItems'),world,{result,notice:api.notice});inventoryUI.render();}
     function inventory(){renderInventory();$('inventoryNotice').textContent='';open($('inventoryDialog'));}
-    function renderMastery(){const root=$('masteryContent');$('talentPointCount').textContent=R.talentPoints(world.state)+' оч.';if(board)board.refresh();else board=window.BrukDestiny.mount(root,world,{train:id=>result(()=>world.train(id)),respec:()=>result(()=>world.respec())});}
+    function renderMastery(){const root=$('masteryContent');$('talentPointCount').textContent=R.talentPoints(world.state)+' оч.';if(board)board.refresh();else board=window.BrukDestiny.mount(root,world,{train:(id,count)=>result(()=>world.train(id,count)),respec:()=>result(()=>world.respec())});}
     function mastery(){open($('masteryDialog'));renderMastery();$('masteryNotice').textContent='';}
     function refresh(){if($('merchantDialog').open)renderTown();if($('inventoryDialog').open)renderInventory();if($('masteryDialog').open)renderMastery();}
     $('closeMerchant').addEventListener('click',()=>close($('merchantDialog')));$('closeInventory').addEventListener('click',()=>close($('inventoryDialog')));$('closeMastery').addEventListener('click',()=>close($('masteryDialog')));
