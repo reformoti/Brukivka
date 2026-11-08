@@ -13,3 +13,15 @@ dialog{background:linear-gradient(125deg,#343838,var(--hud-panel))!important;col
 
 /* Target HP is drawn beside its model; no central strip. */
 #targetHud{display:none!important}
+
+#townTabs{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:6px;overflow:visible;flex-shrink:0;padding:10px}#townTabs button{min-height:38px;padding:8px;font:600 11px Manrope,system-ui;white-space:normal}#townTabs button[aria-selected=true]{background:#d1b97c!important;color:#20291f!important;border-color:#e8d89c}.panel-filters [role=tab][aria-selected=true]{outline:1px solid #ddc78e}#merchantDialog .dialog-heading h2{font-size:20px}#merchantStock .resource-row{gap:10px}#merchantStock .resource-row small{min-width:170px}
+
+/* Keep the camp tabs and their scroll area above legacy workspace sizing. */
+#merchantDialog #townTabs{height:auto!important;flex:0 0 auto!important;grid-template-columns:repeat(4,minmax(0,1fr));padding:8px!important}
+#merchantDialog #merchantStock,#inventoryDialog #inventoryItems{overflow:auto!important;overscroll-behavior:contain}
+#merchantDialog #merchantStock .resource-row{height:auto!important;min-height:54px}
+#merchantDialog .dialog-heading{height:auto!important;flex:0 0 auto!important;min-height:48px}
+#merchantDialog #merchantNotice{height:auto;min-height:18px;flex:0 0 auto}
+#merchantDialog #merchantStock .resource-list{display:flex;flex-direction:column}
+#merchantDialog #merchantStock .resource-row>strong{flex:1;min-width:120px}
+#merchantDialog #merchantStock .resource-row>button{white-space:normal}

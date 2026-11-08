@@ -44,3 +44,4 @@ test('model integration preserves existing art icons and telegraphs',()=>{
   const art={icon:()=>'<svg/>',telegraphs:()=>42};const icon=art.icon,telegraphs=art.telegraphs;M.decorate(art,R);assert.equal(art.icon,icon);assert.equal(art.telegraphs,telegraphs);assert.equal(typeof art.drawMonster,'function');assert.equal(art.drawWeapon,M.weapon);
   render(c=>art.drawNode(c,{id:0,type:'copper',x:0,y:0,charges:1},world()));
 });
+test('camp NPCs have distinct finite models and leave their data unchanged',()=>{const drawings=new Set();for(const [id,n] of Object.entries(R.TRADERS)){const npc={id,...n},before=JSON.stringify(npc);drawings.add(render(c=>M.trader(c,npc)));assert.equal(JSON.stringify(npc),before);}assert.equal(drawings.size,Object.keys(R.TRADERS).length);});

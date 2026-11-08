@@ -1,5 +1,6 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {newDb} from 'pg-mem';import {WebSocket} from 'ws';import {createGameServer} from './server.mjs';import {normalizeName,passwordHash,verifyPassword} from './accounts.mjs';
-const password='a-long-private-passphrase';
+import test from 'node:test';import assert from 'node:assert/strict';import {newDb} from 'pg-mem';import {WebSocket} from 'ws';import {createGameServer} from './server.mjs';import {normalizeName,validPassword,passwordHash,verifyPassword} from './accounts.mjs';
+const password='abc123';
+test('password minimum is six, maximum 128; old long passwords remain valid',()=>{assert(!validPassword('12345'));assert(validPassword('123456'));assert(validPassword('a-long-private-passphrase'));assert(validPassword('a'.repeat(128)));assert(!validPassword('a'.repeat(129)));});
 test('password hashing is salted, non-plaintext and checks the password',async()=>{const a=await passwordHash(password),b=await passwordHash(password);assert.notEqual(a.hash,b.hash);assert.notEqual(a.hash,password);assert(await verifyPassword(password,{salt:a.salt,password_hash:a.hash}));assert(!await verifyPassword('wrong-password',{salt:a.salt,password_hash:a.hash}));assert.equal(normalizeName(' Alice '),'alice');});
 test('HTTP login, uniqueness, cookie auth, game movement, restart and logout',async t=>{
 const db=newDb({noAstCoverageCheck:true}),{Pool}=db.adapters.createPg();let app,cookie='',port,origin;const sockets=[];
@@ -9,6 +10,7 @@ async function join(){return await new Promise((resolve,reject)=>{const ws=new W
 t.after(async()=>{for(const s of sockets)s.terminate();if(app)await app.stop();});await launch();
 const page=await(await fetch(origin+'/')).text();assert(page.includes('id="worldCanvas"'));assert(page.includes('masteryContent'));assert(page.includes('online-config.js'));assert(!page.includes('id="gate"'));for(const file of ['realms-ui.js','realms-panels.js','homow-online.js','realms.css','game-shell.css','homow-online.css','fonts/Manrope.ttf'])assert.equal((await fetch(origin+'/'+file)).status,200);for(const file of ['client.js','market.js','style.css','.env.local','homow-server/server.mjs'])assert.equal((await fetch(origin+'/'+file)).status,404);
 assert.equal((await api('session')).body.username,null);assert.equal((await api('register',{username:'Alice',password},'https://evil.example')).status,403);
+assert.equal((await api('register',{username:'shortpass',password:'12345'})).status,400);
 const reg=await api('register',{username:'Alice',password});assert.equal(reg.status,201);assert.match(reg.cookie,/HttpOnly/);assert.match(reg.cookie,/SameSite=Strict/);cookie=reg.cookie.split(';')[0];assert.equal((await api('session')).body.username,'alice');
 assert.equal((await api('register',{username:'ALICE',password})).status,409);assert.equal((await api('login',{username:'alice',password:'wrong-password'})).status,401);
 const stored=db.public.many('SELECT * FROM homow_passwords')[0];assert.notEqual(stored.password_hash,password);assert(!JSON.stringify(db.public.many('SELECT * FROM homow_sessions')).includes(cookie.split('=')[1]));

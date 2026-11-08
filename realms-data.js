@@ -96,5 +96,16 @@
     recovery:{name:'Відновлення',branch:'Ремісник',description:'+2 здоров’я за секунду відновлення в таборі за ранг.',max:5,parent:'alchemist'},
     balanced:{name:'Збалансована зброя',branch:'Ремісник',description:'+1% шкоди та +0.5 захисту за ранг.',max:5,parent:'endurance'}
   });
-  return {WIDTH,HEIGHT,CAMP,SPAWN,TYPES,SPAWNS,OBSTACLES,WEAPONS,ARMOR,FAMILIES,ARMOR_KINDS,SUPPORTS,EXTRAS,RESOURCES,NODE_TYPES,NODES,TOOLS,RECIPES,TALENTS,CONTRACTS,VARIANTS,DEFAULT_VARIANTS,OUTFITS};
+  const TRADERS={
+    blacksmith:{name:'Коваль',role:'Зброя, лати та інструменти',icon:'sword',x:285,y:405,color:'#9c7452'},
+    mage:{name:'Маг',role:'Посохи, мантії та фокуси',icon:'staff',x:350,y:330,color:'#8d80b4'},
+    enchanter:{name:'Рунний майстер',role:'Зачарування спорядження .1–.4',icon:'crystal',x:445,y:340,color:'#73b9b1'},
+    armorer:{name:'Бронник',role:'Броня, шоломи, чоботи та плащі',icon:'plate',x:500,y:420,color:'#a3a798'},
+    alchemist:{name:'Алхімік',role:'Зілля та рецепти лікування',icon:'potion',x:470,y:515,color:'#96b26e'},
+    artificer:{name:'Ремісник',role:'Переробка, сумки та інструменти',icon:'bag',x:380,y:555,color:'#b29a6a'},
+    quartermaster:{name:'Інтендант',role:'Сховище та контракти',icon:'flag',x:285,y:495,color:'#8b9dab'},
+    market:{name:'Ринок',role:'Продаж ресурсів із сумки та сховища',icon:'resource_copper',x:275,y:445,color:'#c7ac78'}
+  };
+  function traderStock(id,slot,kind){const catalog={variant:VARIANTS,armor:ARMOR_KINDS,outfit:OUTFITS,support:SUPPORTS,extra:EXTRAS}[slot];if(!catalog||!Object.hasOwn(catalog,kind))return false;if(id==='blacksmith')return slot==='variant'&&VARIANTS[kind]?.family!=='staff'||slot==='armor'&&kind==='plate'||slot==='support'&&kind==='shield';if(id==='mage')return slot==='variant'&&VARIANTS[kind]?.family==='staff'||slot==='armor'&&kind==='cloth'||slot==='support'&&kind==='focus'||slot==='extra'&&kind==='cape';if(id==='armorer')return ['armor','outfit','extra','support'].includes(slot);if(id==='artificer')return slot==='extra'&&kind==='bag';return false;}
+  return {TRADERS,traderStock,WIDTH,HEIGHT,CAMP,SPAWN,TYPES,SPAWNS,OBSTACLES,WEAPONS,ARMOR,FAMILIES,ARMOR_KINDS,SUPPORTS,EXTRAS,RESOURCES,NODE_TYPES,NODES,TOOLS,RECIPES,TALENTS,CONTRACTS,VARIANTS,DEFAULT_VARIANTS,OUTFITS};
 });

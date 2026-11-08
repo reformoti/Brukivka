@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {R} from './world.mjs';
 const scrypt=promisify(rawScrypt),cookieName='homow_session',life=30*86400000;
 export const normalizeName=v=>typeof v==='string'&&/^[a-z0-9_]{3,24}$/.test(v.normalize('NFKC').trim().toLowerCase())?v.normalize('NFKC').trim().toLowerCase():null;
-export const validPassword=v=>typeof v==='string'&&v.length>=10&&v.length<=128;
+export const validPassword=v=>typeof v==='string'&&v.length>=6&&v.length<=128;
 const digest=v=>createHash('sha256').update(v).digest('hex');
 export async function passwordHash(password,salt=randomBytes(16).toString('hex')){return {salt,hash:(await scrypt(password,salt,64,{N:65536,r:8,p:1,maxmem:128*1024*1024})).toString('hex')};}
 export async function verifyPassword(password,record){const derived=await passwordHash(password,record?.salt||'0'.repeat(32)),expected=record?.password_hash||'0'.repeat(128);return timingSafeEqual(Buffer.from(derived.hash,'hex'),Buffer.from(expected,'hex'))&&!!record;}
@@ -25,7 +25,7 @@ export function createAccounts(pool,origin,onLogout=()=>{}){
  let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>2048){send(413,{error:'Запит завеликий.'});return;}}
  let data;try{data=JSON.parse(body);}catch{send(400,{error:'Невірний запит.'});return;}
  if(!data||typeof data!=='object'||Array.isArray(data)){send(400,{error:'Невірний запит.'});return;}
- const name=normalizeName(data.username),password=data.password;if(!name||!validPassword(password)){send(400,{error:'Логін: 3–24 латинські літери, цифри або _. Пароль: 10–128 символів.'});return;}
+ const name=normalizeName(data.username),password=data.password;if(!name||!validPassword(password)){send(400,{error:'Логін: 3–24 латинські літери, цифри або _. Пароль: 6–128 символів.'});return;}
  const now=Date.now();for(const [k,v] of attempts)if(v.until<now)attempts.delete(k);const rateKey=path+':'+name,rate=attempts.get(rateKey)||{count:0,until:now+60000};
  if(rate.count>=6||attempts.size>=4096||hashing>=2){send(429,{error:'Забагато спроб. Спробуй за хвилину.'});return;}rate.count++;attempts.set(rateKey,rate);hashing++;
  try{
