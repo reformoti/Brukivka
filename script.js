@@ -2130,6 +2130,7 @@
     const file = url.pathname.split('/').pop();
     if (url.origin !== location.origin || !steamGames.has(file)) return;
     event.preventDefault();
+    if(['homow.html','realms.html'].includes(file)&&window.BrukHoMoWLaunch){window.BrukHoMoWLaunch.open();return;}
     const license=Object.entries(window.BrukMining.GAMES).find(([,g])=>g.file===file)?.[0];
     if(license&&!save.mining.licenses.includes(license)){window.BrukMinerUI?.purchase(license);return;}
     steamLaunchLink = link;

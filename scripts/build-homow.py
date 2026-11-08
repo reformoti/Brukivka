@@ -3,15 +3,22 @@ from pathlib import Path
 import re,base64
 ROOT=Path(__file__).resolve().parents[1]
 source=(ROOT/'realms.html').read_text()
-def css(m):
- name=m.group(1).split('?')[0];text=(ROOT/name).read_text()
+def css_text(name,chain=()):
+ name=name.split('?')[0]
+ if name in chain:raise ValueError('Circular CSS import: '+name)
+ text=(ROOT/name).read_text()
+ def imported(m):
+  target=((ROOT/name).parent/m.group(2).split('?')[0]).relative_to(ROOT)
+  return css_text(str(target),chain+(name,))
+ text=re.sub(r"@import\s+url\((['\"]?)([^)\"']+)\1\)\s*;",imported,text)
  def embed(u):
-  file=(ROOT/name).parent/u.group(2)
-  if not file.exists():return u.group(0)
+  file=(ROOT/name).parent/u.group(2).split('?')[0]
+  if not file.is_file():return u.group(0)
   mime='font/ttf' if file.suffix=='.ttf' else 'image/webp'
   return "url('data:"+mime+';base64,'+base64.b64encode(file.read_bytes()).decode()+"')"
- text=re.sub(r'url\(([\"\']?)([^\)\"\']+)\1\)',embed,text)
- return '<style>\n'+text+'\n</style>'
+ return re.sub(r'url\(([\"\']?)([^\)\"\']+)\1\)',embed,text)
+def css(m):
+ return '<style>\n'+css_text(m.group(1))+'\n</style>'
 def js(m):
  name=m.group(1).split('?')[0]
  return '<script>\n'+(ROOT/name).read_text().replace('</script','<\\/script')+'\n</script>'

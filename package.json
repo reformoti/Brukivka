@@ -8,7 +8,7 @@
   "scripts": {
     "build": "node scripts/build-online.mjs",
     "start": "node --env-file-if-exists=.env --env-file-if-exists=.env.local homow-server/server.mjs",
-    "test:online": "node --test homow-server/test.mjs homow-server/accounts.test.mjs homow-server/full-client.test.mjs",
+    "test:online": "node --test homow-server/*.test.mjs homow-server/test.mjs",
     "test:db": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/verify-online-db.mjs"
   },
   "workspaces": [
