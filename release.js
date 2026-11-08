@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.6.0',date:'2026-11-08',name:'Frontlines and Runes'};
+  const release={version:'6.7.0',date:'2026-11-08',name:'Unified HoMoW Online'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
