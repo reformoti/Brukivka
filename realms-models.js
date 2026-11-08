@@ -154,6 +154,7 @@
   }
   function wall(c,o){c.save();c.fillStyle='#24372e66';c.fillRect(o.x+5,o.y+9,o.w+8,o.h+6);rect(c,o.x,o.y-8,o.w,o.h+8,2,'#7f7d68','#c5b58d');const horizontal=o.w>o.h,length=horizontal?o.w:o.h;for(let n=0;n<length;n+=36){const x=o.x+(horizontal?n:0),y=o.y+(horizontal?0:n);rect(c,x,y-12,14,18,2,'#a39b7c','#4c5549');}c.restore();}
   function guard(c,n){player(c,{state:{x:n.x,y:n.y,armor:3,armorKind:'plate',supportKind:'shield',weaponKind:'spear'},time:0,footstep:0,swing:0,facing:{x:1,y:0}},false,weapon);c.save();c.font='700 11px system-ui';c.textAlign='center';c.strokeStyle='#192a27';c.lineWidth=3;c.strokeText('ВАРТА',n.x,n.y-86);c.fillStyle='#e1d3a8';c.fillText('ВАРТА',n.x,n.y-86);c.restore();}
+  function billboard(c,n){c.save();c.translate(n.x,n.y);oval(c,0,5,89,12,'#20302677');rect(c,-63,-65,10,72,2,'#65543d','#b59c6d');rect(c,53,-65,10,72,2,'#65543d','#b59c6d');rect(c,-84,-105,168,86,5,'#263c37','#c6b279');rect(c,-75,-96,150,68,2,'#3d5146');c.textAlign='center';c.font='700 13px system-ui';c.fillStyle='#f1d999';c.fillText('ТОП ГРАВЦІВ',0,-75);c.font='600 10px system-ui';c.fillStyle='#c4cbb5';c.fillText('LV · KILLS · ◈ · 1×1',0,-55);c.fillText('E · відкрити',0,-37);c.restore();}
   function rock(c,o){
     c.save();c.translate(o.x,o.y);oval(c,o.w*.58,o.h-2,o.w*.58,14,'#1b2b2855');facet(c,0,0,o.w,o.h,'#b0b1a0','#838d81','#566961');
     line(c,[[o.w*.53,o.h*.4],[o.w*.38,o.h*.69],[o.w*.46,o.h*.95]],'#3e514a',2);line(c,[[o.w*.68,o.h*.25],[o.w*.8,o.h*.32]],'#d0c9a7',2);
@@ -257,5 +258,5 @@
   function drop(c,d){c.save();c.translate(d.x,d.y);oval(c,3,9,14,5,'#20322966');shape(c,[[-8,-11],[-12,4],[-6,10],[8,8],[12,1],[7,-12]],'#9f8860','#3d4a3c');line(c,[[-7,-9],[8,-10]],'#d3bc85',3);line(c,[[0,-9],[0,6]],'#c2a67a',1.5);oval(c,8,-12,4,3,'#d1bc85');c.restore();}
 
   function decorate(art,R){variantCatalog=R.VARIANTS||{};art.drawMonster=(c,m,w)=>{const info=R.TYPES[m.type];if(!info?.model)return monster(c,m,w);c.save();c.filter=m.type==='wraith'?'hue-rotate(70deg)':m.type==='salamander'?'sepia(.6) saturate(2)':'none';monster(c,{...m,type:info.model},w);c.filter='none';c.strokeStyle=info.skin;c.fillStyle=info.skin;c.lineWidth=3;c.beginPath();if(m.type==='treant'){c.moveTo(m.x-15,m.y-70);c.lineTo(m.x-28,m.y-95);c.lineTo(m.x-39,m.y-92);c.moveTo(m.x+15,m.y-70);c.lineTo(m.x+26,m.y-97);}else if(m.type==='frostgiant'){for(let i=0;i<5;i++){c.moveTo(m.x-30+i*15,m.y-110);c.lineTo(m.x-25+i*15,m.y-135);c.lineTo(m.x-20+i*15,m.y-110);}}else{c.arc(m.x,m.y-65,9,0,Math.PI*2);}c.stroke();c.restore();};art.drawWeapon=weapon;art.drawNode=(c,n,w)=>node(c,n,w,R);}
-  return {wall,guard,trader,setGraphics:p=>{graphics={...graphics,...p};},monster,tree,house,rock,node,player,camp,weapon,drop,decorate};
+  return {billboard,wall,guard,trader,setGraphics:p=>{graphics={...graphics,...p};},monster,tree,house,rock,node,player,camp,weapon,drop,decorate};
 });

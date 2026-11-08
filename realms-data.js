@@ -1,7 +1,7 @@
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.BrukRealmsData=factory();})(typeof window==='undefined'?globalThis:window,function(){
   'use strict';
-  const WIDTH=3200,HEIGHT=2200,CAMP={x:500,y:470},SPAWN={x:520,y:530};
-  const VILLAGE={x:70,y:90,w:880,h:780,gate:{x:950,y:500}},inVillage=(x,y)=>x>VILLAGE.x&&x<VILLAGE.x+VILLAGE.w&&y>VILLAGE.y&&y<VILLAGE.y+VILLAGE.h;
+  const WIDTH=5200,HEIGHT=3600,CAMP={x:500,y:470},SPAWN={x:520,y:530};
+  const VILLAGE={x:70,y:90,w:880,h:780,gate:{x:950,y:500},exits:[{x:950,y:500},{x:355,y:90},{x:600,y:870},{x:70,y:590}]},inVillage=(x,y)=>x>VILLAGE.x&&x<VILLAGE.x+VILLAGE.w&&y>VILLAGE.y&&y<VILLAGE.y+VILLAGE.h;
   const TYPES={
     slime:{name:'Лісовий слиз',hp:65,damage:8,speed:67,range:30,aggro:195,leash:330,cooldown:1.4,xp:20,silver:22,radius:19,color:'#9cbd70',loot:{fiber:1},respawn:18},
     wolf:{name:'Дикий вовк',hp:115,damage:14,speed:106,range:34,aggro:245,leash:390,cooldown:1.3,xp:38,silver:42,radius:20,color:'#b5b5a2',loot:{hide:2},respawn:24},
@@ -19,14 +19,19 @@
   for(const [id,m] of Object.entries(additions))TYPES[id]={...TYPES[m.base],...m,model:m.base,color:m.skin};
   SPAWNS.push(['rat',720,720],['rat',990,820],['rat',1020,1320],['rogue',1680,1240],['rogue',1960,1660],['wraith',2380,1480],['wraith',2740,1460],['salamander',1790,1740],['salamander',2080,1810],['treant',1530,1940],['treant',1970,2030],['frostgiant',2990,2040]);
   const HOUSES=[['blacksmith',150,150],['mage',400,135],['enchanter',650,150],['armorer',150,420],['alchemist',650,420],['artificer',150,665],['quartermaster',400,690],['market',650,665]].map(([owner,x,y])=>({owner,x,y,w:150,h:115,type:'house'}));
-  const WALLS=[{x:70,y:90,w:880,h:14},{x:70,y:870,w:880,h:14},{x:70,y:90,w:14,h:780},{x:950,y:90,w:14,h:330},{x:950,y:580,w:14,h:304}].map(o=>({...o,type:'wall'}));
+  const wallLines=[{x:70,y:90,w:245,h:14},{x:395,y:90,w:555,h:14},{x:70,y:870,w:490,h:14},{x:640,y:870,w:310,h:14},{x:70,y:90,w:14,h:450},{x:70,y:640,w:14,h:230},{x:950,y:90,w:14,h:330},{x:950,y:580,w:14,h:304}];
+  const WALLS=wallLines.flatMap(o=>{const horizontal=o.w>o.h,length=horizontal?o.w:o.h,parts=[];for(let n=0;n<length;n+=180)parts.push({...o,x:o.x+(horizontal?n:0),y:o.y+(horizontal?0:n),w:horizontal?Math.min(180,length-n):o.w,h:horizontal?o.h:Math.min(180,length-n),type:'wall'});return parts;});
+  const BILLBOARD={x:350,y:610,name:'Дошка пошани'};
+  const ZONES=[{id:'sanctuary',x:4300,y:780,name:'Прадавнє святилище',boss:'ancient',level:20},{id:'citadel',x:4600,y:3050,name:'Крижана цитадель',boss:'frostgiant',level:25}];
   const GUARDS=[{id:'gate_north',x:925,y:435,name:'Варта',color:'#84979b'},{id:'gate_south',x:925,y:565,name:'Варта',color:'#84979b'}];
   const OBSTACLES=[...HOUSES,...WALLS,{x:1380,y:170,w:290,h:205,type:'water'},{x:1000,y:930,w:180,h:170,type:'water'},{x:1940,y:260,w:100,h:65,type:'rock'},{x:1700,y:735,w:105,h:75,type:'rock'},{x:2230,y:1160,w:90,h:70,type:'rock'},{x:2100,y:1380,w:230,h:170,type:'water'},{x:2780,y:270,w:130,h:85,type:'rock'},{x:2590,y:1950,w:120,h:75,type:'rock'}];
+  OBSTACLES.push({x:3750,y:400,w:230,h:180,type:'water'},{x:4650,y:500,w:130,h:70,type:'rock'},{x:4250,y:2800,w:190,h:100,type:'rock'},{x:4750,y:3220,w:170,h:110,type:'water'});
   const progression={slime:[1,95,10,0,18],rat:[2,160,19,2,32],wolf:[3,260,32,6,62],boar:[4,400,38,9,90],spider:[5,330,34,10,110],bandit:[6,570,44,13,160],golem:[7,950,54,18,220],skeleton:[8,800,60,19,275],mage:[9,690,68,16,340],rogue:[10,1000,76,22,420],bear:[11,1500,85,25,500],wraith:[13,1400,105,28,720],salamander:[15,2000,125,33,950],treant:[17,3400,150,42,1200],ancient:[20,7200,200,60,2100],frostgiant:[25,12500,280,80,3800]};
   for(const [id,[level,hp,damage,defence,xp]] of Object.entries(progression))Object.assign(TYPES[id],{level,hp,damage,defence,xp});
   // Keep spawn IDs and types stable for saved kills and respawn timers.
   Object.assign(SPAWNS[0],['slime',1060,510]);Object.assign(SPAWNS[1],['slime',1100,700]);Object.assign(SPAWNS[2],['slime',1250,380]);Object.assign(SPAWNS[3],['slime',1250,800]);Object.assign(SPAWNS[40],['rat',1040,150]);
   Object.assign(SPAWNS[16],['boar',1470,980]);
+  Object.assign(SPAWNS[39],['ancient',4300,780]);Object.assign(SPAWNS[51],['frostgiant',4600,3050]);Object.assign(SPAWNS[45],['wraith',4010,850]);Object.assign(SPAWNS[46],['wraith',4500,1050]);Object.assign(SPAWNS[47],['salamander',3950,2380]);Object.assign(SPAWNS[48],['salamander',4750,2700]);Object.assign(SPAWNS[49],['treant',3400,2200]);Object.assign(SPAWNS[50],['treant',4050,3200]);
   const WEAPONS=[{name:'Дорожній меч',cost:0},{name:'Залізний клинок',cost:160},{name:'Клинок мандрівника',cost:400},{name:'Срібний палаш',cost:850},{name:'Меч вартового',cost:1600},{name:'Клинок світанку',cost:2900}];
   WEAPONS.push({name:'Клинок міфрилу',cost:5200},{name:'Клинок реліквії',cost:9400},{name:'Клинок безсмертя',cost:17000});
   const ARMOR=[{name:'Дорожній одяг',cost:0},{name:'Шкіряний жилет',cost:140},{name:'Кольчуга',cost:360},{name:'Ламелярний обладунок',cost:800},{name:'Панцир вартового',cost:1500},{name:'Обладунок світанку',cost:2700}];
@@ -48,6 +53,7 @@
   const NODE_TYPES={copper:{resource:'copper',name:'Мідна жила',tool:'pickaxe',required:0,charges:4,seconds:2.3,respawn:25,xp:5},iron:{resource:'iron',name:'Залізна жила',tool:'pickaxe',required:1,charges:4,seconds:3,respawn:35,xp:8},mithril:{resource:'mithril',name:'Міфрилова жила',tool:'pickaxe',required:2,charges:3,seconds:3.6,respawn:50,xp:12},crystal:{resource:'crystal',name:'Рунічна друза',tool:'pickaxe',required:3,charges:3,seconds:4,respawn:60,xp:15},stone:{resource:'stone',name:'Кам’яна брила',tool:'pickaxe',required:0,charges:4,seconds:2,respawn:25,xp:4},wood:{resource:'wood',name:'Дерево для рубки',tool:'axe',required:0,charges:5,seconds:2.1,respawn:28,xp:4},fiber:{resource:'fiber',name:'Дикі льони',tool:'sickle',required:0,charges:4,seconds:1.8,respawn:22,xp:4},herb:{resource:'herb',name:'Лікувальні трави',tool:'sickle',required:0,charges:3,seconds:2,respawn:30,xp:5}};
   const NODES=[['copper',610,730],['copper',890,350],['copper',570,1100],['copper',1030,1330],['iron',1320,390],['iron',1510,1130],['iron',1840,920],['iron',2040,1750],['mithril',2350,730],['mithril',2670,1190],['mithril',2960,1620],['crystal',2620,1610],['crystal',2940,1940],['crystal',3020,450],['stone',830,800],['stone',1280,1000],['stone',1830,630],['wood',540,800],['wood',700,250],['wood',990,780],['wood',1300,1770],['wood',1770,1360],['fiber',540,540],['fiber',790,1290],['fiber',1580,1560],['herb',330,850],['herb',820,520],['herb',1190,1830],['herb',2010,1220]].map(([type,x,y],id)=>({id,type,x,y}));
   Object.assign(NODES[17],{x:600,y:900});Object.assign(NODES[18],{x:820,y:300});
+  for(const [type,x,y] of [['mithril',3900,600],['crystal',4500,850],['wood',3500,1200],['herb',3700,1800],['mithril',4400,2700],['crystal',4750,3000],['iron',3350,2000],['stone',3600,2800]])NODES.push({id:NODES.length,type,x,y});
   const TOOLS={pickaxe:{name:'Кирка',description:'T1 відкриває залізо, T2 — міфрил, T3 — кристали.'},axe:{name:'Сокира лісоруба',description:'Кожен рівень прискорює рубку.'},sickle:{name:'Серп',description:'Кожен рівень прискорює збір волокна та трав.'}};
   const RECIPES={
     copper_ingot:{name:'Виплавити мідь',input:{copper:2},output:{copper_ingot:1},fee:2,xp:12},
@@ -118,5 +124,5 @@
   };
   for(const h of HOUSES)Object.assign(h,{name:TRADERS[h.owner].name,color:TRADERS[h.owner].color});
   function traderStock(id,slot,kind){const catalog={variant:VARIANTS,armor:ARMOR_KINDS,outfit:OUTFITS,support:SUPPORTS,extra:EXTRAS}[slot];if(!catalog||!Object.hasOwn(catalog,kind))return false;if(id==='blacksmith')return slot==='variant'&&VARIANTS[kind]?.family!=='staff'||slot==='armor'&&kind==='plate'||slot==='support'&&kind==='shield';if(id==='mage')return slot==='variant'&&VARIANTS[kind]?.family==='staff'||slot==='armor'&&kind==='cloth'||slot==='support'&&kind==='focus'||slot==='extra'&&kind==='cape';if(id==='armorer')return ['armor','outfit','extra','support'].includes(slot);if(id==='artificer')return slot==='extra'&&kind==='bag';return false;}
-  return {VILLAGE,inVillage,HOUSES,WALLS,GUARDS,TRADERS,traderStock,WIDTH,HEIGHT,CAMP,SPAWN,TYPES,SPAWNS,OBSTACLES,WEAPONS,ARMOR,FAMILIES,ARMOR_KINDS,SUPPORTS,EXTRAS,RESOURCES,NODE_TYPES,NODES,TOOLS,RECIPES,TALENTS,CONTRACTS,VARIANTS,DEFAULT_VARIANTS,OUTFITS};
+  return {BILLBOARD,ZONES,VILLAGE,inVillage,HOUSES,WALLS,GUARDS,TRADERS,traderStock,WIDTH,HEIGHT,CAMP,SPAWN,TYPES,SPAWNS,OBSTACLES,WEAPONS,ARMOR,FAMILIES,ARMOR_KINDS,SUPPORTS,EXTRAS,RESOURCES,NODE_TYPES,NODES,TOOLS,RECIPES,TALENTS,CONTRACTS,VARIANTS,DEFAULT_VARIANTS,OUTFITS};
 });
