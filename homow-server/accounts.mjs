@@ -1,3 +1,4 @@
+import {ownerName} from './owner.mjs';
 import {randomBytes,randomUUID,scrypt as rawScrypt,timingSafeEqual,createHash} from 'node:crypto';
 import {promisify} from 'node:util';
 import {readFile} from 'node:fs/promises';
@@ -26,6 +27,7 @@ export function createAccounts(pool,origin,onLogout=()=>{}){
  let data;try{data=JSON.parse(body);}catch{send(400,{error:'Невірний запит.'});return;}
  if(!data||typeof data!=='object'||Array.isArray(data)){send(400,{error:'Невірний запит.'});return;}
  const name=normalizeName(data.username),password=data.password;if(!name||!validPassword(password)){send(400,{error:'Логін: 3–24 латинські літери, цифри або _. Пароль: 6–128 символів.'});return;}
+ if(path==='/api/auth/register'&&name===ownerName){send(409,{error:'Цей логін недоступний.'});return;}
  const now=Date.now();for(const [k,v] of attempts)if(v.until<now)attempts.delete(k);const rateKey=path+':'+name,rate=attempts.get(rateKey)||{count:0,until:now+60000};
  if(rate.count>=6||attempts.size>=4096||hashing>=2){send(429,{error:'Забагато спроб. Спробуй за хвилину.'});return;}rate.count++;attempts.set(rateKey,rate);hashing++;
  try{

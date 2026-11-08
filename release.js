@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.11.0',date:'2026-11-08',name:'Frontiers, Duels and Rankings'};
+  const release={version:'6.12.0',date:'2026-11-08',name:'Bosses, Mounts and Equipment'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
