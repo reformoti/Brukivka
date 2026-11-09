@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.14.0',date:'2026-11-08',name:'Compact Skill Clusters'};
+  const release={version:'6.15.0',date:'2026-11-09',name:'HoMoW Progress Update'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

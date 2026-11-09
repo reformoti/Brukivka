@@ -1,3 +1,11 @@
+# v6.15.0 · 2026-11-09
+
+- HoMoW now has a lower, smoother XP curve for leveling.
+- Added the owner-only DOWNLVL(n) command; it cannot lower a character below level 1 and clears partial XP.
+- Crafting consumes materials without charging silver. HOI time advancement now avoids frequent idle polling.
+- The minimap follows the player and no longer reveals monster or resource positions; local terrain and buildings are easier to distinguish.
+- HoMoW music defaults to track 6 at 5% volume and repeats the track. Playback begins on the first user interaction because browsers block audible autoplay.
+
 # v6.14.0 · 2026-11-08
 
 - Дерево прокачки згорнуто в 11 компактних клубків. Замість 1305 повторюваних рангів — 51 вузол з поточним рівнем і максимумом. Гілки розкриваються натисканням або списком; є повернення до огляду та згортання.
