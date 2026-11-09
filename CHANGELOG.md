@@ -1,3 +1,31 @@
+# v6.18.0 · 2026-11-09
+
+- HoMoW запускается как локальная одиночная игра из файла `homow.html`; Steam больше не перенаправляет на приостановленный Render-сервис.
+- Прогресс HoMoW сохраняется локально в браузере. Онлайн-сервис временно не используется; существующие онлайн-аккаунты и серверная база не затрагиваются.
+
+# v6.17.0 · 2026-11-09
+
+- HoMoW now attempts to start track 6 when the page opens, at 5% volume with repeat enabled; browsers that block autoplay start it on the first interaction.
+- Added phone app ordering, a first-open tutorial, purchased wallpaper styling, vine maze visuals, and the second route palette.
+- Added a separate free crafting screen and owner-only 100 million / 500 thousand balance shortcuts.
+- Reduced HoI idle timer polling and added the owner-only DOWNLVL(n) command.
+
+# v6.16.0 · 2026-11-09
+
+- Phone programs now follow their introduction order; the Account app appears at the end.
+- Added first-open basics tutorial. Phone backgrounds follow the purchased wallpaper theme.
+- Added a separate materials-only crafting screen in HoMoW and owner-only quick grants of 100 million or 500 thousand silver.
+- Owner balance cap raised to 100 million.
+- First delivery route uses a vine-and-brush maze; the second route has a warm ruin palette.
+
+# v6.15.0 · 2026-11-09
+
+- HoMoW now has a lower, smoother XP curve for leveling.
+- Added the owner-only DOWNLVL(n) command; it cannot lower a character below level 1 and clears partial XP.
+- Crafting consumes materials without charging silver. HOI time advancement now avoids frequent idle polling.
+- The minimap follows the player and no longer reveals monster or resource positions; local terrain and buildings are easier to distinguish.
+- HoMoW music defaults to track 6 at 5% volume and repeats the track. Playback begins on the first user interaction because browsers block audible autoplay.
+
 # v6.14.0 · 2026-11-08
 
 - Дерево прокачки згорнуто в 11 компактних клубків. Замість 1305 повторюваних рангів — 51 вузол з поточним рівнем і максимумом. Гілки розкриваються натисканням або списком; є повернення до огляду та згортання.
