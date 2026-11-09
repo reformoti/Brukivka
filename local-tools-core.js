@@ -8,13 +8,5 @@
     else return false;
     return true;
   }
-  function realm(world,text,R){
-    const m=typeof text==='string'&&/^(UPLVL|DOWNLVL|GIVEMONEY)\(([1-9]\d{0,8})\)$/.exec(text.trim());
-    if(!m)return false;
-    const n=Number(m[2]),s=world.state;
-    if(m[1]==='GIVEMONEY'){if(s.silver+n>100000000)return false;world.creditSilver(n);}
-    else{s.level=m[1]==='UPLVL'?Math.min(R.levelCap(s),s.level+n):Math.max(1,s.level-n);s.xp=0;s.hp=m[1]==='UPLVL'?R.maxHp(s):Math.min(s.hp,R.maxHp(s));s.mana=m[1]==='UPLVL'?R.maxMana(s):Math.min(s.mana,R.maxMana(s));}
-    return true;
-  }
-  return {apply,realm};
+  return {apply};
 });

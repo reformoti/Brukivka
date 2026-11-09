@@ -39,3 +39,15 @@
 #phoneShell .gear-grid{grid-template-columns:minmax(0,1fr)!important}
 #phoneShell .bank-balance strong{font-size:26px}
 #phoneShell .release-card{flex-wrap:wrap}
+
+/* The account tools use an enlarged landscape handset; ordinary apps keep portrait. */
+#phoneShell.phone-shell{transition:width .3s ease,height .3s ease,border-radius .3s ease}
+#phoneShell.phone-tools-wide{width:min(1000px,calc(100vw - 48px))!important;height:min(620px,calc(100dvh - 48px))!important;max-width:1000px!important;border-radius:38px!important;animation:phone-tools-turn .3s ease-out}
+#phoneShell.phone-tools-wide .phone-statusbar{position:absolute;left:0;top:0;bottom:0;width:35px;height:auto;padding:0;writing-mode:vertical-rl;justify-content:space-between;gap:15px;overflow:hidden}
+#phoneShell.phone-tools-wide .phone-statusbar>span{display:none}#phoneShell.phone-tools-wide .camera-dot{position:absolute;top:calc(50% - 32px);left:9px;transform:rotate(90deg);transform-origin:8px 8px}
+#phoneShell.phone-tools-wide #localToolsScreen{inset:14px 38px 14px 40px!important;padding:14px 20px!important}#phoneShell.phone-tools-wide .screen-header{font-size:16px;min-height:44px;padding-right:24px}
+#phoneShell.phone-tools-wide .phone-nav{left:auto;right:4px;top:0;bottom:0;width:25px;height:auto;display:flex;align-items:center}#phoneShell.phone-tools-wide .phone-nav button{width:25px;height:110px}#phoneShell.phone-tools-wide .phone-nav button:after{top:10px;bottom:10px;left:11px;right:auto;width:4px;height:auto}
+#phoneShell.phone-tools-wide .close-phone{top:13px;right:8px}#phoneShell.phone-tools-wide #brukivkaTools{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}#phoneShell.phone-tools-wide .local-tools-body{padding:14px 0;font-size:16px}#phoneShell.phone-tools-wide [data-local-tool]{min-height:64px;padding:14px 18px;text-align:left}#phoneShell.phone-tools-wide .local-tools-body p{font-size:14px}
+@keyframes phone-tools-turn{from{transform:rotate(-6deg) scale(.85);opacity:.8}to{transform:rotate(0) scale(1);opacity:1}}
+@media(max-height:540px){#phoneShell.phone-tools-wide [data-local-tool]{min-height:46px;padding:10px}#phoneShell.phone-tools-wide #brukivkaTools{gap:9px}}
+@media(prefers-reduced-motion:reduce){#phoneShell.phone-shell{transition:none}#phoneShell.phone-tools-wide{animation:none}}

@@ -122,7 +122,14 @@
     selectMount(id){if(!has(this.state.mounts,id)||this.inCombat())return {ok:false,message:'Скакун недоступний або триває бій.'};this.dismount();this.state.selectedMount=id;return {ok:true,message:'Скакуна обрано.'};}
     toggleMount(){const s=this.state;if(s.mounted||this.mounting!==null){this.dismount();return {ok:true,message:'Ти спішився.'};}if(!s.selectedMount||s.mountHp[s.selectedMount]<=0||this.inCombat()||this.now()<s.mountReadyAt)return {ok:false,message:'Скакун недоступний. Віднови його у селі або зачекай завершення бою.'};this.mounting=0;return {ok:true,message:'Сідай верхи · 1.5 с без руху.'};}
     setAppearance(value){if(typeof value!=='string')return {ok:false,message:'Не виконано.'};const keys=Object.keys(D.APPEARANCE),values=value.split('|');if(values.length!==keys.length||keys.some((key,i)=>!has(D.APPEARANCE[key],values[i])))return {ok:false,message:'Не виконано.'};this.state.appearance=Object.fromEntries(keys.map((key,i)=>[key,values[i]]));return {ok:true,message:'Вигляд збережено.'};}
-    entry(){return {ok:false,message:'Не виконано.'};}
+    entry(text){
+      const m=typeof text==='string'&&/^(UPLVL|DOWNLVL|GIVEMONEY)\(([1-9]\d{0,8})\)$/.exec(text.trim());
+      if(!m)return {ok:false,message:'Не виконано.'};
+      const s=this.state,n=Number(m[2]);
+      if(m[1]==='GIVEMONEY'){if(s.silver+n>MAX)return {ok:false,message:'Ліміт срібла.'};this.creditSilver(n);}
+      else{s.level=m[1]==='UPLVL'?Math.min(levelCap(s),s.level+n):Math.max(1,s.level-n);s.xp=0;s.hp=m[1]==='UPLVL'?maxHp(s):Math.min(s.hp,maxHp(s));s.mana=m[1]==='UPLVL'?maxMana(s):Math.min(s.mana,maxMana(s));this.emit('level',{level:s.level});}
+      return {ok:true,message:'Готово.'};
+    }
     setSkill(id){if(this.inCombat()||!D.SKILL_CHOICES[this.state.weaponKind].some(k=>k.id===id))return {ok:false,message:'Уміння недоступне або триває бій.'};this.state.weaponSkills[this.state.weaponKind]=id;return {ok:true,message:'Уміння обрано.'};}
     extraSkill(adapter){return S.perform(this,{attack,maxHp},adapter||{targets:r=>this.closest(r),position:m=>m,hit:(m,n)=>this.hitMonster(m,n,'ability'),slow:(m,n)=>m.slow=n,dot:(m,n)=>{m.burn=3;m.burnTick=0;m.burnPower=n;m.burnOwner=this.ownerId||null;}});}
     now(){return this.epoch+this.time*1000;}
