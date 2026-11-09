@@ -28,16 +28,6 @@
   function renderPaint(root){window.BrukPaint.mount(root);}
   function renderGallery(root){window.BrukPaint.gallery(root);}
   function renderExchange(root){window.BrukExchange.mount(root);}
-  function renderWorkshop(root){
-    root.append(heading('BrukWorkshop','Мініатюрна виробнича лінія: зібрати 3 камені → випалити заготовку → зробити одну бруківку. Збери партію з 10 штук.'));
-    const line=document.createElement('div');line.className='workshop-line';
-    const cards=[['01 / СИРОВИНА',state.raw+' каменів','Зібрати камінь',()=>{state.raw++;},false],
-      ['02 / ПІЧ',state.baked+' заготовок','Випалити · 3 камені',()=>{if(state.raw<3)return;state.raw-=3;state.baked++;},state.raw<3],
-      ['03 / МАЙСТЕРНЯ',state.bricks+' бруківок','Сформувати бруківку',()=>{if(!state.baked)return;state.baked--;state.bricks++;state.produced++;},!state.baked]];
-    cards.forEach(([label,value,copy,action,disabled])=>{const card=document.createElement('article');card.append(stat(label,value),button(copy,()=>{action();persist();render();if(state.bricks&&state.produced%10===0)notice('Партію з 10 бруківок зібрано! Майстерня працює.');},disabled));line.append(card);});root.append(line);
-    const progress=document.createElement('progress');progress.max=10;progress.value=state.produced%10;progress.setAttribute('aria-label','Прогрес поточної партії');root.append(progress);
-    const p=document.createElement('p');p.className='preview-caption';p.textContent=`Готових партій: ${Math.floor(state.produced/10)} · У поточній: ${state.produced%10}/10. Готові секції можна передати на свою ділянку через магазин нижче.`;root.append(p);mountShop(root,'workshop','bricks');
-  }
   function renderDispatch(root){
     root.append(heading('BrukDispatch','Обери маршрут і відправ фургон з бруківкою. Довші маршрути дають більше очок логістики.'));
     const summary=document.createElement('div');summary.className='preview-stats';summary.append(stat('ДОСТАВОК',state.deliveries),stat('ОЧКИ ЛОГІСТИКИ',state.points));root.append(summary);
@@ -55,8 +45,8 @@
     if(p>=1){state.deliveries++;state.points+=trip.points;const name=trip.name;trip=null;persist();if(selected==='dispatch'&&!$('pcPreviewPanel').classList.contains('hidden'))render();notice(`Доставлено: ${name}!`);}
   }
   function mountShop(root,source,field){window.BrukRewardShop.mount(root,source,{balance:()=>state[field],snapshot:()=>JSON.stringify(state),debit:cost=>{if(state[field]<cost)return false;state[field]-=cost;return persist();},restore:snapshot=>{state=JSON.parse(snapshot);persist();}},render);}
-  const renderers={miner:root=>window.BrukMinerUI.mount(root),paint:renderPaint,gallery:renderGallery,exchange:renderExchange,workshop:renderWorkshop,dispatch:renderDispatch};
-  const titles={miner:'BrukCoin Miner',paint:'BrukPaint',gallery:'Мої малюнки',exchange:'BrukExchange',workshop:'BrukWorkshop',dispatch:'BrukDispatch'};
+  const renderers={miner:root=>window.BrukMinerUI.mount(root),paint:renderPaint,gallery:renderGallery,exchange:renderExchange,dispatch:renderDispatch};
+  const titles={miner:'BrukCoin Miner',paint:'BrukPaint',gallery:'Мої малюнки',exchange:'BrukExchange',dispatch:'BrukDispatch'};
   function render(){window.BrukPaint.leave();const root=$('pcPreviewContent');root.replaceChildren();$('pcPreviewBadge').textContent=selected==='miner'?'GPU / BRC':selected==='paint'?'СТУДІЯ':selected==='gallery'?'ПАПКА':selected==='exchange'?'TRADE HUB':selected==='workshop'?'ВИРОБНИЦТВО':'ЛОГІСТИКА';$('pcPreviewTitle').textContent=titles[selected];renderers[selected](root);window.BrukHelp?.fold(root);window.BrukWorkspace?.prepare(root,selected);}
   window.BrukPcApps={open(id){if(!renderers[id])return;selected=id;notice('');render();}};
   function frame(time){if(trip&&time-lastTick>60){lastTick=time;tickDispatch();}requestAnimationFrame(frame);}requestAnimationFrame(frame);

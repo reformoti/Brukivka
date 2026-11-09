@@ -1699,7 +1699,6 @@
     $('pcOpenButton').classList.toggle('hidden', false);
     $('pcPowerSummary').textContent = `${window.BrukMining.GPU[save.pcUpgrades.gpu].name} · ${(window.BrukMining.rate(save.pcUpgrades.gpu)/1000*60).toFixed(2)} BRC/хв`;
     $('pcSpecsLabel').textContent = `CPU ${save.pcUpgrades.cpu} · GPU ${save.pcUpgrades.gpu} · RAM ${save.pcUpgrades.ram}`;
-    $('pcDesktopPower').textContent = `+${pcAimBonus()} px до цілі`;
     const monitor=MONITORS[save.monitorTier];
     $('pcMonitorStatus').textContent=`${monitor.name} · ${monitor.resolution}`;
     $('pcMonitorUpgrade').disabled=!save.pcOwned||save.monitorTier>=MONITORS.length-1||save.balance<monitor.cost;
@@ -1747,7 +1746,6 @@
     win.classList.remove('monitor-off','monitor-crt','monitor-hd','monitor-fhd','monitor-ultra');
     win.classList.add(['monitor-off','monitor-crt','monitor-hd','monitor-fhd','monitor-ultra'][save.monitorTier]);
     $('monitorBlackScreen').classList.toggle('hidden',save.monitorTier!==0);
-    $('pcMonitorBadge').textContent=MONITORS[save.monitorTier].resolution;
   }
   $('pcMonitorUpgrade').addEventListener('click',()=>{
     if(!save.pcOwned||save.monitorTier>=MONITORS.length-1)return;

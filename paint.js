@@ -87,7 +87,7 @@
   function persistDraft(){try{localStorage.setItem(DRAFT,JSON.stringify({name,fileId,dirty,document:doc}));return true;}catch{notice('Чернетку не збережено: у сховищі браузера бракує місця. Завантаж PNG або звільни місце в папці.');return false;}}
   function folderIcon(){
     const folder=$('paintFolderApp');if(!folder)return;
-    folder.classList.toggle('hidden',!directory.created);
+    folder.classList.remove('hidden');
     $('paintFolderCount').textContent=`${directory.files.length} зображень`;
   }
   function persistDirectory(next){
