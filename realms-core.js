@@ -2,7 +2,7 @@
   'use strict';
   const {WIDTH,HEIGHT,CAMP,SPAWN,TYPES,SPAWNS,OBSTACLES,WEAPONS,ARMOR,FAMILIES,ARMOR_KINDS,SUPPORTS,EXTRAS,RESOURCES,NODE_TYPES,NODES,TOOLS,RECIPES,TALENTS,CONTRACTS,VARIANTS,DEFAULT_VARIANTS,OUTFITS}=D;
   const L=Loadout.create(D),S=Skills.create(D),B=Bosses.create(D);
-  const RADIUS=15,MAX=99999999,has=(o,k)=>typeof k==='string'&&Object.prototype.hasOwnProperty.call(o,k),clamp=(n,a,b)=>Math.max(a,Math.min(b,n)),integer=(v,f=0)=>Number.isSafeInteger(v)&&v>=0?Math.min(MAX,v):f;
+  const RADIUS=15,MAX=100000000,has=(o,k)=>typeof k==='string'&&Object.prototype.hasOwnProperty.call(o,k),clamp=(n,a,b)=>Math.max(a,Math.min(b,n)),integer=(v,f=0)=>Number.isSafeInteger(v)&&v>=0?Math.min(MAX,v):f;
   const record=o=>o&&typeof o==='object'&&!Array.isArray(o)?o:{},rankCost=rank=>1+Math.floor(rank/2),tierRequirement=tier=>[0,0,1,2,4,6,7,8,10,14,18,23,28][tier]||0;
   const levelCap=s=>s.monolithAwakened?650:100;
   const personalBlocked=(s,x,y,r=15)=>!s.passUnlocked&&x+r>=D.PASS.barrierX;

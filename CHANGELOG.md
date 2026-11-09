@@ -1,3 +1,18 @@
+# v6.17.0 · 2026-11-09
+
+- HoMoW now attempts to start track 6 when the page opens, at 5% volume with repeat enabled; browsers that block autoplay start it on the first interaction.
+- Added phone app ordering, a first-open tutorial, purchased wallpaper styling, vine maze visuals, and the second route palette.
+- Added a separate free crafting screen and owner-only 100 million / 500 thousand balance shortcuts.
+- Reduced HoI idle timer polling and added the owner-only DOWNLVL(n) command.
+
+# v6.16.0 · 2026-11-09
+
+- Phone programs now follow their introduction order; the Account app appears at the end.
+- Added first-open basics tutorial. Phone backgrounds follow the purchased wallpaper theme.
+- Added a separate materials-only crafting screen in HoMoW and owner-only quick grants of 100 million or 500 thousand silver.
+- Owner balance cap raised to 100 million.
+- First delivery route uses a vine-and-brush maze; the second route has a warm ruin palette.
+
 # v6.15.0 · 2026-11-09
 
 - HoMoW now has a lower, smoother XP curve for leveling.
