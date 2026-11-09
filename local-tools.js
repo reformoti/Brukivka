@@ -1,0 +1,19 @@
+(()=>{
+  'use strict';if(window.BrukDevice?.blocked)return;
+  const $=id=>document.getElementById(id),entry=$('accountToolsEntry');if(!entry)return;
+  const screen=document.createElement('section');screen.id='localToolsScreen';screen.className='phone-screen hidden';
+  screen.innerHTML='<div class="screen-header"><button id="localToolsBack" class="icon-button" type="button" aria-label="Назад до акаунта">‹</button><span>Локальні інструменти</span></div><div class="local-tools-body"><label>Гра<select id="localToolsGame"><option value="brukivka">Бруківка</option><option value="homow">HoMoW · локальне збереження</option></select></label><button type="button" data-local-tool="add100m">Додати 100 млн</button><button type="button" data-local-tool="add500k">Додати 500 тис.</button><div id="brukivkaTools"><button type="button" data-local-tool="maxUpgrades">Повна прокачка</button><button type="button" data-local-tool="maxNmt">Максимум НМТ</button><button type="button" data-local-tool="unlockAll">Відкрити всі покупки</button><button type="button" class="danger" data-local-tool="reset">Повністю скинути прогрес</button></div><form id="localToolsForm" hidden><input id="localToolsCode" maxlength="40" autocomplete="off" spellcheck="false" aria-label="Код"><button type="submit">Виконати</button></form><p id="localToolsStatus" role="status"></p></div>';
+  $('phoneShell').append(screen);
+  function show(target){document.querySelectorAll('.phone-screen').forEach(s=>s.classList.toggle('hidden',s!==target));}
+  function note(text){$('localToolsStatus').textContent=text;}
+  entry.onclick=()=>{show(screen);note('Зміни стосуються локального прогресу вибраної гри.');};
+  $('localToolsBack').onclick=()=>show($('accountScreen'));
+  $('localToolsGame').onchange=()=>{const local=$('localToolsGame').value==='homow';$('brukivkaTools').hidden=local;$('localToolsForm').hidden=!local;note(local?'Змінюється лише локальний персонаж HoMoW. Онлайн-акаунти не змінюються.':'Зміни стосуються Бруківки на цьому пристрої.');};
+  let loading=null;
+  function realmModules(){if(window.BrukRealms)return Promise.resolve(window.BrukRealms);if(!loading)loading=(async()=>{for(const name of ['realms-data.js','realms-loadout.js','realms-skills.js','realms-bosses.js','realms-core.js']){await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=name+'?v='+window.BrukRelease.version;script.onload=resolve;script.onerror=()=>reject(Error('Не вдалося завантажити інструменти HoMoW.'));document.head.append(script);});}return window.BrukRealms;})().catch(e=>{loading=null;throw e;});return loading;}
+  async function realmCommand(text){const R=await realmModules(),key='brukivka_realms_v1',raw=localStorage.getItem(key);if(!raw)throw Error('Спочатку запусти локальну HoMoW хоча б один раз.');const world=new R.World(JSON.parse(raw));if(!window.BrukLocalToolsCore.realm(world,text,R))throw Error('Не виконано: перевір код або ліміт балансу.');localStorage.setItem(key,JSON.stringify(world.save()));localStorage.setItem('brukivka_homow_tools_v1',String(Date.now()));}
+  let busy=false;
+  async function execute(action,text){if(busy)return;busy=true;try{if($('localToolsGame').value==='homow'){await realmCommand(text||(action==='add100m'?'GIVEMONEY(100000000)':'GIVEMONEY(500000)'));note('Прогрес HoMoW збережено.');}else{const ok=window.BrukLocalTools.apply(action);note(ok?'Готово.':action==='reset'?'Скидання скасовано.':'Не виконано.');}}catch(e){note(e.message);}finally{busy=false;}}
+  screen.querySelectorAll('[data-local-tool]').forEach(b=>b.onclick=()=>execute(b.dataset.localTool));
+  $('localToolsForm').onsubmit=e=>{e.preventDefault();execute('command',$('localToolsCode').value);};
+})();

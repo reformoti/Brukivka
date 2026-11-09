@@ -2170,6 +2170,13 @@
     renderSoundcloud();
   });
 
+  window.BrukLocalTools={apply(action){
+    if(action==='reset'){completelyResetProgress();return false;}
+    const config={brick:brickTiers.length-1,phone:phoneTiers.length-1,strength:strengthTiers.length-1,pocket:POCKET_MAX,monitor:MONITORS.length-1,cpu:5,gpu:window.BrukMining.GPU.length-1,ram:5,tests:Object.fromEntries(Object.entries(SUBJECTS).map(([k,v])=>[k,v.max])),routes:DELIVERY_LEVELS.map((_,i)=>i),wallpapers:WALLPAPERS.filter(w=>w.id).map(w=>w.id),games:Object.keys(window.BrukMining.GAMES),islands:ISLANDS.map(i=>i.id)};
+    if(!window.BrukLocalToolsCore.apply(save,action,config))return false;
+    persist();updateUI();renderWallpaperShop();return true;
+  }};
+
   window.BrukEconomy={
     snapshot:()=>({...save.mining,licenses:[...save.mining.licenses],gpu:save.pcUpgrades.gpu,pcOwned:save.pcOwned}),
     toggle:()=>{if(!save.pcOwned)return false;save.mining.running=!save.mining.running;persist();return save.mining.running;},

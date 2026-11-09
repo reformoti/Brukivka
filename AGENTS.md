@@ -10,3 +10,5 @@
 - Run the applicable tests before publishing. For chess, label move analysis as the game's approximate bot evaluation.
 
 - `homow.html` is the generated, self-contained HoMoW Steam entry. Edit `realms.html`, the `realms-*` / `homow-*` source modules, and shared CSS/fonts instead of the bundle. Run `python scripts/build-homow.py` after source changes, and verify both the source entry and the independent HTML before publishing. Keep the legacy RPG save key.
+
+- Run `node scripts/build-release-history.mjs` for every release. It generates the PC Start update archive from CHANGELOG.md and verifies the current version. Keep `release-history.js` committed.
