@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.22.1',date:'2026-11-10',name:'Compact Delivery Routes'};
+  const release={version:'6.22.2',date:'2026-11-10',name:'Brukivka Favicon'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
