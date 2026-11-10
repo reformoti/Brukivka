@@ -153,6 +153,13 @@
     function reset() {maze.reset();done=false;pointer=null;aiming=false;keys.clear();flight.reset();draw();}
     function setLevel(id){level=id;canvas.style.aspectRatio=id===2?'1 / 1':'10 / 7';reset();resize();}
     function resize() {
+      const box=canvas.parentElement;
+      if(root.document.body.classList.contains('main-minimal')&&!box.classList.contains('hidden')){
+        const area=box.parentElement.getBoundingClientRect(),aspect=level===2?1:10/7;
+        const height=Math.max(1,Math.floor(Math.min(area.height-42,(area.width-2)/aspect)));
+        box.style.width=(Math.floor(height*aspect)+2)+'px';
+        box.style.height=(height+42)+'px';
+      }
       const r=canvas.getBoundingClientRect(),ratio=Math.min(root.devicePixelRatio||1,2);
       const w=Math.max(1,Math.round(r.width*ratio)),h=Math.max(1,Math.round(r.height*ratio));if(canvas.width!==w)canvas.width=w;if(canvas.height!==h)canvas.height=h;draw();
     }
@@ -266,7 +273,7 @@
       } else {keys.clear();pointer=null;aiming=false;}
       root.requestAnimationFrame(frame);
     }
-    if(root.ResizeObserver)new root.ResizeObserver(resize).observe(canvas.parentElement);
+    if(root.ResizeObserver)new root.ResizeObserver(resize).observe(canvas.parentElement.parentElement);
     root.requestAnimationFrame(resize);
     root.requestAnimationFrame(frame);
     return {setLevel,reset,resize,cancel:()=>{keys.clear();pointer=null;aiming=false;}};
