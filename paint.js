@@ -1,39 +1,44 @@
 (function(root){
   'use strict';
   const W=1200,H=800,DRAFT='brukivka_paint_draft_v2',FILES='brukivka_paint_folder_v2';
-  const tools=new Set(['brush','eraser','line','rect','ellipse','clear','paper']);
+  const tools=new Set(['brush','eraser','line','rect','ellipse','clear','paper','pencil','text','fill','arrow','triangle','diamond','star','roundrect','flipH','flipV']);
   const validColor=c=>typeof c==='string'&&/^#[0-9a-f]{6}$/i.test(c);
   const clone=value=>JSON.parse(JSON.stringify(value));
   function sanitizeDocument(raw){
     if(!raw||!Array.isArray(raw.actions)||raw.actions.length>2000)return null;
     let count=0;const actions=[];
     for(const a of raw.actions){
-      if(!a||!tools.has(a.tool)||!validColor(a.color)||!Number.isFinite(a.width)||a.width<1||a.width>80||!Array.isArray(a.points))return null;
+      if(!a||!tools.has(a.tool)||!(validColor(a.color)||(a.tool==='paper'&&a.color==='transparent'))||!Number.isFinite(a.width)||a.width<1||a.width>80||!Array.isArray(a.points))return null;
       count+=a.points.length;if(count>100000)return null;
       if(a.points.some(p=>!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite)||p[0]<0||p[0]>W||p[1]<0||p[1]>H))return null;
-      if(!['clear','paper'].includes(a.tool)&&!a.points.length)return null;
-      actions.push({tool:a.tool,color:a.color,width:a.width,fill:a.fill===true,points:a.points.map(p=>p.slice())});
+      if(!['clear','paper','flipH','flipV'].includes(a.tool)&&!a.points.length)return null;
+      if(a.opacity!==undefined&&(!Number.isFinite(a.opacity)||a.opacity<0||a.opacity>1))return null;
+      if(a.tool==='text'&&(typeof a.text!=='string'||a.text.length>160||!Number.isFinite(a.fontSize)||a.fontSize<8||a.fontSize>200))return null;
+      actions.push({opacity:a.opacity??1,...(a.tool==='text'?{text:a.text,fontSize:a.fontSize}:{}),tool:a.tool,color:a.color,width:a.width,fill:a.fill===true,points:a.points.map(p=>p.slice())});
     }
-    return {version:2,width:W,height:H,paper:validColor(raw.paper)?raw.paper:'#ffffff',actions};
+    return {version:2,width:W,height:H,paper:raw.paper==='transparent'?'transparent':validColor(raw.paper)?raw.paper:'#ffffff',actions};
   }
+  function pixelFill(ctx,a){const image=ctx.getImageData(0,0,W,H),d=image.data,x=Math.min(W-1,Math.floor(a.points[0][0])),y=Math.min(H-1,Math.floor(a.points[0][1])),start=y*W+x,at=start*4,target=[d[at],d[at+1],d[at+2],d[at+3]],rgb=[1,3,5].map(i=>parseInt(a.color.slice(i,i+2),16)),alpha=a.opacity??1,seen=new Uint8Array(W*H),queue=new Uint32Array(W*H);let read=0,end=1;queue[0]=start;seen[start]=1;while(read<end){const p=queue[read++],i=p*4;if(target.some((v,k)=>d[i+k]!==v))continue;const old=d[i+3]/255,out=alpha+old*(1-alpha);for(let k=0;k<3;k++)d[i+k]=out?Math.round((rgb[k]*alpha+d[i+k]*old*(1-alpha))/out):0;d[i+3]=Math.round(out*255);const px=p%W;for(const n of [px>0?p-1:-1,px<W-1?p+1:-1,p>=W?p-W:-1,p<(H-1)*W?p+W:-1])if(n>=0&&!seen[n]){seen[n]=1;queue[end++]=n;}}ctx.putImageData(image,0,0);}
+  function flipPixels(ctx,vertical){const image=ctx.getImageData(0,0,W,H),d=image.data;for(let y=0;y<(vertical?Math.floor(H/2):H);y++)for(let x=0;x<(vertical?W:Math.floor(W/2));x++){const a=(y*W+x)*4,b=((vertical?H-1-y:y)*W+(vertical?x:W-1-x))*4;for(let k=0;k<4;k++){const t=d[a+k];d[a+k]=d[b+k];d[b+k]=t;}}ctx.putImageData(image,0,0);}
   function paintAction(ctx,a){
-    if(a.tool==='paper')return;
+    if(a.tool==='paper')return;if(a.tool==='fill'){pixelFill(ctx,a);return;}if(a.tool==='flipH'||a.tool==='flipV'){flipPixels(ctx,a.tool==='flipV');return;}
     if(a.tool==='clear'){ctx.clearRect(0,0,W,H);return;}
-    ctx.save();ctx.globalCompositeOperation=a.tool==='eraser'?'destination-out':'source-over';
+    ctx.save();ctx.globalAlpha=a.opacity??1;ctx.globalCompositeOperation=a.tool==='eraser'?'destination-out':'source-over';
     ctx.strokeStyle=ctx.fillStyle=a.color;ctx.lineWidth=a.width;ctx.lineCap=ctx.lineJoin='round';
     const first=a.points[0],last=a.points[a.points.length-1];
     ctx.beginPath();
-    if(a.tool==='brush'||a.tool==='eraser'){
+    if(a.tool==='text'){ctx.font=(a.fontSize||32)+'px sans-serif';ctx.fillText(a.text,first[0],first[1]);ctx.restore();return;}
+    if(['brush','eraser','pencil'].includes(a.tool)){
       if(a.points.length===1){ctx.arc(first[0],first[1],a.width/2,0,Math.PI*2);ctx.fill();}
       else{
         ctx.moveTo(...first);
-        for(let i=1;i<a.points.length-1;i++){const p=a.points[i],q=a.points[i+1];ctx.quadraticCurveTo(p[0],p[1],(p[0]+q[0])/2,(p[1]+q[1])/2);}
+        if(a.tool==='pencil'){for(const p of a.points.slice(1))ctx.lineTo(...p);}else for(let i=1;i<a.points.length-1;i++){const p=a.points[i],q=a.points[i+1];ctx.quadraticCurveTo(p[0],p[1],(p[0]+q[0])/2,(p[1]+q[1])/2);}
         ctx.lineTo(...last);ctx.stroke();
       }
     }else if(a.tool==='line'){ctx.moveTo(...first);ctx.lineTo(...last);ctx.stroke();}
     else{
       const x=Math.min(first[0],last[0]),y=Math.min(first[1],last[1]),w=Math.abs(first[0]-last[0]),h=Math.abs(first[1]-last[1]);
-      if(a.tool==='rect')ctx.rect(x,y,w,h);else ctx.ellipse(x+w/2,y+h/2,Math.max(.1,w/2),Math.max(.1,h/2),0,0,Math.PI*2);
+      if(a.tool==='rect')ctx.rect(x,y,w,h);else if(a.tool==='roundrect')ctx.roundRect(x,y,w,h,Math.min(w,h)*.18);else if(['triangle','diamond','star'].includes(a.tool)){const count=a.tool==='star'?10:a.tool==='diamond'?4:3;for(let i=0;i<count;i++){const r=a.tool==='star'&&i%2?.43:1,angle=-Math.PI/2+i*Math.PI*2/count,px=x+w/2+Math.cos(angle)*w/2*r,py=y+h/2+Math.sin(angle)*h/2*r;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();}else if(a.tool==='arrow'){const angle=Math.atan2(last[1]-first[1],last[0]-first[0]),n=Math.max(14,a.width*3);ctx.moveTo(...first);ctx.lineTo(...last);for(const side of [-1,1]){ctx.moveTo(...last);ctx.lineTo(last[0]-Math.cos(angle+side*.5)*n,last[1]-Math.sin(angle+side*.5)*n);}ctx.stroke();ctx.restore();return;}else ctx.ellipse(x+w/2,y+h/2,Math.max(.1,w/2),Math.max(.1,h/2),0,0,Math.PI*2);
       if(a.fill)ctx.fill();else ctx.stroke();
     }
     ctx.restore();
@@ -48,7 +53,7 @@
     const ink=makeCanvas(W,H),ctx=ink.getContext('2d');
     for(const a of doc.actions)paintAction(ctx,a);
     const out=canvas.getContext('2d');out.clearRect(0,0,canvas.width,canvas.height);
-    out.fillStyle=paperColor(doc);out.fillRect(0,0,canvas.width,canvas.height);out.drawImage(ink,0,0,canvas.width,canvas.height);
+    if(paperColor(doc)!=='transparent'){out.fillStyle=paperColor(doc);out.fillRect(0,0,canvas.width,canvas.height);}out.drawImage(ink,0,0,canvas.width,canvas.height);
     return canvas;
   }
   const pure={sanitizeDocument,paintAction,drawDocument,W,H};
@@ -57,6 +62,7 @@
   const $=id=>document.getElementById(id);
   const makeCanvas=(w=W,h=H)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c;};
   const blank=()=>({version:2,width:W,height:H,paper:'#ffffff',actions:[]});
+  let opacity=1,fontSize=32,textValue='Текст';
   let doc=blank(),name='Малюнок 1',fileId=null,dirty=false,redo=[],tool='brush',color='#26394b',width=8,fill=false;
   let directory={created:false,files:[]},cleanup=null,finishStroke=null,storageProblem='';
   const safeName=value=>String(value||'Малюнок').replace(/[\\/:*?"<>|\x00-\x1f]/g,'').replace(/\.png$/i,'').trim().slice(0,64)||'Малюнок';
@@ -132,6 +138,10 @@
     const sizeLabel=document.createElement('label');sizeLabel.textContent='Товщина ';const slider=document.createElement('input');slider.type='range';slider.id='paintWidth';slider.min=1;slider.max=80;slider.value=width;slider.setAttribute('aria-label','Товщина кисті');const size=document.createElement('b');size.id='paintWidthLabel';slider.addEventListener('input',()=>{width=Number(slider.value);refresh();});sizeLabel.append(slider,size);
     const fillLabel=document.createElement('label');const check=document.createElement('input');check.type='checkbox';check.id='paintShapeFill';check.checked=fill;check.addEventListener('change',()=>{fill=check.checked;});fillLabel.append(check,document.createTextNode(' Заливка фігур'));
     settings.append(colorLabel,sizeLabel,fillLabel);toolbar.append(settings);editor.append(toolbar);
+    const extra=document.createElement('select');extra.id='paintExtraTool';extra.setAttribute('aria-label','Додаткові інструменти');for(const [id,label] of [['','Ще інструменти…'],['pencil','Олівець'],['text','Текст'],['picker','Піпетка'],['fill','Заливка області'],['arrow','Стрілка'],['triangle','Трикутник'],['diamond','Ромб'],['star','Зірка'],['roundrect','Заокруглений прямокутник'],['flipH','Віддзеркалити ↔'],['flipV','Віддзеркалити ↕']]){const o=document.createElement('option');o.value=id;o.textContent=label;extra.append(o);}extra.onchange=()=>{finish();if(extra.value.startsWith('flip')){commit({tool:extra.value,color,width:1,opacity:1,fill:false,points:[]});extra.value='';}else if(extra.value)tool=extra.value;refresh();};toolbar.append(extra);
+    const alphaLabel=document.createElement('label');alphaLabel.textContent='Непрозорість ';const alpha=document.createElement('input');alpha.id='paintOpacity';alpha.type='range';alpha.min=0;alpha.max=100;alpha.value=100;const alphaValue=document.createElement('b');alphaValue.id='paintOpacityValue';alpha.oninput=()=>{opacity=Number(alpha.value)/100;alphaValue.textContent=alpha.value+'%';};alphaLabel.append(alpha,alphaValue);settings.append(alphaLabel);
+    const transparentLabel=document.createElement('label'),transparent=document.createElement('input');transparent.type='checkbox';transparent.id='paintTransparent';transparent.onchange=()=>commit({tool:'paper',color:transparent.checked?'transparent':'#ffffff',width:1,fill:false,points:[]});transparentLabel.append(transparent,document.createTextNode(' Прозоре тло'));settings.append(transparentLabel);
+    const textTools=document.createElement('div');textTools.id='paintTextTools';textTools.hidden=true;const textInput=document.createElement('input');textInput.id='paintText';textInput.type='text';textInput.value=textValue;textInput.maxLength=160;textInput.setAttribute('aria-label','Текст для полотна');textInput.oninput=()=>textValue=textInput.value;const textSize=document.createElement('input');textSize.id='paintFontSize';textSize.type='number';textSize.min=8;textSize.max=200;textSize.value=fontSize;textSize.setAttribute('aria-label','Розмір тексту');textSize.onchange=()=>fontSize=Math.max(8,Math.min(200,Math.floor(Number(textSize.value)||32)));textTools.append(textInput,textSize);toolbar.append(textTools);
     const palette=document.createElement('div');palette.className='paint-swatches';
     for(const c of ['#26394b','#ffffff','#f05454','#e79a47','#f4d56a','#69b681','#49b4c6','#6695eb','#a883d1','#ee9fc5','#a37953','#a7b0b8']){
       const b=button('',()=>{color=c;picker.value=c;});b.style.background=c;b.setAttribute('aria-label',`Колір ${c}`);palette.append(b);
@@ -152,12 +162,13 @@
     let pending=null,pointer=null,request=null;
     function present(){
       const p=preview.getContext('2d');p.clearRect(0,0,W,H);p.drawImage(ink,0,0);if(pending)paintAction(p,pending);
-      ctx.fillStyle=paperColor(doc,pending);ctx.fillRect(0,0,W,H);ctx.drawImage(preview,0,0);
+      ctx.clearRect(0,0,W,H);if(paperColor(doc,pending)!=='transparent'){ctx.fillStyle=paperColor(doc,pending);ctx.fillRect(0,0,W,H);}ctx.drawImage(preview,0,0);
     }
     function rebuild(){const c=ink.getContext('2d');c.clearRect(0,0,W,H);for(const a of doc.actions)paintAction(c,a);present();}
     function schedule(){if(request===null)request=requestAnimationFrame(()=>{request=null;present();});}
     function refresh(){
       editor.querySelectorAll('[data-paint-tool]').forEach(b=>{b.classList.toggle('active',b.dataset.paintTool===tool);b.setAttribute('aria-pressed',String(b.dataset.paintTool===tool));});
+      textTools.hidden=tool!=='text';transparent.checked=paperColor(doc)==='transparent';alpha.value=Math.round(opacity*100);alphaValue.textContent=alpha.value+'%';
       $('paintWidthLabel').textContent=width+' px';$('paintUndo').disabled=!doc.actions.length;$('paintRedo').disabled=!redo.length;
       $('paintDocumentStatus').textContent=dirty?'Є зміни · чернетка':'Збережено'+(fileId?' в «Мої малюнки»':' · нове полотно');
     }
@@ -171,12 +182,13 @@
     function point(e){const r=canvas.getBoundingClientRect();return [Math.round(Math.max(0,Math.min(W,(e.clientX-r.left)/r.width*W))*10)/10,Math.round(Math.max(0,Math.min(H,(e.clientY-r.top)/r.height*H))*10)/10];}
     function add(e){
       const p=point(e),last=pending.points.at(-1);
-      if(['brush','eraser'].includes(pending.tool)){if(Math.hypot(p[0]-last[0],p[1]-last[1])>=.7)pending.points.push(p);}
+      if(['brush','eraser','pencil'].includes(pending.tool)){if(Math.hypot(p[0]-last[0],p[1]-last[1])>=.7)pending.points.push(p);}
       else pending.points=[pending.points[0],p];
     }
     canvas.addEventListener('pointerdown',e=>{
       if(pointer!==null||(e.button!==undefined&&e.button!==0))return;
-      pointer=e.pointerId;pending={tool,color,width,fill,points:[point(e)]};canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});e.preventDefault();schedule();
+      const at=point(e);if(tool==='picker'){const pixel=exportCanvas().getContext('2d').getImageData(Math.min(W-1,Math.floor(at[0])),Math.min(H-1,Math.floor(at[1])),1,1).data;if(pixel[3]){color='#'+[...pixel].slice(0,3).map(n=>n.toString(16).padStart(2,'0')).join('');picker.value=color;opacity=pixel[3]/255;refresh();}return;}if(tool==='text'||tool==='fill'){commit({tool,color,width,fill,opacity,points:[at],...(tool==='text'?{text:textValue,fontSize}:{})});return;}
+      pointer=e.pointerId;pending={tool,color,width,fill,opacity,points:[at]};canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});e.preventDefault();schedule();
     });
     canvas.addEventListener('pointermove',e=>{if(!pending||pointer!==e.pointerId)return;const samples=e.getCoalescedEvents?.();for(const sample of samples?.length?samples:[e])add(sample);e.preventDefault();schedule();});
     canvas.addEventListener('pointerup',e=>{if(!pending||pointer!==e.pointerId)return;add(e);finish();});

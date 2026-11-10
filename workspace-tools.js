@@ -2,7 +2,7 @@
   'use strict';if(window.BrukDevice?.blocked)return;
   const el=(tag,cls,text)=>{const n=document.createElement(tag);n.className=cls||'';if(text)n.textContent=text;return n;};
   function extra(root,key,title,nodes){if(!nodes.length)return;const old=document.getElementById('extra-'+key),wasOpen=old?.open;old?.remove();const dialog=el('dialog','os-dialog workspace-extra');dialog.id='extra-'+key;const head=el('header','os-dialog-head'),close=el('button','','✕');close.type='button';close.onclick=()=>dialog.close();head.append(el('h2','',title),close);dialog.append(head,...nodes);document.body.append(dialog);const button=el('button','workspace-extra-button',title);button.type='button';button.onclick=()=>dialog.showModal();root.append(button);if(wasOpen)dialog.showModal();}
-  function prepare(root,id){root.dataset.workspace=id==='exchange'?'exchange-simple':id;
+  function prepare(root,id){root.dataset.workspace=id==='exchange'?'exchange-terminal':id;
     if(id==='paint'){const editor=root.querySelector('.paint-editor'),gallery=editor?.querySelector('.paint-editor-heading>button');if(gallery)editor.querySelector('.paint-file-bar').append(gallery);}
     if(id==='gallery'){root.querySelectorAll('.paint-gallery').forEach(n=>window.BrukFit.pages(n,':scope>.paint-file',3));}
     if(id==='exchange')return;else if(['dispatch'].includes(id)){extra(root,id+'-shop','Магазин користі',[...root.querySelectorAll('.benefit-shop')]);extra(root,id+'-help','Підказки',[...root.querySelectorAll('.app-help,.preview-caption:not(#dispatchStatus)')]);}

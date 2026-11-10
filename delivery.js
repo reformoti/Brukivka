@@ -217,7 +217,7 @@
       ctx.fillStyle='#90caba33';ctx.fillRect(78,446,75,108);ctx.fillStyle='#b6f38d33';ctx.fillRect(848,446,75,108);
       text('ВХІД',108,427,'#92c9c0',16,'center');text('ВИХІД',879,427,'#c4f58a',16,'center');
       text('ПЛАН КВАРТАЛУ / 03',75,42,'#92a7b9',15);text('×3',925,44,'#d6f69e',25,'right');
-      text('Миша / дотик — тягни бруківку · WASD / стрілки — рух',500,975,'#91a5b3',15,'center');
+
       if(maze.phase!=='broken')brick(75+maze.x*85,75+maze.y*85,MAZE_RADIUS*170);
       if(maze.effect){const e=maze.effect,t=e.age/.65;ctx.save();ctx.globalAlpha=1-t;ctx.translate(75+e.x*85,75+e.y*85);for(let i=0;i<12;i++){const a=i*Math.PI/6;ctx.save();ctx.translate(Math.cos(a)*t*85,Math.sin(a)*t*85+40*t*t);ctx.rotate(i+t*5);ctx.fillStyle=i%3?'#c5c7c6':'#7e8586';ctx.fillRect(-5,-4,10,8);ctx.restore();}ctx.restore();text('РОЗБИТО · НА СТАРТ',500,42,'#ff9b9b',17,'center');}
     }
@@ -232,11 +232,10 @@
       const facade=ctx.createLinearGradient(826,0,1000,0);facade.addColorStop(0,'#9c8878');facade.addColorStop(1,'#625d5a');ctx.fillStyle=facade;ctx.fillRect(826,265,174,407);ctx.strokeStyle='#3d41434d';ctx.lineWidth=1;for(let y=275,row=0;y<672;y+=22,row++){ctx.beginPath();ctx.moveTo(826,y);ctx.lineTo(1000,y);ctx.stroke();for(let x=826+(row%2?19:0);x<1000;x+=38){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+22);ctx.stroke();}}ctx.fillStyle='#c1b6a0';ctx.fillRect(820,258,180,10);ctx.fillStyle='#25323b';ctx.fillRect(852,280,130,99);const room=ctx.createLinearGradient(866,290,972,371);room.addColorStop(0,'#192a32');room.addColorStop(1,'#695d46');ctx.fillStyle=room;ctx.fillRect(862,285,110,89);ctx.fillStyle='#ae8a5b55';ctx.fillRect(890,354,56,20);ctx.fillStyle='#ded4ad';ctx.fillRect(THROW.window.left-9,273,9,108);ctx.fillRect(THROW.window.right,273,9,108);ctx.fillRect(THROW.window.left-12,374,140,10);ctx.fillStyle='#3c4947';ctx.fillRect(THROW.window.left-12,384,140,7);
       ctx.fillStyle='#79bbc044';ctx.strokeStyle='#c6e2d6';ctx.lineWidth=3;for(const [x,w] of [[840,19],[974,20]]){ctx.fillRect(x,279,w,91);ctx.strokeRect(x,279,w,91);ctx.beginPath();ctx.moveTo(x,324);ctx.lineTo(x+w,324);ctx.stroke();}ctx.strokeStyle='#6e7b7a';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(842,406);ctx.lineTo(842,652);ctx.lineTo(826,663);ctx.stroke();ctx.fillStyle='#b4b6aa';ctx.fillRect(891,466,83,41);ctx.fillStyle='#727b77';ctx.fillRect(897,472,36,29);ctx.strokeStyle='#404e51';ctx.lineWidth=2;ctx.beginPath();ctx.arc(915,486,12,0,Math.PI*2);ctx.stroke();for(let y=475;y<499;y+=5)ctx.fillRect(941,y,26,2);text('ДОСТАВКА',914,428,'#e9d8ae',15,'center');text('×10',914,453,'#dbf5a7',24,'center');
       ctx.strokeStyle='#d1f590';ctx.lineWidth=2;ctx.setLineDash([5,6]);ctx.beginPath();ctx.moveTo(THROW.window.left+6,THROW.window.plane);ctx.lineTo(THROW.window.right-6,THROW.window.plane);ctx.stroke();ctx.setLineDash([]);text('↓ ВЛУЧ ЗВЕРХУ',914,240,'#e7f6bb',15,'center');
-      THROW.zones.forEach((z,i)=>{ctx.strokeStyle='#b1ced22e';ctx.lineWidth=1;ctx.setLineDash([5,9]);ctx.strokeRect(z.left-38,z.top-34,z.right-z.left+76,z.bottom-z.top+68);ctx.beginPath();ctx.ellipse((z.left+z.right)/2,(z.top+z.bottom)/2,(z.right-z.left)/2,(z.bottom-z.top)/2,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);text(`ПАТРУЛЬ 0${i+1}`,z.left-35,z.top-43,'#b2c4c7',11);});
       dronesAt(flight.time).forEach((d,i)=>{if(flight.explosions.some(e=>Math.hypot(e.x-d.x,e.y-d.y)<100))return;ctx.save();ctx.translate(d.x,d.y);ctx.rotate(Math.sin(flight.time*3+i)*.07);ctx.strokeStyle='#1c2c35';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(-28,-9);ctx.lineTo(28,9);ctx.moveTo(-28,9);ctx.lineTo(28,-9);ctx.stroke();ctx.strokeStyle='#96a6a9';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#334651';ctx.beginPath();ctx.roundRect(-14,-9,28,18,5);ctx.fill();ctx.fillStyle='#92a8a9';ctx.fillRect(-10,-6,20,4);ctx.fillStyle='#0e212d';ctx.fillRect(-7,0,14,7);ctx.fillStyle='#e8b97e';ctx.beginPath();ctx.arc(0,6,3,0,Math.PI*2);ctx.fill();for(const dx of [-28,28])for(const dy of [-9,9]){ctx.fillStyle='#182c32';ctx.beginPath();ctx.arc(dx,dy,4,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#c3d6d7aa';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(dx,dy,17,3,Math.sin(flight.time*48)*.25,0,Math.PI*2);ctx.stroke();ctx.fillStyle=dx<0?'#f98171':'#8fdaaa';ctx.fillRect(dx-2,dy+3,3,3);}ctx.restore();});
       ctx.strokeStyle='#3f332c';ctx.lineWidth=15;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(128,THROW.floor);ctx.lineTo(128,559);ctx.moveTo(128,567);ctx.lineTo(101,526);ctx.moveTo(128,567);ctx.lineTo(155,526);ctx.stroke();ctx.strokeStyle='#a38c64';ctx.lineWidth=7;ctx.stroke();ctx.strokeStyle='#5b4330';ctx.lineWidth=2;for(let y=580;y<640;y+=8){ctx.beginPath();ctx.moveTo(122,y);ctx.lineTo(134,y+2);ctx.stroke();}
       const shot=shotFromPull(pull),shown=aiming?shot:flight.phase==='miss'?THROW.anchor:flight.ball;
-      if(flight.phase!=='flying'&&flight.phase!=='success'&&flight.phase!=='miss'&&flight.phase!=='destroyed') {
+      if(aiming) {
         const aim=shotFromPull(pull);ctx.fillStyle='#d7f39488';
         for(let t=.12;t<2.8;t+=.1){const x=aim.x+aim.vx*t,y=aim.y+aim.vy*t+THROW.gravity*t*t/2;if(x<0||x>1000||y>THROW.floor)break;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();}
       }
@@ -246,7 +245,7 @@
       text('ВІДКРИТЕ ВІКНО / 04',28,37,'#c0cdd3',17);
       text(flight.phase==='flying'?'У ПОЛЬОТІ':`НАТЯГ ${Math.round(shot.power*100)}%`,28,65,'#d5f19c',17);
       ctx.fillStyle='#0d1c27';ctx.fillRect(28,78,150,7);ctx.fillStyle='#d5f19c';ctx.fillRect(28,78,150*shot.power,7);
-      if(flight.phase==='ready')text('↙ потягни й відпусти',40,475,'#f6d1a0',16);
+
       if(flight.phase==='destroyed')text('БРУКІВКУ ЗНИЩЕНО',500,80,'#ffd19e',24,'center');
       if(flight.phase==='miss')text('Повз! Бруківка знову на старті.',500,80,'#ffd19e',21,'center');
       if(flight.phase==='success')text('ДОСТАВЛЕНО У ВІКНО!',500,80,'#d6f69e',26,'center');

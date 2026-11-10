@@ -7,7 +7,7 @@
       const dot=(x,y,r,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.arc(x*sx,y*sy,r,0,Math.PI*2);ctx.fill();};
       if($('mapResources').checked)for(const n of world.nodes)if(n.charges)dot(n.x,n.y,4,R.RESOURCES[R.NODE_TYPES[n.type].resource].color);
       if($('mapEnemies').checked)for(const m of world.monsters)if(m.alive)dot(m.x,m.y,R.TYPES[m.type].boss?9:3,R.TYPES[m.type].boss?'#efc375':'#e1a18b');
-      dot(R.CAMP.x,R.CAMP.y,7,'#d6e8a6');dot(R.MONOLITH.x,R.MONOLITH.y,6,'#9edddb');dot(R.BILLBOARD.x,R.BILLBOARD.y,4,'#f3df99');
+      for(const d of R.DUNGEONS)dot(d.entry.x,d.entry.y,5,'#b2a7e5');dot(R.CITY_LANDMARKS.hall.x,R.CITY_LANDMARKS.hall.y,5,'#ead490');dot(R.CAMP.x,R.CAMP.y,7,'#d6e8a6');dot(R.MONOLITH.x,R.MONOLITH.y,6,'#9edddb');dot(R.BILLBOARD.x,R.BILLBOARD.y,4,'#f3df99');
       const s=world.state;dot(s.x,s.y,8,'#fff4cc');dot(s.x,s.y,4,'#377f89');if(world.target){ctx.strokeStyle='#f0d28b';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(s.x*sx,s.y*sy);ctx.lineTo(world.target.x*sx,world.target.y*sy);ctx.stroke();ctx.setLineDash([]);dot(world.target.x,world.target.y,5,'#f0d28b');}
     }
     function openEnding(){api.clearKeys();for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();$('victoryDialog').showModal();}

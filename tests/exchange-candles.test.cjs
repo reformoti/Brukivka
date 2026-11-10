@@ -1,0 +1,2 @@
+const test=require('node:test'),assert=require('node:assert/strict'),{candles}=require('../exchange');
+test('OHLC candles aggregate only recorded session prices',()=>{const h=[40,44,38,42,45].map((price,i)=>({day:i+1,prices:[price]}));assert.deepEqual(candles(h,0,3),[{day:3,open:40,close:38,high:44,low:38},{day:5,open:38,close:45,high:45,low:38}]);assert.deepEqual(candles(h.slice(0,1),0),[{day:1,open:40,close:40,high:40,low:40}]);});

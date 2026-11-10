@@ -12,3 +12,9 @@ test('malformed saved drawings cannot inject unsupported tools, colors or coordi
 test('erasers, geometric shapes and undoable clear/background operations can be restored',()=>{
  for(const tool of ['eraser','line','rect','ellipse','clear','paper'])assert(sanitizeDocument(drawing([{...stroke,tool,fill:true,points:['clear','paper'].includes(tool)?[]:stroke.points}])));
 });
+test('new Paint tools preserve transparent backgrounds and opacity without accepting invalid alpha',()=>{
+ for(const tool of ['pencil','fill','arrow','triangle','diamond','star','roundrect','flipH','flipV']){const doc=sanitizeDocument({paper:'transparent',actions:[{...stroke,tool,opacity:.4}]});assert(doc);assert.equal(doc.paper,'transparent');assert.equal(doc.actions[0].opacity,.4);}
+ assert(sanitizeDocument(drawing([{...stroke,tool:'text',text:'Привіт',fontSize:48,opacity:.5}])));
+ for(const opacity of [-1,2,NaN,Infinity])assert.equal(sanitizeDocument(drawing([{...stroke,opacity}])),null);
+ assert.equal(sanitizeDocument(drawing([{...stroke,tool:'text',text:'x',fontSize:1000}])),null);
+});

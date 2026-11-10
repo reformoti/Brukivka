@@ -794,7 +794,7 @@
     $('deliveryHint').textContent=level.hint;
     $('gameBoard').classList.toggle('hidden',save.deliveryLevel>=2);
     $('deliveryCanvasBox').classList.toggle('hidden',save.deliveryLevel<2);
-    $('deliveryStatus').classList.toggle('hidden',save.deliveryLevel<2);
+    $('deliveryStatus').classList.add('hidden');
     $('deliveryCanvas').setAttribute('aria-label',level.name);
     board.dataset.level=String(save.deliveryLevel);
     $('deliveryControls').textContent=save.deliveryLevel===2?'Тягни бруківку або керуй стрілками / WASD':'Миша / дотик: натягни й відпусти. Клавіатура: ← → — напрямок, ↑ ↓ — натяг, пробіл — кидок.';
@@ -826,10 +826,10 @@
       save.balance-=item.price;save.deliveryOwned.push(id);bought=true;
     }
     stopDrag();deliveryGame.cancel();save.deliveryLevel=id;deliveryGeneration++;resetting=false;persist();renderDeliveryLevel();rememberStart();resetBrick();randomizeLasers();updateUI();
-    setStatus(bought?`Маршрут придбано назавжди за ${money(item.price)} UAH. ${item.hint}`:item.hint,'good');
+    setStatus(bought?`Маршрут придбано за ${money(item.price)} UAH.`:'','good');
     if(id>=2)$('deliveryCanvas').focus({preventScroll:true});
   }
-  $('deliveryReset').addEventListener('click',()=>{if(resetting)return;deliveryGame.reset();setStatus(DELIVERY_LEVELS[save.deliveryLevel].hint);$('deliveryCanvas').focus({preventScroll:true});});
+  $('deliveryReset').addEventListener('click',()=>{if(resetting)return;deliveryGame.reset();setStatus('');$('deliveryCanvas').focus({preventScroll:true});});
 
   function rememberStart() {
     const boardRect = board.getBoundingClientRect();
@@ -919,11 +919,13 @@
     });
   }
 
+  let deliveryStatusTimer;
   function setStatus(text, type = '') {
     $('statusMessage').textContent = text;
     $('statusMessage').className = `status-message${type ? ` ${type}` : ''}`;
     $('deliveryStatus').textContent=text;
     $('deliveryStatus').dataset.tone=type;
+    $('deliveryStatus').classList.toggle('hidden',save.deliveryLevel<2||!text);clearTimeout(deliveryStatusTimer);if(save.deliveryLevel>=2&&text)deliveryStatusTimer=setTimeout(()=>$('deliveryStatus').classList.add('hidden'),3000);
   }
 
   function stopDrag() {
@@ -983,7 +985,7 @@
       setStatus(`${destination}: +${money(reward)} UAH · ×${DELIVERY_LEVELS[save.deliveryLevel].multiplier}`, 'good');
     }
     randomizeLasers();
-    setTimeout(() => { if(save.deliveryLevel!==deliveredLevel||deliveryGeneration!==deliveredGeneration)return;resetBrick();setStatus(DELIVERY_LEVELS[save.deliveryLevel].hint);resetting=false; }, 800);
+    setTimeout(() => { if(save.deliveryLevel!==deliveredLevel||deliveryGeneration!==deliveredGeneration)return;resetBrick();setStatus('');resetting=false; }, 800);
   }
 
   function checkGameCollision() {
