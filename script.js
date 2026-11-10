@@ -722,12 +722,8 @@
   $('wallpaperApp').addEventListener('click',()=>showScreen('wallpaperScreen'));
 
   // Phone navigation.
-  const screenIds = [
-    'phoneHome','bankScreen','brukivkaScreen','znoScreen','quizScreen','quizResultScreen',
-    'legitScreen','telegramScreen','reformotiChatScreen','pcShopScreen','wallpaperScreen','fopScreen'
-  ];
   function showScreen(id) {
-    $('designScreen')?.classList.add('hidden');screenIds.forEach((screenId) => $(screenId).classList.add('hidden'));
+    $$('.phone-screen').forEach(screen=>screen.classList.add('hidden'));
     $(id).classList.remove('hidden');
     updateUI();
     if(id==='fopScreen'){payIslands();renderFopWallet();}
@@ -2163,7 +2159,8 @@
   $('steamGameMusic').addEventListener('click', () => { $('scPlay').click(); updateSteamMusic(); });
   $('steamGameMute').addEventListener('click', () => { $('scMute').click(); updateSteamMusic(); });
   scDecks.forEach(deck => ['play','pause','ended'].forEach(name => deck.addEventListener(name, updateSteamMusic)));
-  $('nextGameApp').addEventListener('click', () => {
+  $('nextGameApp').addEventListener('click',()=>showScreen('appleIqScreen'));
+  $('appleIqLaunch').addEventListener('click', () => {
     scUserPaused = true;
     stopFade();
     scDecks.forEach(deck => deck.pause());

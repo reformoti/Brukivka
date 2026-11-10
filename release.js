@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.22.3',date:'2026-11-10',name:'Round Favicon & Design Colors'};
+  const release={version:'6.23.0',date:'2026-11-10',name:'AppleIQ Phone App'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
