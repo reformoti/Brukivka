@@ -2208,5 +2208,9 @@
   window.BrukGarageSnapshot=()=>window.BrukVentures.normalizeGarage(save.garage);
   window.BrukRewardShop.configure({get:()=>save.perks,set:value=>save.perks=value,save:persist,changed:updateUI});
   window.BrukMusic={state:()=>({playing:!scAudio().paused,track:MUSIC_TRACKS[save.audio.track],volume:save.audio.volume/100}),toggle:()=>$('scPlay').click(),next:()=>$('scNext').click(),volume:value=>{save.audio.volume=Math.round(clamp(value,0,1)*100);scApplyVolume();persist();renderSoundcloud();}};
+  window.BrukOnboarding={
+    read:()=>({balance:save.balance,earned:save.totalEarned,brick:save.brickTier,route:save.deliveryLevel,pc:save.pcOwned,order:save.order?{...save.order}:null,upgradeCost:brickTier().cost,routeCost:DELIVERY_LEVELS[1].price}),
+    begin:()=>{if(save.totalEarned!==0||save.balance!==0||save.brickTier!==0||save.deliveryLevel!==0||save.pcOwned||save.order?.active||save.order?.completed)return false;save.order={id:Date.now(),target:6,progress:0,reward:3200,active:false,completed:false};persist();updateUI();return true;}
+  };
   init();
 })();
