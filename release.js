@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.24.0',date:'2026-11-11',name:'Guided First Steps'};
+  const release={version:'6.25.0',date:'2026-11-12',name:'Neuron Siege & Account Bonus'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

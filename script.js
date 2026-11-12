@@ -438,7 +438,7 @@
   function strengthTier() { return strengthTiers[clamp(save.strength, 0, 5)]; }
   function finalReward() {
     const base=brickTier().reward*strengthTier().carry*nmtMultiplier()*activityMultiplier();
-    return clamp(Math.round(Math.pow(base,pocketPower())*incomeFactor()*DELIVERY_LEVELS[save.deliveryLevel].multiplier),0,MAX_BALANCE);
+    return clamp(Math.round(Math.pow(base,pocketPower())*incomeFactor()*DELIVERY_LEVELS[save.deliveryLevel].multiplier*(window.BrukBindingBonus?.multiplier()||1)),0,MAX_BALANCE);
   }
   function displayNmt(score) { return score >= 100 ? String(score) : '—'; }
 
@@ -469,7 +469,7 @@
     const avg = averageNmt();
     const multiplier = nmtMultiplier(avg);
 
-    $('deliveryReward').textContent = `+${money(finalReward())} UAH · ×${DELIVERY_LEVELS[save.deliveryLevel].multiplier}`;
+    $('deliveryReward').textContent = `+${money(finalReward())} UAH · ×${DELIVERY_LEVELS[save.deliveryLevel].multiplier}${window.BrukBindingBonus?.multiplier()===10?' · акаунт ×10':''}`;
     $('deliveryBalance').textContent = `${money(save.balance)} UAH`;
     $('businessBalance').textContent = `${money(save.balance)} UAH`;
     updateDeliveryButtons();
@@ -702,13 +702,13 @@
   // Delete all recognized Brukivka storage, including historical backups and Mini HOI campaigns.
   function completelyResetProgress() {
     if (!window.confirm('ВИДАЛИТИ ВСІ збереження гри, НМТ, ПК, шпалери, гроші та Mini HOI?'))return;
-    if (!window.confirm('Останнє підтвердження: видалений прогрес неможливо відновити. Скинути все?'))return;
+    if (!window.confirm('Останнє підтвердження: видалений прогрес неможливо відновити. Прив’язка акаунта й бонус ×10 залишаться. Скинути прогрес?'))return;
     try {
       for (const store of [localStorage,sessionStorage]) {
         const keys = [];
         for (let i = 0; i < store.length; i++) {
           const key = store.key(i);
-          if (key && /^brukivka/i.test(key)) keys.push(key);
+          if (key && /^brukivka/i.test(key)&&!window.BrukBindingBonus?.keep(key)) keys.push(key);
         }
         for (const key of keys) store.removeItem(key);
       }
@@ -793,7 +793,7 @@
     $('deliveryStatus').classList.add('hidden');
     $('deliveryCanvas').setAttribute('aria-label',level.name);
     board.dataset.level=String(save.deliveryLevel);
-    $('deliveryControls').textContent=save.deliveryLevel===2?'Тягни бруківку або керуй стрілками / WASD':'Миша / дотик: натягни й відпусти. Клавіатура: ← → — напрямок, ↑ ↓ — натяг, пробіл — кидок.';
+    $('deliveryControls').textContent=save.deliveryLevel===4?'Натягни рогатку й відпусти. Зруйнуй домики та всіх нейронів за 5 пострілів. R — нова спроба; стрілки й пробіл — кидок.':save.deliveryLevel===2?'Тягни бруківку або керуй стрілками / WASD':'Миша / дотик: натягни й відпусти. Клавіатура: ← → — напрямок, ↑ ↓ — натяг, пробіл — кидок.';
     $('deliveryLevels').replaceChildren();
     DELIVERY_LEVELS.forEach((item,id)=>{
       const button=document.createElement('button');button.type='button';button.className='delivery-level';button.dataset.route=String(id);
@@ -2209,8 +2209,9 @@
   window.BrukRewardShop.configure({get:()=>save.perks,set:value=>save.perks=value,save:persist,changed:updateUI});
   window.BrukMusic={state:()=>({playing:!scAudio().paused,track:MUSIC_TRACKS[save.audio.track],volume:save.audio.volume/100}),toggle:()=>$('scPlay').click(),next:()=>$('scNext').click(),volume:value=>{save.audio.volume=Math.round(clamp(value,0,1)*100);scApplyVolume();persist();renderSoundcloud();}};
   window.BrukOnboarding={
-    read:()=>({balance:save.balance,earned:save.totalEarned,brick:save.brickTier,route:save.deliveryLevel,pc:save.pcOwned,order:save.order?{...save.order}:null,upgradeCost:brickTier().cost,routeCost:DELIVERY_LEVELS[1].price}),
+    read:()=>({balance:save.balance,earned:save.totalEarned,deliveryReward:finalReward(),brick:save.brickTier,route:save.deliveryLevel,pc:save.pcOwned,order:save.order?{...save.order}:null,upgradeCost:brickTier().cost,routeCost:DELIVERY_LEVELS[1].price}),
     begin:()=>{if(save.totalEarned!==0||save.balance!==0||save.brickTier!==0||save.deliveryLevel!==0||save.pcOwned||save.order?.active||save.order?.completed)return false;save.order={id:Date.now(),target:6,progress:0,reward:3200,active:false,completed:false};persist();updateUI();return true;}
   };
+  window.addEventListener('bruk-binding-bonus',updateUI);
   init();
 })();

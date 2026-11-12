@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const {LEVELS,moveMaze,THROW,dronesAt,shotFromPull,catchesWindow,FlightWorld}=require('../delivery.js');
 
 test('delivery routes offer the requested multipliers',()=>{
-  assert.deepEqual(LEVELS.map(level=>level.multiplier),[.1,1,3,10]);
+  assert.deepEqual(LEVELS.map(level=>level.multiplier),[.1,1,3,10,250]);
 });
 test('the supplied maze has a traversable route through its actual corridors',()=>{
   let position={x:.65,y:5};
@@ -70,7 +70,7 @@ test('drone damage is immediate and its contact cooldown prevents duplicate pena
 });
 
 test('paid routes have increasing one-time prices; explicit access cannot select a locked route',()=>{
- const {restoreAccess}=require('../delivery.js');assert.deepEqual(LEVELS.map(l=>l.price),[0,2500,35000,250000]);
+ const {restoreAccess}=require('../delivery.js');assert.deepEqual(LEVELS.map(l=>l.price),[0,2500,35000,250000,2500000]);
  assert.deepEqual(restoreAccess({deliveryOwned:[0,2,2,'3',99],deliveryLevel:3}),{owned:[0,2],selected:0});
  assert.deepEqual(restoreAccess({deliveryOwned:[0,2],deliveryLevel:2}),{owned:[0,2],selected:2});
  assert.deepEqual(restoreAccess({deliveryLevel:3}),{owned:[0,1,3],selected:3});

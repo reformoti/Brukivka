@@ -5,6 +5,7 @@
     {name:'Лазерні ворота', multiplier:1, price:2500, penalty:500, icon:'⌁', hint:'Знайомий маршрут: проведи бруківку між воротами й лазерами.'},
     {name:'Лабіринт', multiplier:3, price:35000, penalty:1500, icon:'▦', hint:'Знайди шлях від входу ліворуч до виходу праворуч. Стіна руйнує бруківку й повертає на старт: −1 500 UAH.'},
     {name:'У відкрите вікно', multiplier:10, price:250000, penalty:4500, icon:'↗', hint:'Потягни бруківку вниз і вліво та відпусти. Влуч у вікно зверху, на спаданні. Стіна чи БПЛА: −4 500 UAH. БПЛА повністю знищує бруківку.'}
+    ,{name:'Облога нейронів',multiplier:250,price:2500000,penalty:0,icon:'◉',hint:'Натягни рогатку та запусти бруківку. Зруйнуй домики й усіх нейронів за 5 пострілів. R — нова спроба.'}
   ];
   const penaltyFor=level=>LEVELS[level]?.penalty||0;
   function restoreAccess(source={}){
@@ -148,10 +149,11 @@
     const {canvas,onSuccess,onMessage,isActive,onPenalty=()=>{}}=options,ctx=canvas.getContext('2d');
     const reducedMotion=root.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
     let level=2,maze=new MazeWorld(kind=>{onPenalty(kind);keys.clear();pointer=null;notify('Бруківка розбилась об стіну. −1 500 UAH. Почни зі входу.','bad');}),done=false,pointer=null,offset={x:0,y:0},pull={x:-54,y:78};
+    const siege=root.BrukNeuronSiege?.create(options);
     let aiming=false,keys=new Set(),previous=null,flight=new FlightWorld(kind=>onPenalty(kind));
     function notify(text,type=''){onMessage(text,type);}
-    function reset() {maze.reset();done=false;pointer=null;aiming=false;keys.clear();flight.reset();draw();}
-    function setLevel(id){level=id;canvas.style.aspectRatio=id===2?'1 / 1':'10 / 7';reset();resize();}
+    function reset() {maze.reset();done=false;pointer=null;aiming=false;keys.clear();flight.reset();if(level===4)siege?.reset();draw();}
+    function setLevel(id){level=id;siege?.setActive(id===4);canvas.style.aspectRatio=id===2?'1 / 1':'10 / 7';reset();resize();}
     function resize() {
       const box=canvas.parentElement;
       if(root.document.body.classList.contains('main-minimal')&&!box.classList.contains('hidden')){
@@ -173,6 +175,7 @@
     canvas.addEventListener('pointerdown',event=>{
       if(!isActive()||done)return;
       const p=point(event);
+      if(level===4)return;
       if(level===2) {
         if(maze.phase!=='ready')return;const m=mazePoint(p);if(Math.hypot(m.x-maze.x,m.y-maze.y)>.85)return;
         offset={x:m.x-maze.x,y:m.y-maze.y};
@@ -198,6 +201,7 @@
     canvas.addEventListener('pointercancel',()=>{pointer=null;aiming=false;});
     const codeMap={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down'};
     root.document.addEventListener('keydown',event=>{
+      if(level===4)return;
       if(!isActive()||done||event.ctrlKey||event.metaKey||event.altKey||event.target.closest('input,textarea,select,button,a'))return;
       const direction=codeMap[event.code];
       if(direction){event.preventDefault();keys.add(direction);
@@ -257,10 +261,10 @@
       if(flight.phase==='miss')text('Повз! Бруківка знову на старті.',500,80,'#ffd19e',21,'center');
       if(flight.phase==='success')text('ДОСТАВЛЕНО У ВІКНО!',500,80,'#d6f69e',26,'center');
     }
-    function draw(){if(!ctx)return;ctx.setTransform(canvas.width/1000,0,0,canvas.height/(level===2?1000:700),0,0);level===2?drawMaze():drawThrow();}
+    function draw(){if(!ctx)return;if(level===4)return;ctx.setTransform(canvas.width/1000,0,0,canvas.height/(level===2?1000:700),0,0);level===2?drawMaze():drawThrow();}
     function frame(time) {
       const dt=previous===null?0:Math.min(.04,(time-previous)/1000);previous=time;
-      if(isActive()&&!done) {
+      if(isActive()&&!done&&level!==4) {
         if(level===2)maze.step(dt);
         if(level===2&&keys.size){const x=(keys.has('right')?1:0)-(keys.has('left')?1:0),y=(keys.has('down')?1:0)-(keys.has('up')?1:0),norm=Math.hypot(x,y)||1;finishMaze({x:maze.x+x/norm*dt*2.5,y:maze.y+y/norm*dt*2.5});}
         if(level===3){const before=flight.phase;flight.step(dt);
@@ -276,7 +280,7 @@
     if(root.ResizeObserver)new root.ResizeObserver(resize).observe(canvas.parentElement.parentElement);
     root.requestAnimationFrame(resize);
     root.requestAnimationFrame(frame);
-    return {setLevel,reset,resize,cancel:()=>{keys.clear();pointer=null;aiming=false;}};
+    return {setLevel,reset,resize,cancel:()=>{keys.clear();pointer=null;aiming=false;siege?.cancel();}};
   }
   const api={LEVELS,restoreAccess,MAZE_LINES,mazeBlocked,moveMaze,MazeWorld,penaltyFor,THROW,dronesAt,shotFromPull,catchesWindow,FlightWorld,drawExplosion,create};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
