@@ -402,6 +402,8 @@ body.main-minimal #deliveryCanvasBox .main-reward small{font-size:7px}
 
 #siegeUpgradeOpen[hidden]{display:none!important}.siege-workshop{width:min(900px,92vw);max-height:90dvh;overflow:auto;background:var(--ui-panel);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:var(--ui-radius);padding:22px}.siege-workshop::backdrop{background:#000a;backdrop-filter:blur(5px)}.siege-shop-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.siege-workshop h2{margin:0;font-size:23px}.siege-workshop p{font-size:12px;line-height:1.7;color:var(--ui-muted)}.siege-shop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}.siege-shop-grid article{padding:16px;background:var(--ui-soft);border:1px solid var(--ui-line);border-radius:var(--ui-radius)}.siege-shop-grid h3{margin:0;font-size:17px}.siege-workshop button{padding:10px 14px;background:var(--ui-soft);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:var(--ui-radius);cursor:pointer}.siege-shop-grid button{background:var(--ui-accent);color:var(--ui-on);font-size:11px;font-weight:700}.siege-workshop button:disabled{opacity:.5;cursor:default}.siege-ammo-mark{height:48px;display:flex;align-items:center;font-size:32px;color:var(--ammo-color)}.siege-workshop .siege-shop-note{color:var(--ui-accent)}@media(max-width:650px){.siege-shop-grid{grid-template-columns:1fr}}
 
+#siegeLayoutSelect[hidden]{display:none!important}#siegeLayoutSelect{max-width:190px;min-width:115px;height:28px;padding:3px 8px;border:1px solid var(--ui-line);border-radius:var(--ui-radius);background:var(--ui-soft);color:var(--ui-text);font-family:inherit;font-size:10px;font-weight:600;cursor:pointer}#siegeLayoutSelect:focus-visible{outline:2px solid var(--ui-accent);outline-offset:2px}.delivery-tools:has(#siegeLayoutSelect:not([hidden])) #deliveryControls{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}.siege-workshop details{padding:10px 12px;border:1px solid var(--ui-line);border-radius:var(--ui-radius);color:var(--ui-muted);font-size:12px}.siege-workshop summary{cursor:pointer;color:var(--ui-text)}
+
 </style><script>
 (() => {
   'use strict';if(window.BrukDevice?.blocked)return;
@@ -515,7 +517,7 @@ $('gameLocale').onchange=()=>O.set({locale:$('gameLocale').value});$('gameQualit
   <script>
 (function(root){
   'use strict';
-  const release={version:'6.26.0',date:'2026-11-12',name:'Siege Workshop'};
+  const release={version:'6.27.0',date:'2026-11-12',name:'Neurosphere'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

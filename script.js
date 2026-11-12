@@ -792,11 +792,11 @@
     $('deliveryHint').textContent=level.hint;
     $('gameBoard').classList.toggle('hidden',save.deliveryLevel>=2);
     $('deliveryCanvasBox').classList.toggle('hidden',save.deliveryLevel<2);
-    $('siegeUpgradeOpen').hidden=save.deliveryLevel!==4;
+    $('siegeUpgradeOpen').hidden=save.deliveryLevel!==4;$('siegeLayoutSelect').hidden=save.deliveryLevel!==4;
     $('deliveryStatus').classList.add('hidden');
     $('deliveryCanvas').setAttribute('aria-label',level.name);
     board.dataset.level=String(save.deliveryLevel);
-    $('deliveryControls').textContent=save.deliveryLevel===4?'Натягни рогатку й відпусти. Зруйнуй домики та всіх нейронів за 5 пострілів. R — нова спроба; стрілки й пробіл — кидок.':save.deliveryLevel===2?'Тягни бруківку або керуй стрілками / WASD':'Миша / дотик: натягни й відпусти. Клавіатура: ← → — напрямок, ↑ ↓ — натяг, пробіл — кидок.';
+    $('deliveryControls').textContent=save.deliveryLevel===4?'Зруйнуй ядро → мегаперевантаження · R — спочатку':save.deliveryLevel===2?'Тягни бруківку або керуй стрілками / WASD':'Миша / дотик: натягни й відпусти. Клавіатура: ← → — напрямок, ↑ ↓ — натяг, пробіл — кидок.';
     $('deliveryLevels').replaceChildren();
     DELIVERY_LEVELS.forEach((item,id)=>{
       const button=document.createElement('button');button.type='button';button.className='delivery-level';button.dataset.route=String(id);
@@ -2211,6 +2211,7 @@
   window.BrukGarageSnapshot=()=>window.BrukVentures.normalizeGarage(save.garage);
   window.BrukRewardShop.configure({get:()=>save.perks,set:value=>save.perks=value,save:persist,changed:updateUI});
   window.BrukMusic={state:()=>({playing:!scAudio().paused,track:MUSIC_TRACKS[save.audio.track],volume:save.audio.volume/100}),toggle:()=>$('scPlay').click(),next:()=>$('scNext').click(),volume:value=>{save.audio.volume=Math.round(clamp(value,0,1)*100);scApplyVolume();persist();renderSoundcloud();}};
+  $('siegeLayoutSelect').onchange=e=>deliveryGame.setSiegeLayout(Number(e.target.value));
   window.BrukSiegeShop={read:()=>({state:window.BrukNeuronSiege.normalizeUpgrade(save.siege),balance:save.balance,unlocked:save.deliveryOwned.includes(4)}),buy(kind,id){if(!save.deliveryOwned.includes(4))return {ok:false,message:'Спочатку відкрий п’ятий маршрут.'};const result=window.BrukNeuronSiege.purchase(save.siege,save.balance,kind,id);if(result.ok){save.siege=result.state;save.balance=result.balance;persist();updateUI();}return result;}};
   window.BrukOnboarding={
     read:()=>({balance:save.balance,earned:save.totalEarned,deliveryReward:finalReward(),brick:save.brickTier,route:save.deliveryLevel,pc:save.pcOwned,order:save.order?{...save.order}:null,upgradeCost:brickTier().cost,routeCost:DELIVERY_LEVELS[1].price}),

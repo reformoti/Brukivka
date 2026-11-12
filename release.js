@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.26.0',date:'2026-11-12',name:'Siege Workshop'};
+  const release={version:'6.27.0',date:'2026-11-12',name:'Neurosphere'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

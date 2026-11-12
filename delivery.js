@@ -5,7 +5,7 @@
     {name:'Лазерні ворота', multiplier:1, price:2500, penalty:500, icon:'⌁', hint:'Знайомий маршрут: проведи бруківку між воротами й лазерами.'},
     {name:'Лабіринт', multiplier:3, price:35000, penalty:1500, icon:'▦', hint:'Знайди шлях від входу ліворуч до виходу праворуч. Стіна руйнує бруківку й повертає на старт: −1 500 UAH.'},
     {name:'У відкрите вікно', multiplier:10, price:250000, penalty:4500, icon:'↗', hint:'Потягни бруківку вниз і вліво та відпусти. Влуч у вікно зверху, на спаданні. Стіна чи БПЛА: −4 500 UAH. БПЛА повністю знищує бруківку.'}
-    ,{name:'Облога нейронів',multiplier:250,price:228148867690450,penalty:0,icon:'◉',hint:'Натягни рогатку та запусти бруківку. Зруйнуй домики й усіх нейронів за 5 пострілів. R — нова спроба.'}
+    ,{name:'Облога нейронів',multiplier:250,price:228148867690450,penalty:0,icon:'◉',hint:'Три схеми нейрофортець. Зруйнуй усі клітини за 5 пострілів або розбий сяюче ядро та запусти мегаперевантаження мережі.'}
   ];
   const penaltyFor=level=>LEVELS[level]?.penalty||0;
   function restoreAccess(source={}){
@@ -280,7 +280,7 @@
     if(root.ResizeObserver)new root.ResizeObserver(resize).observe(canvas.parentElement.parentElement);
     root.requestAnimationFrame(resize);
     root.requestAnimationFrame(frame);
-    return {setLevel,reset,resize,cancel:()=>{keys.clear();pointer=null;aiming=false;siege?.cancel();}};
+    return {setLevel,reset,resize,setSiegeLayout:id=>{if(level===4)siege?.setLayout(id);},cancel:()=>{keys.clear();pointer=null;aiming=false;siege?.cancel();}};
   }
   const api={LEVELS,restoreAccess,MAZE_LINES,mazeBlocked,moveMaze,MazeWorld,penaltyFor,THROW,dronesAt,shotFromPull,catchesWindow,FlightWorld,drawExplosion,create};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
