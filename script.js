@@ -205,6 +205,7 @@
       estate:window.BrukVentures.defaultEstate(),
       garage:window.BrukVentures.defaultGarage(),
       mining:window.BrukMining.normalize(),
+      siege:window.BrukNeuronSiege.normalizeUpgrade(),
       brickTier:0,
       phoneTier:0,
       strength:0,
@@ -272,6 +273,7 @@
     result.estate=window.BrukVentures.normalizeEstate(source.estate);
     result.garage=window.BrukVentures.normalizeGarage(source.garage);
     result.mining=window.BrukMining.normalize(source.mining);
+    result.siege=window.BrukNeuronSiege.normalizeUpgrade(source.siege);
     const access=window.BrukDelivery.restoreAccess(source);
     result.deliveryLevel=access.selected;result.deliveryOwned=access.owned;
     result.brickTier = safeInt(source.brickTier, 0, 0, brickTiers.length - 1);
@@ -773,8 +775,8 @@
   let startPosition = {x:0,y:0};
   let mobileLayout = window.matchMedia('(max-width: 760px)').matches;
   const deliveryGame = window.BrukDelivery.create({
-    canvas:$('deliveryCanvas'),onSuccess:delivered,onMessage:setStatus,onPenalty:deliveryPenalty,
-    isActive:()=>save.deliveryLevel>=2&&save.deliveryOwned.includes(save.deliveryLevel)&&!resetting&&!document.hidden&&$('phoneOverlay').classList.contains('hidden')&&$('pcOverlay').classList.contains('hidden')&&!$('businessHost').open
+    getSiege:()=>save.siege,canvas:$('deliveryCanvas'),onSuccess:delivered,onMessage:setStatus,onPenalty:deliveryPenalty,
+    isActive:()=>save.deliveryLevel>=2&&save.deliveryOwned.includes(save.deliveryLevel)&&!resetting&&!document.hidden&&$('phoneOverlay').classList.contains('hidden')&&$('pcOverlay').classList.contains('hidden')&&!$('businessHost').open&&!$('siegeWorkshop')?.open
   });
   function deliveryPenalty(kind) {
     if(resetting||save.deliveryLevel<2)return;
@@ -790,6 +792,7 @@
     $('deliveryHint').textContent=level.hint;
     $('gameBoard').classList.toggle('hidden',save.deliveryLevel>=2);
     $('deliveryCanvasBox').classList.toggle('hidden',save.deliveryLevel<2);
+    $('siegeUpgradeOpen').hidden=save.deliveryLevel!==4;
     $('deliveryStatus').classList.add('hidden');
     $('deliveryCanvas').setAttribute('aria-label',level.name);
     board.dataset.level=String(save.deliveryLevel);
@@ -2208,6 +2211,7 @@
   window.BrukGarageSnapshot=()=>window.BrukVentures.normalizeGarage(save.garage);
   window.BrukRewardShop.configure({get:()=>save.perks,set:value=>save.perks=value,save:persist,changed:updateUI});
   window.BrukMusic={state:()=>({playing:!scAudio().paused,track:MUSIC_TRACKS[save.audio.track],volume:save.audio.volume/100}),toggle:()=>$('scPlay').click(),next:()=>$('scNext').click(),volume:value=>{save.audio.volume=Math.round(clamp(value,0,1)*100);scApplyVolume();persist();renderSoundcloud();}};
+  window.BrukSiegeShop={read:()=>({state:window.BrukNeuronSiege.normalizeUpgrade(save.siege),balance:save.balance,unlocked:save.deliveryOwned.includes(4)}),buy(kind,id){if(!save.deliveryOwned.includes(4))return {ok:false,message:'Спочатку відкрий п’ятий маршрут.'};const result=window.BrukNeuronSiege.purchase(save.siege,save.balance,kind,id);if(result.ok){save.siege=result.state;save.balance=result.balance;persist();updateUI();}return result;}};
   window.BrukOnboarding={
     read:()=>({balance:save.balance,earned:save.totalEarned,deliveryReward:finalReward(),brick:save.brickTier,route:save.deliveryLevel,pc:save.pcOwned,order:save.order?{...save.order}:null,upgradeCost:brickTier().cost,routeCost:DELIVERY_LEVELS[1].price}),
     begin:()=>{if(save.totalEarned!==0||save.balance!==0||save.brickTier!==0||save.deliveryLevel!==0||save.pcOwned||save.order?.active||save.order?.completed)return false;save.order={id:Date.now(),target:6,progress:0,reward:3200,active:false,completed:false};persist();updateUI();return true;}
