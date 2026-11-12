@@ -3,7 +3,7 @@
   if(typeof window!=='undefined'&&window.BrukDevice?.blocked)return;
   const V=window.BrukVentures,$=id=>document.getElementById(id);
   const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
-  const money=n=>Math.round(n).toLocaleString('uk-UA');
+  const money=n=>window.BrukMoney?.format(n)||Math.round(n).toLocaleString('uk-UA');
   function button(text,action,id,disabled=false){const b=el('button','venture-button',text);b.type='button';if(id)b.id=id;b.disabled=disabled;b.addEventListener('click',action);return b;}
   function hero(root,kicker,title,copy){const h=el('div','venture-hero');h.append(el('small','',kicker),el('h2','',title),el('p','',copy));root.append(h);}
   function stat(label,value){const s=el('div','venture-stat');s.append(el('small','',label),el('strong','',value));return s;}

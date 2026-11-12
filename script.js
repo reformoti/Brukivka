@@ -4,7 +4,7 @@
 
   const $ = (id) => document.getElementById(id);
   const $$ = (selector) => [...document.querySelectorAll(selector)];
-  const money = (value) => Math.round(Number(value) || 0).toLocaleString('uk-UA');
+  const money = window.BrukMoney.format;
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const rand = (min, max) => Math.random() * (max - min) + min;
   const randInt = (min, max) => Math.floor(rand(min, max + 1));
@@ -115,7 +115,7 @@
   const MARKET_REFRESH_PRICE = 250;
   const MARKET_REFRESH_COOLDOWN_MS = 30 * 1000;
   const ITEM_SALE_DELAY_MS = 60 * 1000;
-  const MAX_BALANCE = Number.MAX_SAFE_INTEGER;
+  const MAX_BALANCE = window.BrukMoney.LIMIT, MAX_COUNT=Number.MAX_SAFE_INTEGER;
   // These URLs are fixed game assets, never interpolated from saved user input.
   const WALLPAPERS = [
     {id:0,name:'Стандартна тема',price:0,icon:'◈',image:'',accent:'#7885ff',panel:'#131720',panel2:'#1a1f29',bg:'#090b10',soft:'#242a49',glow:'#7885ff'},
@@ -142,7 +142,7 @@
     {name:'Ultra 4K',cost:0,resolution:'1920×1080'}];
   function pocketPower(){return save.pocketTier ? 1.01+(save.pocketTier-1)*.02:1;}
   function pocketCost(){return Math.round(1100000*Math.exp(.16*Math.pow(save.pocketTier,1.85))/1000)*1000;}
-  function incomeFactor(){return save.waiterPenalty ? .1:1;}
+  function incomeFactor(){return (save.waiterPenalty ? 0.1 : 1)*window.BrukLabCore.effects(save.lab).income;}
   function award(value){const amount=Math.max(0,Math.round(value*incomeFactor()));save.balance=clamp(save.balance+amount,-MAX_BALANCE,MAX_BALANCE);save.totalEarned=clamp(save.totalEarned+amount,0,MAX_BALANCE);return amount;}
   function islandIncome(){return ISLANDS.reduce((total,i)=>total+i.income*(save.islands[i.id]||0),0);}
   // Clothing and delivery contracts scale by lifetime income, not only current cash.
@@ -206,6 +206,7 @@
       garage:window.BrukVentures.defaultGarage(),
       mining:window.BrukMining.normalize(),
       siege:window.BrukNeuronSiege.normalizeUpgrade(),
+      lab:window.BrukLabCore.normalize(),
       brickTier:0,
       phoneTier:0,
       strength:0,
@@ -274,6 +275,7 @@
     result.garage=window.BrukVentures.normalizeGarage(source.garage);
     result.mining=window.BrukMining.normalize(source.mining);
     result.siege=window.BrukNeuronSiege.normalizeUpgrade(source.siege);
+    result.lab=window.BrukLabCore.normalize(source.lab);
     const access=window.BrukDelivery.restoreAccess(source);
     result.deliveryLevel=access.selected;result.deliveryOwned=access.owned;
     result.brickTier = safeInt(source.brickTier, 0, 0, brickTiers.length - 1);
@@ -284,9 +286,9 @@
       result.attempted[subject] = typeof attempted[subject] === 'boolean'
         ? attempted[subject] : result.tests[subject] > 0;
     });
-    result.legit.score = safeInt(legit.score, 0, 0, MAX_BALANCE);
-    result.legit.streak = safeInt(legit.streak, 0, 0, MAX_BALANCE);
-    result.legit.best = Math.max(result.legit.streak, safeInt(legit.best, 0, 0, MAX_BALANCE));
+    result.legit.score = safeInt(legit.score, 0, 0, MAX_COUNT);
+    result.legit.streak = safeInt(legit.streak, 0, 0, MAX_COUNT);
+    result.legit.best = Math.max(result.legit.streak, safeInt(legit.best, 0, 0, MAX_COUNT));
     if (source.order !== null && source.order !== undefined) {
       const order = record(source.order);
       if (Number.isFinite(order.target) && order.target >= 1 && Number.isFinite(order.reward) && order.reward >= 0) {
@@ -294,7 +296,7 @@
         const progress = safeInt(order.progress, 0, 0, target);
         const completed = order.completed === true || progress >= target;
         result.order = {
-          id:safeInt(order.id, 0, 0, MAX_BALANCE), target, progress,
+          id:safeInt(order.id, 0, 0, MAX_COUNT), target, progress,
           reward:safeInt(order.reward, 0, 0, MAX_BALANCE),
           active:!completed && order.active === true,
           completed
@@ -325,7 +327,7 @@
         });
       }
     }
-    result.marketSerial = safeInt(source.marketSerial, 1, 1, MAX_BALANCE);
+    result.marketSerial = safeInt(source.marketSerial, 1, 1, MAX_COUNT);
     if (result.market) {
       const serials = [...result.market.kos, ...result.market.street]
         .map((item) => /^offer_(\d+)$/.exec(item.offerId))
@@ -728,6 +730,7 @@
     $$('.phone-screen').forEach(screen=>screen.classList.add('hidden'));
     $(id).classList.remove('hidden');
     updateUI();
+    if(id==='laboratoryScreen')window.BrukLabUI?.refresh();
     if(id==='fopScreen'){payIslands();renderFopWallet();}
     if (id === 'wallpaperScreen') renderWallpaperShop();
     if (id === 'telegramScreen') renderTelegram();
@@ -747,6 +750,7 @@
   $('closePhone').addEventListener('click', () => $('phoneOverlay').classList.add('hidden'));
   $('phoneHomeButton').addEventListener('click', () => showScreen('phoneHome'));
   $$('[data-home]').forEach((button) => button.addEventListener('click', () => showScreen('phoneHome')));
+  $('laboratoryApp').addEventListener('click',()=>showScreen('laboratoryScreen'));
   $('fopApp').addEventListener('click',()=>showScreen('fopScreen'));
   $('fopQuickOpen').addEventListener('click',()=>showScreen('fopScreen'));
   $('bankOpenFop').addEventListener('click',()=>showScreen('fopScreen'));
@@ -2057,6 +2061,7 @@
     applyWallpaperTheme();
     showSaveNotice(saveNotice);
     syncHoiBonus();
+    settleLaboratory();
     ensureOrder();
     ensureMarket();
     persist(); // Commit sanitized data and restore a damaged main save from the backup.
@@ -2076,7 +2081,7 @@
       updatePhoneTime();
       if (!$('tgMarketPanel').classList.contains('hidden')) updateMarketRefreshButton();
       if (!$('tgInventoryPanel').classList.contains('hidden')) renderInventory();
-      updateWaiterJob();payIslands();
+      updateWaiterJob();payIslands();tickLaboratory();
     }, 1000);
   }
 
@@ -2192,14 +2197,14 @@
   };
   let mineLast=performance.now(),mineSave=mineLast;
   setInterval(()=>{const now=performance.now(),dt=(now-mineLast)/1000;mineLast=now;if(document.hidden||!save.pcOwned)return;const earned=window.BrukMining.tick(save.mining,dt,save.pcUpgrades.gpu,save.pcOwned);if(earned&&now-mineSave>5000){persist();mineSave=now;}window.dispatchEvent(new Event('bruk-mining'));},1000);
-  window.addEventListener('pagehide',()=>persist());
+  window.addEventListener('pagehide',()=>{settleLaboratory();persist();});
   const businessAPI={
     estate:()=>save.estate,garage:()=>save.garage,balance:()=>save.balance,perks:()=>({...save.perks}),
     usePerk:(key,change)=>{if(!['brickStock','rebarStock','paintVouchers'].includes(key)||save.perks[key]<1)return false;if(change()===false)return false;save.perks[key]--;persist();updateUI();return true;},
     message:text=>$('businessMessage').textContent=text,
     commit:()=>{persist();updateUI();},
     buy:(cost,change)=>{
-      if(!Number.isSafeInteger(cost)||cost<0||cost>MAX_BALANCE)return false;
+      if(!window.BrukMoney.valid(cost)||cost<0)return false;
       if(cost>0&&save.balance<cost){$('businessMessage').textContent=`Потрібно ${money(cost)} UAH. На балансі ${money(save.balance)}.`;return false;}
       if(change()===false)return false;save.balance-=cost;persist();updateUI();return true;
     },
@@ -2219,6 +2224,16 @@
   window.BrukRewardShop.configure({get:()=>save.perks,set:value=>save.perks=value,save:persist,changed:updateUI});
   window.BrukMusic={state:()=>({playing:!scAudio().paused,track:MUSIC_TRACKS[save.audio.track],volume:save.audio.volume/100}),toggle:()=>$('scPlay').click(),next:()=>$('scNext').click(),volume:value=>{save.audio.volume=Math.round(clamp(value,0,1)*100);scApplyVolume();persist();renderSoundcloud();}};
   $('siegeLayoutSelect').onchange=e=>{if(resetting){e.target.value=String(save.siege.stage);return;}deliveryGame.setSiegeLayout(Number(e.target.value));$('deliveryCanvas').focus({preventScroll:true});};
+  let labSavedAt=0;
+  function settleLaboratory(){save.lab=window.BrukLabCore.settle(save.lab).state;}
+  function tickLaboratory(){settleLaboratory();if(Date.now()-labSavedAt>5000&&Object.values(save.lab.facilities).some(Boolean)){labSavedAt=Date.now();persist();}if(!$('laboratoryScreen').classList.contains('hidden'))window.dispatchEvent(new Event('bruk-lab'));}
+  function commitLaboratory(result){if(!result.ok)return result;save.lab=result.state;if(result.balance!==undefined)save.balance=result.balance;if(result.reward)save.totalEarned=Math.min(MAX_BALANCE,save.totalEarned+result.reward);persist();updateUI();window.dispatchEvent(new Event('bruk-lab'));return result;}
+  window.BrukLab={
+    read:()=>{settleLaboratory();return {state:window.BrukLabCore.normalize(save.lab),balance:save.balance,rates:window.BrukLabCore.rates(save.lab),effects:window.BrukLabCore.effects(save.lab)};},
+    facility:id=>{settleLaboratory();return commitLaboratory(window.BrukLabCore.buyFacility(save.lab,save.balance,id));},
+    study:id=>{settleLaboratory();return commitLaboratory(window.BrukLabCore.study(save.lab,id));},
+    annihilate:fraction=>{settleLaboratory();return commitLaboratory(window.BrukLabCore.annihilate(save.lab,save.balance,fraction));}
+  };
   window.BrukSiegeShop={read:()=>({state:window.BrukNeuronSiege.normalizeUpgrade(save.siege),balance:save.balance,unlocked:save.deliveryOwned.includes(4)}),buy(kind,id){if(!save.deliveryOwned.includes(4))return {ok:false,message:'Спочатку відкрий п’ятий маршрут.'};const result=window.BrukNeuronSiege.purchase(save.siege,save.balance,kind,id);if(result.ok){save.siege=result.state;save.balance=result.balance;persist();updateUI();}return result;}};
   window.BrukOnboarding={
     read:()=>({balance:save.balance,earned:save.totalEarned,deliveryReward:finalReward(),brick:save.brickTier,route:save.deliveryLevel,pc:save.pcOwned,order:save.order?{...save.order}:null,upgradeCost:brickTier().cost,routeCost:DELIVERY_LEVELS[1].price}),

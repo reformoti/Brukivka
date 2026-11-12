@@ -18,7 +18,7 @@ function purchase(raw,balance,kind,id){const state=normalizeUpgrade(raw);let cos
  if(kind==='rank'){cost=price(state,id);if(cost===null)return {ok:false,message:'Досягнуто максимум.'};}
  else if(kind==='ammo'){if(!Object.hasOwn(AMMO,id))return {ok:false,message:'Невідомий тип.'};cost=state.owned.includes(id)?0:AMMO[id].price;}
  else return {ok:false,message:'Невідома дія.'};
- if(!Number.isSafeInteger(balance)||!Number.isSafeInteger(cost)||(cost>0&&balance<cost))return {ok:false,message:'Недостатньо UAH.'};
+ if(!(typeof balance==='number'&&Number.isFinite(balance)&&Number.isInteger(balance)&&Math.abs(balance)<=1e120)||!Number.isSafeInteger(cost)||(cost>0&&balance<cost))return {ok:false,message:'Недостатньо UAH.'};
  if(kind==='rank')state[id]++;else {if(!state.owned.includes(id))state.owned.push(id);state.ammo=id;}
  return {ok:true,state,balance:balance-cost,cost};
 }

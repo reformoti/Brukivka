@@ -1,6 +1,6 @@
 (function(root){'use strict';
 const TAU=Math.PI*2,clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-function penaltyForBalance(balance){return Number.isSafeInteger(balance)&&balance>0?Number(BigInt(balance)*85n/100n):0;}
+function penaltyForBalance(balance){if(typeof balance!=='number'||!Number.isFinite(balance)||!Number.isInteger(balance)||balance<=0||balance>1e120)return 0;return Number.isSafeInteger(balance)?Number(BigInt(balance)*85n/100n):Math.floor(balance*.85);}
 function segmentHit(ax,ay,bx,by,x,y,r){const dx=bx-ax,dy=by-ay,t=clamp(((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1),0,1);return (ax+dx*t-x)**2+(ay+dy*t-y)**2<=r*r;}
 class World{
  constructor(upgrades={},ammo={damage:1,speed:1}){
@@ -105,7 +105,7 @@ function draw(ctx,w,{canvas}={}){
  if(w.phase==='intro'){
   panel(228,242,544,196,'#0a2037f5','#d0dccca0');text('БІЙ НАД ХМАРАМИ',259,281,27,'#f8e7c8',700);text('3 HP · нейрон, птах або перешкода забирають 1 HP.',259,314,13);text('Рідкісний золотий НЕЙТРОН знищує літак одразу.',259,340,13,'#ffdc9c');text('За поразку: штраф 85% поточного додатного балансу.',259,366,12,'#ffe0b1');text('ПРОБІЛ / ENTER або натисни на поле — почати',259,408,14,'#c6eddd',700);
  }else if(w.phase==='lost'||w.won){
-  panel(250,249,500,163,'#0a2037f5',w.won?'#a8e6ca':'#e4a49b');text(w.won?'МОЗОК ПЕРЕМОЖЕНО':'ЛІТАК ЗНИЩЕНО',279,290,27,w.won?'#d8f1b7':'#ffd0b4',700);text(w.won?'Нейросферу звільнено. Кампанію завершено.':'Штраф −'+w.lossCharged.toLocaleString('uk-UA')+' UAH (85%).',279,326,14,'#e6d5c1');text(w.won?'Нагороду зараховано · відкриті етапи доступні знову':'R або «Спочатку» — повторити бій із 3 HP',279,376,12,'#a9d4d9');
+  panel(250,249,500,163,'#0a2037f5',w.won?'#a8e6ca':'#e4a49b');text(w.won?'МОЗОК ПЕРЕМОЖЕНО':'ЛІТАК ЗНИЩЕНО',279,290,27,w.won?'#d8f1b7':'#ffd0b4',700);text(w.won?'Нейросферу звільнено. Кампанію завершено.':'Штраф −'+(root.BrukMoney?.format(w.lossCharged)|| (w.lossCharged<1e18?w.lossCharged.toLocaleString('uk-UA'):w.lossCharged.toExponential(3)))+' UAH (85%).',279,326,14,'#e6d5c1');text(w.won?'Нагороду зараховано · відкриті етапи доступні знову':'R або «Спочатку» — повторити бій із 3 HP',279,376,12,'#a9d4d9');
  }
 }
 const api={World,draw,penaltyForBalance,segmentHit};if(typeof module==='object'&&module.exports)module.exports=api;else root.BrukSkyBoss=api;

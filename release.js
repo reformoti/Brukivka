@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.29.0',date:'2026-11-12',name:'Neurosphere Campaign'};
+  const release={version:'6.30.0',date:'2026-11-12',name:'Antimatter Laboratory'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
