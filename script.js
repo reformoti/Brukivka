@@ -775,9 +775,15 @@
   let startPosition = {x:0,y:0};
   let mobileLayout = window.matchMedia('(max-width: 760px)').matches;
   const deliveryGame = window.BrukDelivery.create({
-    getSiege:()=>save.siege,canvas:$('deliveryCanvas'),onSuccess:delivered,onMessage:setStatus,onPenalty:deliveryPenalty,
+    getSiege:()=>save.siege,onSiegeClear:stage=>{save.siege=window.BrukNeuronSiege.advance(save.siege,stage);persist();siegeControls();window.dispatchEvent(new Event('bruk-siege-progress'));},onSiegeSelect:stage=>{save.siege=window.BrukNeuronSiege.selectStage(save.siege,stage);persist();siegeControls();window.dispatchEvent(new Event('bruk-siege-progress'));},onBossDefeat:bossDefeat,canvas:$('deliveryCanvas'),onSuccess:delivered,onMessage:setStatus,onPenalty:deliveryPenalty,
     isActive:()=>save.deliveryLevel>=2&&save.deliveryOwned.includes(save.deliveryLevel)&&!resetting&&!document.hidden&&$('phoneOverlay').classList.contains('hidden')&&$('pcOverlay').classList.contains('hidden')&&!$('businessHost').open&&!$('siegeWorkshop')?.open
   });
+  function siegeControls(){if(save.deliveryLevel===4)$('deliveryControls').textContent=save.siege.stage===9?'WASD / стрілки · пробіл — стрільба · 3 HP':'Пробій бар’єрів · зверху БПЛА · R — спочатку';}
+  function bossDefeat(){
+    const penalty=window.BrukSkyBoss.penaltyForBalance(save.balance);
+    save.balance-=penalty;persist();updateUI();window.BrukSfx?.playBreak();
+    setStatus(`Літак знищено. Штраф 85%: −${money(penalty)} UAH. Натисни R, щоб повторити бій.`, 'bad');return penalty;
+  }
   function deliveryPenalty(kind) {
     if(resetting||save.deliveryLevel<2)return;
     const penalty=window.BrukDelivery.penaltyFor(save.deliveryLevel);
@@ -796,7 +802,8 @@
     $('deliveryStatus').classList.add('hidden');
     $('deliveryCanvas').setAttribute('aria-label',level.name);
     board.dataset.level=String(save.deliveryLevel);
-    $('deliveryControls').textContent=save.deliveryLevel===4?'Зруйнуй ядро → мегаперевантаження · R — спочатку':save.deliveryLevel===2?'Тягни бруківку або керуй стрілками / WASD':'Миша / дотик: натягни й відпусти. Клавіатура: ← → — напрямок, ↑ ↓ — натяг, пробіл — кидок.';
+    $('deliveryControls').textContent=save.deliveryLevel===4?'Пробій бар’єрів · зверху БПЛА · R — спочатку':save.deliveryLevel===2?'Тягни бруківку або керуй стрілками / WASD':'Миша / дотик: натягни й відпусти. Клавіатура: ← → — напрямок, ↑ ↓ — натяг, пробіл — кидок.';
+    siegeControls();
     $('deliveryLevels').replaceChildren();
     DELIVERY_LEVELS.forEach((item,id)=>{
       const button=document.createElement('button');button.type='button';button.className='delivery-level';button.dataset.route=String(id);
@@ -2211,7 +2218,7 @@
   window.BrukGarageSnapshot=()=>window.BrukVentures.normalizeGarage(save.garage);
   window.BrukRewardShop.configure({get:()=>save.perks,set:value=>save.perks=value,save:persist,changed:updateUI});
   window.BrukMusic={state:()=>({playing:!scAudio().paused,track:MUSIC_TRACKS[save.audio.track],volume:save.audio.volume/100}),toggle:()=>$('scPlay').click(),next:()=>$('scNext').click(),volume:value=>{save.audio.volume=Math.round(clamp(value,0,1)*100);scApplyVolume();persist();renderSoundcloud();}};
-  $('siegeLayoutSelect').onchange=e=>deliveryGame.setSiegeLayout(Number(e.target.value));
+  $('siegeLayoutSelect').onchange=e=>{if(resetting){e.target.value=String(save.siege.stage);return;}deliveryGame.setSiegeLayout(Number(e.target.value));$('deliveryCanvas').focus({preventScroll:true});};
   window.BrukSiegeShop={read:()=>({state:window.BrukNeuronSiege.normalizeUpgrade(save.siege),balance:save.balance,unlocked:save.deliveryOwned.includes(4)}),buy(kind,id){if(!save.deliveryOwned.includes(4))return {ok:false,message:'Спочатку відкрий п’ятий маршрут.'};const result=window.BrukNeuronSiege.purchase(save.siege,save.balance,kind,id);if(result.ok){save.siege=result.state;save.balance=result.balance;persist();updateUI();}return result;}};
   window.BrukOnboarding={
     read:()=>({balance:save.balance,earned:save.totalEarned,deliveryReward:finalReward(),brick:save.brickTier,route:save.deliveryLevel,pc:save.pcOwned,order:save.order?{...save.order}:null,upgradeCost:brickTier().cost,routeCost:DELIVERY_LEVELS[1].price}),

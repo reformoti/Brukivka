@@ -46,7 +46,7 @@ function draw(ctx,w,{canvas,pull={x:-75,y:28},aim=false}={}){
    if(b.w>b.h){for(let x=22;x<b.w;x+=23)line(x,2,x,b.h-2,'#24384d',1);}else{for(let y=18;y<b.h;y+=21)line(2,y,b.w-2,y,'#24384d',1);}
    for(const [rx,ry] of [[4,5],[b.w-5,b.h-6]]){circle(rx,ry,2,'#25384d');line(rx-1,ry-1,rx+1,ry-1,'#9bb2c4');}
   }
-  const max={wood:75,glass:35,stone:180}[b.material];if(b.hp<max*.7){const p=b.hp<max*.3?2:1;ctx.strokeStyle='#0b1b28';ctx.lineWidth=p;ctx.beginPath();ctx.moveTo(b.w*.2,2);ctx.lineTo(b.w*.55,b.h*.4);ctx.lineTo(b.w*.3,b.h*.6);ctx.lineTo(b.w*.8,b.h-1);ctx.stroke();}
+  const max=b.maxHp;if(b.hp<max*.7){const p=b.hp<max*.3?2:1;ctx.strokeStyle='#0b1b28';ctx.lineWidth=p;ctx.beginPath();ctx.moveTo(b.w*.2,2);ctx.lineTo(b.w*.55,b.h*.4);ctx.lineTo(b.w*.3,b.h*.6);ctx.lineTo(b.w*.8,b.h-1);ctx.stroke();}
   ctx.restore();
  }
  function neuron(b){
@@ -62,7 +62,7 @@ function draw(ctx,w,{canvas,pull={x:-75,y:28},aim=false}={}){
   ctx.restore();
  }
  function links(){
-  const nodes=new Map(w.bodies.filter(b=>!b.dead).map(b=>[b.id,b]));if(w.core)nodes.set(w.core.id,w.core);
+  const nodes=new Map(w.bodies.filter(b=>!b.dead).map(b=>[b.id,b]));for(const core of w.cores)nodes.set(core.id,core);
   for(const [i,e] of w.links.entries()){const a=nodes.get(e.from),b=nodes.get(e.to);if(!a||!b||(!w.overload&&(a.dead||b.dead)))continue;
    const bend=Math.min(24,Math.abs(a.x-b.x)*.15+6),mx=(a.x+b.x)/2,my=(a.y+b.y)/2-bend;
    ctx.strokeStyle=w.overload?'#ffcd8fc0':e.hub?'#f7d09699':'#64dcd566';ctx.lineWidth=w.overload?2:e.hub?1.5:1;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(mx,my,b.x,b.y);ctx.stroke();
@@ -85,12 +85,12 @@ function draw(ctx,w,{canvas,pull={x:-75,y:28},aim=false}={}){
   if(w.phase==='ready'){
    const p=aim?{x:140+pull.x,y:520+pull.y}:{x:140,y:520};
    ctx.strokeStyle='#311f20';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(115,503);ctx.lineTo(p.x,p.y);ctx.lineTo(164,503);ctx.stroke();ctx.strokeStyle='#ceac85';ctx.lineWidth=2;ctx.stroke();
-   if(aim){for(let dt=.08;dt<2.1;dt+=.075){const x=p.x-pull.x*9.2*w.force*w.ammo.speed*dt,y=p.y-pull.y*9.2*w.force*w.ammo.speed*dt+255*dt*dt;if(y>640||x>1000||x<0)break;circle(x,y,dt<.5?2.5:1.7,dt<.7?'#e7fff4b0':'#a6dedf70');}
+   if(aim){for(let dt=.08;dt<2.1;dt+=.075){const x=p.x-pull.x*9.2*w.force*w.ammo.speed*dt,y=p.y-pull.y*9.2*w.force*w.ammo.speed*dt+255*dt*dt;if(y>640||x>1000||x<0)break;if(y-w.ammo.size/2<=w.ceiling){circle(x,y,5,'#f7ab73');break;}circle(x,y,dt<.5?2.5:1.7,dt<.7?'#e7fff4b0':'#a6dedf70');}
     const power=Math.min(1,Math.hypot(pull.x,pull.y)/105);panel(64,569,36,7,'#0c202c','#425d66',3);ctx.fillStyle=c;ctx.fillRect(66,571,32*power,3);text(Math.round(power*100)+'%',62,563,11,c);
    }
    brick(p.x,p.y,w.ammo.size,0,w.upgrades.ammo);
   }
-  for(let i=0;i<w.shots-1;i++)brick(52+i*26,618,19,0,w.upgrades.ammo);
+  for(let i=0;i<Math.min(5,w.shots-1);i++)brick(34+i*20,618,15,0,w.upgrades.ammo);if(w.shots>6)text('+'+(w.shots-6),32,590,11,c);
  }
  function effects(){
   for(let i=1;i<w.trail.length;i++){const a=w.trail[i-1],b=w.trail[i];line(a.x,a.y,b.x,b.y,'#d4f8ed'+Math.round(i/w.trail.length*110).toString(16).padStart(2,'0'),i/w.trail.length*3);}
@@ -103,24 +103,40 @@ function draw(ctx,w,{canvas,pull={x:-75,y:28},aim=false}={}){
   panel(20,20,960,94,'#091b28ee','#63808c66',12);panel(34,34,46,64,'#163442','#4f958d80',6);text('05',40,65,25,c,700);text('ROUTE',39,85,8,'#8fb2bc');
   text('НЕЙРОСФЕРА',97,55,26,'#edf8f4',700);text(w.layout.number+' / '+w.layout.name,98,79,13,c,500);text('ОБЛОГА НЕЙРОНІВ',98,97,8,'#7898a7',500);
   line(536,38,536,94,'#49627266');text('КЛІТИНИ',557,49,9,'#8daab7');text(String(w.remaining).padStart(2,'0'),555,82,28,'#f1faf7',650);text('/ '+w.total,601,80,13,'#789eab');
-  text('ПОСТРІЛИ',683,49,9,'#8daab7');for(let i=0;i<5;i++){ctx.fillStyle=i<w.shots?c:'#29424e';ctx.beginPath();ctx.roundRect(683+i*22,63,14,19,3);ctx.fill();}
+  text('БРУКІВКА',683,49,9,'#8daab7');text(w.shots+' / '+w.maxShots,683,80,24,c,700);
   panel(827,36,136,62,'#183b3d','#69c4ae70',6);text('НАГОРОДА',844,55,9,'#a6c8bd');text('×250',842,84,27,'#d8efaf',700);
   panel(24,136,284,90,'#0b202acc','#659ba36b',8);circle(42,154,3,w.overload?'#ffd69b':c);text('МЕГА НЕЙРОННА ЗВ’ЯЗКА',53,158,11,'#d7f3e8',700);
-  const ratio=w.core&&!w.core.dead?Math.max(0,w.core.hp/w.coreMax):0;
-  text(w.overload?'ЛАНЦЮГОВЕ ПЕРЕВАНТАЖЕННЯ':ratio===0?'ЯДРО ЗРУЙНОВАНО':'ЯДРО · '+Math.ceil(ratio*100)+'%',38,181,11,w.overload?'#ffe0a0':'#a7bcc7');
-  ctx.fillStyle='#243f49';ctx.fillRect(38,192,255,4);ctx.fillStyle=w.overload?'#ffd69b':c;ctx.fillRect(38,192,255*(w.overload?1:ratio),4);text(w.overload?'Імпульс поширюється мережею':'Розбий ядро — вимкни всю мережу',38,213,10,'#86a7b2',500);
-  if(w.core&&!w.core.dead){const core=w.core;line(core.x,core.y-28,core.x,core.y-47,'#ffd69b99');panel(core.x-29,core.y-65,58,19,'#1c2c33ee','#d2aa6866',4);text('ЯДРО',core.x-18,core.y-52,9,'#ffdb9f',650);}
+  const live=w.cores.filter(n=>!n.dead),ratio=w.cores.reduce((sum,n)=>sum+(n.dead?0:Math.max(0,n.hp)),0)/w.coreMax;
+  text('ЯДРА '+live.length+' / '+w.cores.length+' · ЕТАП '+w.layout.number+' / 10',38,181,11,'#ffdda0');
+  ctx.fillStyle='#243f49';ctx.fillRect(38,192,255,4);ctx.fillStyle=c;ctx.fillRect(38,192,255*ratio,4);text(w.overload?'Кожне ядро керує своєю частиною':'Пробий бар’єри та зруйнуй усі ядра',38,213,10,'#86a7b2',500);
+  for(const core of live){line(core.x,core.y-28,core.x,core.y-42,'#ffd69b99');panel(core.x-27,core.y-61,54,18,'#1c2c33ee','#d2aa6866',4);text('ЯДРО '+(core.cluster+1),core.x-21,core.y-49,8,'#ffdb9f',650);}
   panel(24,656,470,29,'#091d29e6','#45677355',5);text(w.ammo.name.toUpperCase(),36,675,10,'#e1ecea',650);text('НАТЯГ ×'+w.force.toFixed(2)+'   /   ПРОБИТТЯ ×'+w.pierce.toFixed(2),192,675,9,'#91b3bd',500);
   if(w.phase==='ready'&&!aim)text('ПОТЯГНИ БРУКІВКУ Й ВІДПУСТИ',35,456,10,'#afcacb',550);
   if(w.won||w.phase==='lost'){
-   const won=w.won;panel(275,240,450,124,'#071722ef',won?'#82cfb2':'#ae7c6d',12);text(won?'МЕРЕЖУ ЗНИЩЕНО':'СПРОБУ ЗАВЕРШЕНО',304,284,25,won?'#d6f4bd':'#f0c4ad',700);text(won?'Нейросферу звільнено · нагороду зараховано':'Залишилося клітин: '+w.remaining,305,312,13,'#b5ccd2',500);text('R / «Спочатку» — повторити · схема — нова фортеця',305,340,11,'#82a6b0',500);
+   const won=w.won;panel(275,240,450,124,'#071722ef',won?'#82cfb2':'#ae7c6d',12);text(won?'МЕРЕЖУ ЗНИЩЕНО':'СПРОБУ ЗАВЕРШЕНО',304,284,25,won?'#d6f4bd':'#f0c4ad',700);text(won?'Нейросферу звільнено · нагороду зараховано':'Залишилося клітин: '+w.remaining,305,312,13,'#b5ccd2',500);text(won?'Далі — наступний етап':'R / «Спочатку» — повторити · Майстерня — покращення',305,340,11,'#82a6b0',500);
   }
  }
- background();links();
+ function airDefense(){
+  ctx.fillStyle='#ce634517';ctx.fillRect(0,115,1000,Math.max(0,w.ceiling-115));
+  ctx.save();ctx.setLineDash([11,8]);line(0,w.ceiling,1000,w.ceiling,'#f4a56c',2);ctx.setLineDash([]);ctx.restore();
+  panel(650,w.ceiling-23,326,20,'#2b2729eb','#e9a36e77',4);text('МЕЖА БПЛА · ДОТИК = ЗНИЩЕННЯ БРУКІВКИ',660,w.ceiling-9,9,'#ffd1a2');
+ }
+ function barrier(b){
+  const x=b.x,y=b.y-b.h/2,h=b.h;ctx.save();const g=ctx.createLinearGradient(x-9,0,x+9,0);g.addColorStop(0,'#0e354b33');g.addColorStop(.5,'#a7e9ff8c');g.addColorStop(1,'#0e354b33');ctx.fillStyle=g;ctx.fillRect(x-9,y,18,h);line(x,y,x,y+h,'#98e4f3',2);
+  for(let i=0;i<h/28;i++){const yy=y+i*28;line(x-6,yy,x+6,yy+13,'#a7eaff77',1);}
+  panel(x-13,y+7,26,11,'#24495f','#9dc4cf',2);panel(x-13,628,26,11,'#24495f','#9dc4cf',2);
+  const ratio=Math.max(0,b.hp/b.maxHp);ctx.fillStyle='#182d3b';ctx.fillRect(x-3,y+27,6,46);ctx.fillStyle='#9eeaf1';ctx.fillRect(x-2,y+28,4,44*ratio);text(Math.ceil(b.hp)+' HP',x-19,y+91,8,'#bcebf5');ctx.restore();
+ }
+ function interceptions(){
+  for(const d of w.droneStrikes){const u=Math.min(1,d.age/.18),x=1040+(d.x-1040)*u,y=w.ceiling-35+(d.y-w.ceiling+35)*u;
+   if(!d.burst)brick(d.x,d.y,d.size,0,d.ammo);ctx.save();ctx.translate(x,y);ctx.rotate(-.3);ctx.fillStyle='#28343e';ctx.beginPath();ctx.moveTo(-31,-6);ctx.lineTo(20,-10);ctx.lineTo(40,0);ctx.lineTo(20,8);ctx.lineTo(-31,5);ctx.closePath();ctx.fill();line(-5,-3,-16,-24,'#b2c6c8',5);line(-5,3,-16,24,'#b2c6c8',5);circle(25,0,2,'#ff9d71');ctx.restore();
+  }
+ }
+ background();airDefense();links();
  for(const b of w.bodies)if(!b.dead&&b.kind==='block')block(b);
  // Connections remain visible in windows while cells draw over their own endpoints.
  for(const b of w.bodies)if(!b.dead&&b.kind==='neuron')neuron(b);
- sling();effects();for(const b of w.bodies)if(!b.dead&&b.kind==='brick')brick(b.x,b.y,b.w,w.age*5,b.ammo);
+ for(const b of w.bodies)if(!b.dead&&b.kind==='barrier')barrier(b);sling();effects();interceptions();for(const b of w.bodies)if(!b.dead&&b.kind==='brick')brick(b.x,b.y,b.w,w.age*5,b.ammo);
  hud();
 }
 const api={draw};if(typeof module==='object'&&module.exports)module.exports=api;else root.BrukSiegeArt=api;
