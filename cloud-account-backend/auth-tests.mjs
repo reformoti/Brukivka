@@ -21,3 +21,17 @@ test('email reset delivers a single-use expiring link, revokes sessions and keep
 test('reset requests do not reveal known emails and cannot use expired or guessed tokens',async()=>{const h=setup(),mail=[];h.env.XAR_EMAIL_TRANSPORT=async m=>mail.push(m);await h.call('/api/auth/register',{username:'new_user',password,email:'player@example.com'});const known=await h.call('/api/auth/forgot-password',{email:'player@example.com'}),unknown=await h.call('/api/auth/forgot-password',{email:'absent@example.com'});assert.equal(known.status,unknown.status);assert.deepEqual(known.data,unknown.data);const token=new URLSearchParams(new URL(mail[0].text.match(/https:\/\/[^\s]+/)[0]).hash.slice(1)).get('reset');h.db.prepare('UPDATE xar_reset_tokens SET expires_at=0').run();assert.equal((await h.call('/api/auth/reset-password',{token,password:'new password from email'})).status,400);assert.equal((await h.call('/api/auth/reset-password',{token:'0'.repeat(64),password:'new password from email'})).status,400);assert.equal((await h.call('/api/auth/login',{username:'new_user',password})).status,200)});
 test('a reset invalidates every earlier email link for that account',async()=>{const h=setup(),mail=[];h.env.XAR_EMAIL_TRANSPORT=async m=>mail.push(m);await h.call('/api/auth/register',{username:'new_user',password,email:'player@example.com'});for(let n=0;n<2;n++)await h.call('/api/auth/forgot-password',{email:'player@example.com'});const tokens=mail.map(m=>new URLSearchParams(new URL(m.text.match(/https:\/\/[^\s]+/)[0]).hash.slice(1)).get('reset'));assert.equal((await h.call('/api/auth/reset-password',{token:tokens[0],password:'new password from email'})).status,200);assert.equal((await h.call('/api/auth/reset-password',{token:tokens[1],password:'another password from email'})).status,400)});
 test('missing email configuration is explicit and never claims a reset email was sent',async()=>{const h=setup();const config=await h.call('/api/auth/config');assert.equal(config.data.email_reset_enabled,false);await h.call('/api/auth/register',{username:'new_user',password,email:'player@example.com'});const reset=await h.call('/api/auth/forgot-password',{email:'player@example.com'});assert.equal(reset.status,503);assert.match(reset.data.error,/не подключена/);assert.equal(h.db.prepare('SELECT count(*) n FROM xar_reset_tokens').get().n,0)});
+
+test('six-character passwords work for registration login and reset; five characters fail',async()=>{
+ const h=setup(),mail=[];h.env.XAR_EMAIL_TRANSPORT=async m=>mail.push(m);
+ assert.equal((await h.call('/api/auth/register',{username:'six_user',password:'abcde',email:'six@example.com'})).status,400);
+ assert.equal(h.db.prepare('SELECT count(*) n FROM accounts').get().n,0);
+ const registered=await h.call('/api/auth/register',{username:'six_user',password:'abcdef',email:'six@example.com'});assert.equal(registered.status,201);
+ assert.equal((await h.call('/api/auth/login',{username:'six_user',password:'abcdef'})).status,200);
+ await h.call('/api/auth/forgot-password',{email:'six@example.com'});
+ const token=new URLSearchParams(new URL(mail[0].text.match(/https:\/\/[^\s]+/)[0]).hash.slice(1)).get('reset');
+ assert.equal((await h.call('/api/auth/reset-password',{token,password:'12345'})).status,400);
+ assert.equal((await h.call('/api/auth/reset-password',{token,password:'123456'})).status,200);
+ assert.equal((await h.call('/api/auth/login',{username:'six_user',password:'123456'})).status,200);
+ assert.equal((await h.call('/api/auth/login',{username:'six_user',password:'abcdef'})).status,401);
+});

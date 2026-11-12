@@ -31,7 +31,7 @@ export async function authApi(req,env,ctx){
  if(url.pathname==='/api/auth/register'){
   const name=xarUsername(body.username),email=emailAddress(body.email);
   if(!name||!email)return xarReply({error:'Укажи логин и действующую электронную почту.'},400);
-  if(typeof body.password!=='string'||body.password.length<12||body.password.length>128)return xarReply({error:'Пароль: от 12 до 128 символов.'},400);
+  if(typeof body.password!=='string'||body.password.length<6||body.password.length>128)return xarReply({error:'Пароль: от 6 до 128 символов.'},400);
   if(!await xarLimit(req,env,'register:'+email,5))return xarReply({error:'Слишком много попыток. Попробуй через 15 минут.'},429);
   const prior=await env.DB.prepare('SELECT user_id FROM accounts WHERE lower(username)=?').bind(name).first();
   const id=prior?.user_id||'xar:'+crypto.randomUUID();
@@ -54,7 +54,7 @@ export async function authApi(req,env,ctx){
  }
  if(url.pathname==='/api/auth/reset-password'){
   if(typeof body.token!=='string'||!/^[a-f0-9]{64}$/.test(body.token))return xarReply({error:'Ссылка недействительна или срок её действия истёк.'},400);
-  if(typeof body.password!=='string'||body.password.length<12||body.password.length>128)return xarReply({error:'Пароль: от 12 до 128 символов.'},400);
+  if(typeof body.password!=='string'||body.password.length<6||body.password.length>128)return xarReply({error:'Пароль: от 6 до 128 символов.'},400);
   if(!await xarLimit(req,env,'reset:'+await xarDigest(body.token),10))return xarReply({error:'Слишком много попыток.'},429);
   const digest=await xarDigest(body.token),time=Date.now(),token=await env.DB.prepare('SELECT t.user_id,t.credential_version FROM xar_reset_tokens t JOIN xar_credentials c ON c.user_id=t.user_id AND c.updated_at=t.credential_version WHERE t.token_hash=? AND t.consumed_at IS NULL AND t.expires_at>?').bind(digest,time).first();
   if(!token)return xarReply({error:'Ссылка недействительна или срок её действия истёк.'},400);
@@ -79,7 +79,7 @@ export async function authApi(req,env,ctx){
  if(!platformId||!gmail)return xarReply({error:'Підтверди Gmail один раз через ChatGPT, щоб прив’язати акаунт.'},401);
  if(gmailAddress(body.gmail)!==gmail)return xarReply({error:'Gmail має збігатися з підтвердженим акаунтом ChatGPT.'},403);
  const name=xarUsername(body.username);if(!await xarLimit(req,env,'bind:'+platformId,12))return xarReply({error:'Забагато спроб. Спробуй через 15 хвилин.'},429);
- if(typeof body.password!=='string'||body.password.length<12||body.password.length>128)return xarReply({error:'Пароль: від 12 до 128 символів.'},400);
+ if(typeof body.password!=='string'||body.password.length<6||body.password.length>128)return xarReply({error:'Пароль: від 6 до 128 символів.'},400);
  const account=await env.DB.prepare('SELECT username FROM accounts WHERE user_id=?').bind(platformId).first(),credentials=await env.DB.prepare('SELECT gmail FROM xar_credentials WHERE user_id=?').bind(platformId).first();
  if(!name||account&&account.username!==name)return xarReply({error:account?'Використай поточний ігровий логін @'+account.username+'.':'Логін: 3–24 латинські літери, цифри або _.'},400);
  const recovery=url.pathname==='/api/auth/recover';

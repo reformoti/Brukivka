@@ -4,7 +4,7 @@ The existing public Site, D1 database, R2 bucket, account IDs and origin are ret
 
 ## Registration and email recovery
 
-Normal registration accepts username, password and email. Normal login accepts only username and password. No Google or ChatGPT login is required. Addresses are stored as recovery contact addresses, not falsely described as verified. Legacy Gmail aliases retain their canonical form. Existing account IDs and saved games remain unchanged; old authenticated owners can attach a password to their own legacy username without a separate redirect. Email alone never links an existing account.
+Normal registration accepts username, password (6–128 characters) and email. Normal login accepts only username and password. No Google or ChatGPT login is required. Addresses are stored as recovery contact addresses, not falsely described as verified. Legacy Gmail aliases retain their canonical form. Existing account IDs and saved games remain unchanged; old authenticated owners can attach a password to their own legacy username without a separate redirect. Email alone never links an existing account.
 
 Forgot-password requests use a random 256-bit token sent as a link to the account email. Only SHA-256 token hashes are stored. Tokens expire after 15 minutes, are single-use and are invalidated together after a successful reset. Password updates use an atomic version check, revoke all prior sessions, and cannot be replayed. Reset links put tokens in a URL fragment, not server query logs; the portal clears the fragment and sends the token only in the reset POST. Responses do not reveal whether the email exists.
 
@@ -14,7 +14,7 @@ The service may still accept legacy identity endpoints for backwards compatibili
 
 ## Passwords and sessions
 
-Passwords use salted PBKDF2-HMAC-SHA256 at the Workerd WebCrypto ceiling of 100,000 iterations, preceded by HMAC with a server-only pepper. Each account gets an independent 128-bit random salt. This platform-constrained work factor is lower than OWASP's standalone PBKDF2 recommendation; the separate server pepper is required, with rate limiting and a minimum password length. Do not remove the pepper or silently fall back to a fast hash. The algorithm/version is stored per credential for future upgrades. Comparisons process fixed-size digests without early exit.
+Passwords use salted PBKDF2-HMAC-SHA256 at the Workerd WebCrypto ceiling of 100,000 iterations, preceded by HMAC with a server-only pepper. Each account gets an independent 128-bit random salt. This platform-constrained work factor is lower than OWASP's standalone PBKDF2 recommendation; the separate server pepper is required, with rate limiting and a minimum password length of 6 characters. Do not remove the pepper or silently fall back to a fast hash. The algorithm/version is stored per credential for future upgrades. Comparisons process fixed-size digests without early exit.
 
 Runtime `XAR_AUTH_PEPPER` is a Sites secret, at least 32 characters; it must never be committed or placed in game code, save snapshots, test fixtures or logs. Preserve it across deployments. Changing it requires password recovery for existing users. The auth tables contain no plaintext passwords. Fake values in tests are not production secrets.
 
