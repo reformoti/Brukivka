@@ -5,3 +5,6 @@ export const saves=sqliteTable('saves',{user_id:text('user_id').primaryKey().ref
 export const history=sqliteTable('save_history',{user_id:text('user_id').notNull().references(()=>accounts.user_id),revision:integer('revision').notNull(),payload:text('payload').notNull(),object_key:text('object_key'),checksum:text('checksum').notNull(),updated_at:integer('updated_at').notNull()},t=>[primaryKey({columns:[t.user_id,t.revision]})]);
 
 export const tickets=sqliteTable('homow_tickets',{hash:text('hash').primaryKey(),user_id:text('user_id').notNull(),username:text('username').notNull(),audience:text('audience').notNull(),expires_at:integer('expires_at').notNull()});
+
+export const appleSaves=sqliteTable('appleiq_saves',{user_id:text('user_id').primaryKey().references(()=>accounts.user_id),revision:integer('revision').notNull(),payload:text('payload').notNull(),object_key:text('object_key'),checksum:text('checksum').notNull(),updated_at:integer('updated_at').notNull()});
+export const appleHistory=sqliteTable('appleiq_save_history',{user_id:text('user_id').notNull().references(()=>accounts.user_id),revision:integer('revision').notNull(),payload:text('payload').notNull(),object_key:text('object_key'),checksum:text('checksum').notNull(),updated_at:integer('updated_at').notNull()},t=>[primaryKey({columns:[t.user_id,t.revision]})]);
