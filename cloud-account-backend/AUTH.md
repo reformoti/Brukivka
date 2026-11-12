@@ -1,12 +1,16 @@
 # XaR Cloud accounts
 
-The existing public Site, D1 database, R2 bucket, account IDs and origin are retained. The display name is XaR Cloud; the legacy hostname and storage names remain for compatibility. Brukivka, AppleIQ and HoMoW use the same username. Each game's saves remain separate.
+The existing public Site, D1 database, R2 bucket, account IDs and origin are retained. The display name is XaR Cloud; the address is now https://xar-cloud.stunningherring.chatgpt.site and legacy storage names remain for compatibility. Brukivka, AppleIQ and HoMoW use the same username. Each game's saves remain separate.
 
-## Registration and recovery
+## Registration and email recovery
 
-A user binds their existing ChatGPT identity once, using its Gmail address and a new 12–128 character password. This keeps the existing account ID and every save revision. The username is preserved for an existing account; a new username is protected by the database unique index. Gmail aliases are canonicalized; the Gmail column also has a unique index. Gmail association requires both the original platform identity and a matching platform email. Typed email alone never grants ownership, recovers another account, or merges accounts. No verification emails or codes are sent: the confirmation flow is through the existing ChatGPT sign-in. An account without a Gmail address must first use a ChatGPT account associated with Gmail.
+Normal registration accepts username, password and email. Normal login accepts only username and password. No Google or ChatGPT login is required. Addresses are stored as recovery contact addresses, not falsely described as verified. Legacy Gmail aliases retain their canonical form. Existing account IDs and saved games remain unchanged; old authenticated owners can attach a password to their own legacy username without a separate redirect. Email alone never links an existing account.
 
-Ordinary login needs only username and password. Recovery repeats the original Gmail/ChatGPT identity confirmation, sets a new password and revokes every old password session. Accounts without password setup retain legacy platform access; the updated portal guides them through one-time setup. Valid password sessions take precedence over any other platform account open in the browser.
+Forgot-password requests use a random 256-bit token sent as a link to the account email. Only SHA-256 token hashes are stored. Tokens expire after 15 minutes, are single-use and are invalidated together after a successful reset. Password updates use an atomic version check, revoke all prior sessions, and cannot be replayed. Reset links put tokens in a URL fragment, not server query logs; the portal clears the fragment and sends the token only in the reset POST. Responses do not reveal whether the email exists.
+
+Sending requires a configured transactional email provider. Set `XAR_EMAIL_PROVIDER` to `resend` or `brevo`, `XAR_EMAIL_API_KEY` as a Sites secret, and `XAR_EMAIL_FROM` to the provider's verified sender. Register/login work without it; the forgot-password form explicitly reports delivery as unavailable. No emails are claimed sent when the sender is unconfigured. Do not use the user's Gmail connection in ChatGPT as an automated transactional sender. The `XAR_EMAIL_TRANSPORT` function exists only as a server-side test injection; production configuration uses the provider API. Tests never deliver real messages.
+
+The service may still accept legacy identity endpoints for backwards compatibility; these are absent from the normal registration, login and recovery UI.
 
 ## Passwords and sessions
 
@@ -20,6 +24,6 @@ All password mutations check the exact Origin, restrict request sizes, and use p
 
 ## Deployment
 
-Migration 0004 adds credential, session and attempt tables; it does not rewrite accounts or saves. Apply through normal Site publication. Run `npm test`, `npm run build`, then package/deploy with the source helper. No live user passwords are created by development or QA.
+Migration 0004 adds credential, session and attempt tables; migration 0005 adds password-reset tokens. It it does not rewrite accounts or saves. Apply through normal Site publication. Run `npm test`, `npm run build`, then package/deploy with the source helper. No live user passwords are created by development or QA.
 
 Primary references: [Cloudflare WebCrypto](https://developers.cloudflare.com/workers/runtime-apis/web-crypto/), [Workerd PBKDF2 limit](https://github.com/cloudflare/workerd/issues/1346), [OWASP password storage and peppers](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).

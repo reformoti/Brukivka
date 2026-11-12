@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.28.0',date:'2026-11-12',name:'XaR Cloud'};
+  const release={version:'6.28.1',date:'2026-11-12',name:'XaR Cloud — новий вхід'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
@@ -8,5 +8,6 @@
     document.title=(document.querySelector('.realms-shell')?'HoMoW':'Бруківка')+' · v'+release.version;
   }
 })(typeof window==='undefined'?globalThis:window);
+
 
 
