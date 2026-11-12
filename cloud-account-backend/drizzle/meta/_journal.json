@@ -29,6 +29,13 @@
       "when": 1794504606303,
       "tag": "0003_appleiq_progress",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794506428539,
+      "tag": "0004_xar_password_sessions",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.27.0',date:'2026-11-12',name:'Neurosphere'};
+  const release={version:'6.28.0',date:'2026-11-12',name:'XaR Cloud'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
@@ -8,4 +8,5 @@
     document.title=(document.querySelector('.realms-shell')?'HoMoW':'Бруківка')+' · v'+release.version;
   }
 })(typeof window==='undefined'?globalThis:window);
+
 

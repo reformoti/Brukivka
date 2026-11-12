@@ -1,5 +1,5 @@
-Source mirror of the authenticated account service. Its canonical hosted repository uses Sites identity, the DB D1 binding and the BUCKET R2 binding. Never embed server credentials in the game.
+Source mirror of XaR Cloud. The canonical Site keeps the existing D1/R2 resources and account IDs. Runtime XAR_AUTH_PEPPER is a Sites secret and is never mirrored here. See AUTH.md for one-time Gmail binding through the original ChatGPT identity, username/password sessions, recovery and deployment.
 
-The deployed service also accepts app=AppleIQ on account/save/history requests. It shares the ChatGPT identity and username, while appleiq_saves / appleiq_save_history and progress/appleiq/ objects keep AppleIQ separate from Brukivka. Requests without app retain Brukivka behavior. Migration 0003 adds AppleIQ tables without changing existing game data.
+Run npm ci && npm test. The complete test command covers saves, HoMoW tickets, the portal and password sessions. Build with the canonical Site hosting manifest, not a new Site. App=AppleIQ uses separate save/history tables and object prefixes from Brukivka. Public hostname remains compatible; the displayed title is XaR Cloud.
 
-Tests: npm ci && node --test tests.mjs online-tests.mjs portal-tests.mjs. Builds require the canonical Site hosting manifest, kept with that Site and not copied here. Canonical deployed source: 31e6be5de291f76d63c4db0f792e3f14645f9f4b (service version 6). This mirror sync does not change the Brukivka game client or release.
+Canonical deployed source: 075feacb9888e69ea2961271e0788765422060fb, service version 7. Existing migration files are immutable; migration 0004 adds auth tables without rewriting accounts or saves.
