@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts-build.mjs",
-    "test": "node --test tests.mjs online-tests.mjs portal-tests.mjs auth-tests.mjs"
+    "test": "node --test tests.mjs online-tests.mjs portal-tests.mjs auth-tests.mjs mail-tests.mjs"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.10",
