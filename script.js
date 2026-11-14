@@ -402,6 +402,7 @@
   let save = loadSave();
   window.addEventListener('bruk-cloud-snapshot',persist);
   function persist() {
+    window.GameAchievements?.observe(save);
     try {
       const serialized = JSON.stringify(save);
       localStorage.setItem(SAVE_KEY, serialized);

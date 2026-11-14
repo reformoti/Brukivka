@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.30.0',date:'2026-11-12',name:'Antimatter Laboratory'};
+  const release={version:'6.31.0',date:'2026-11-14',name:'Cloud Achievements'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
