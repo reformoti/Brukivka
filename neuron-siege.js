@@ -114,7 +114,7 @@ class World{
  get remaining(){return this.bodies.filter(b=>b.kind==='neuron'&&!b.dead).length;}
 }
 function create({canvas,onSuccess,onMessage,isActive,getSiege=()=>({}),onSiegeClear=()=>{},onSiegeSelect=()=>{},onBossDefeat=()=>0}){
- const ctx=canvas.getContext('2d');let current,enabled=false,pointer=null,pull={x:-75,y:28},aim=false,last=null,awarded=false,penalized=false,lastIntercept=0,keys=new Set(),pointerTarget=null;
+ const ctx=canvas.getContext('2d');let frameId=null,current,enabled=false,pointer=null,pull={x:-75,y:28},aim=false,last=null,awarded=false,penalized=false,lastIntercept=0,keys=new Set(),pointerTarget=null;
  const point=e=>{const r=canvas.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*1000,y:(e.clientY-r.top)/r.height*700};};
  const boss=()=>!!current?.isBoss;
  function cancel(){pointer=null;aim=false;keys.clear();pointerTarget=null;}
@@ -136,16 +136,17 @@ function create({canvas,onSuccess,onMessage,isActive,getSiege=()=>({}),onSiegeCl
  });
  root.document.addEventListener('keyup',e=>keys.delete(e.code));root.addEventListener('blur',cancel);
  function setLayout(id){const s=normalizeUpgrade(getSiege());if(!Number.isInteger(id)||id<0||id>s.unlocked)return false;onSiegeSelect(id);reset();onMessage('Етап '+STAGES[id].number+' · '+STAGES[id].name+'. Нова спроба.');return true;}
- function frame(time){const dt=last===null?0:Math.min(.04,(time-last)/1000);last=time;if(enabled){
+ function scheduleFrame(){if(enabled&&frameId===null)frameId=root.requestAnimationFrame(frame);}
+ function frame(time){frameId=null;const dt=last===null?0:Math.min(.04,(time-last)/1000);last=time;if(enabled){
   if(isActive()){
    if(boss()){const x=(keys.has('ArrowRight')||keys.has('KeyD')?1:0)-(keys.has('ArrowLeft')||keys.has('KeyA')?1:0),y=(keys.has('ArrowDown')||keys.has('KeyS')?1:0)-(keys.has('ArrowUp')||keys.has('KeyW')?1:0);current.step(dt,{x,y,fire:keys.has('Space')||pointer!==null,target:pointerTarget});}else {current.step(dt);if(current.intercepts>lastIntercept){lastIntercept=current.intercepts;root.BrukSfx?.playBreak();onMessage('БПЛА знищив бруківку біля верхньої межі. Зміни траєкторію.');}}
    if(current.won&&!awarded){awarded=true;onSiegeClear(current.isBoss?9:current.layoutIndex);onSuccess();}
    if(boss()&&current.phase==='lost'&&!penalized){penalized=true;current.lossCharged=onBossDefeat();}
+   if(boss())root.BrukSkyBoss.draw(ctx,current,{canvas});else root.BrukSiegeArt.draw(ctx,current,{canvas,pull,aim});
   }else cancel();
-  if(boss())root.BrukSkyBoss.draw(ctx,current,{canvas});else root.BrukSiegeArt.draw(ctx,current,{canvas,pull,aim});
- }root.requestAnimationFrame(frame);}
- reset();root.requestAnimationFrame(frame);
- return {setActive:on=>{enabled=on;last=null;if(on)reset();},reset,setLayout,cancel,get world(){return current;}};
+ }scheduleFrame();}
+ reset();
+ return {setActive:on=>{enabled=on;last=null;if(on){reset();scheduleFrame();}else if(frameId!==null){root.cancelAnimationFrame(frameId);frameId=null;}},reset,setLayout,cancel,get world(){return current;}};
 }
 const api={World,MATERIALS,AMMO,MAX_RANK,STAGES,LAYOUTS,normalizeUpgrade,price,purchase,advance,selectStage,ANCHOR,FLOOR,create};if(typeof module==='object'&&module.exports)module.exports=api;else root.BrukNeuronSiege=api;
 })(typeof window==='undefined'?globalThis:window);

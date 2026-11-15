@@ -150,10 +150,10 @@
     const reducedMotion=root.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
     let level=2,maze=new MazeWorld(kind=>{onPenalty(kind);keys.clear();pointer=null;notify('Бруківка розбилась об стіну. −1 500 UAH. Почни зі входу.','bad');}),done=false,pointer=null,offset={x:0,y:0},pull={x:-54,y:78};
     const siege=root.BrukNeuronSiege?.create(options);
-    let aiming=false,keys=new Set(),previous=null,flight=new FlightWorld(kind=>onPenalty(kind));
+    let enabled=true,frameId=null,aiming=false,keys=new Set(),previous=null,flight=new FlightWorld(kind=>onPenalty(kind));
     function notify(text,type=''){onMessage(text,type);}
     function reset() {maze.reset();done=false;pointer=null;aiming=false;keys.clear();flight.reset();if(level===4)siege?.reset();draw();}
-    function setLevel(id){level=id;siege?.setActive(id===4);canvas.style.aspectRatio=id===2?'1 / 1':'10 / 7';reset();resize();}
+    function setLevel(id,active=true){enabled=active;level=id;if(frameId!==null){root.cancelAnimationFrame(frameId);frameId=null;}previous=null;siege?.setActive(id===4);canvas.style.aspectRatio=id===2?'1 / 1':'10 / 7';reset();resize();scheduleFrame();}
     function resize() {
       const box=canvas.parentElement;
       if(root.document.body.classList.contains('main-minimal')&&!box.classList.contains('hidden')){
@@ -262,7 +262,9 @@
       if(flight.phase==='success')text('ДОСТАВЛЕНО У ВІКНО!',500,80,'#d6f69e',26,'center');
     }
     function draw(){if(!ctx)return;if(level===4)return;ctx.setTransform(canvas.width/1000,0,0,canvas.height/(level===2?1000:700),0,0);level===2?drawMaze():drawThrow();}
+    function scheduleFrame(){if(enabled&&level!==4&&frameId===null)frameId=root.requestAnimationFrame(frame);}
     function frame(time) {
+      frameId=null;
       const dt=previous===null?0:Math.min(.04,(time-previous)/1000);previous=time;
       if(isActive()&&!done&&level!==4) {
         if(level===2)maze.step(dt);
@@ -275,11 +277,11 @@
         }
         draw();
       } else {keys.clear();pointer=null;aiming=false;}
-      root.requestAnimationFrame(frame);
+      scheduleFrame();
     }
     if(root.ResizeObserver)new root.ResizeObserver(resize).observe(canvas.parentElement.parentElement);
     root.requestAnimationFrame(resize);
-    root.requestAnimationFrame(frame);
+    scheduleFrame();
     return {setLevel,reset,resize,setSiegeLayout:id=>{if(level===4)siege?.setLayout(id);},cancel:()=>{keys.clear();pointer=null;aiming=false;siege?.cancel();}};
   }
   const api={LEVELS,restoreAccess,MAZE_LINES,mazeBlocked,moveMaze,MazeWorld,penaltyFor,THROW,dronesAt,shotFromPull,catchesWindow,FlightWorld,drawExplosion,create};

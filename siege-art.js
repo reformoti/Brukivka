@@ -1,6 +1,7 @@
 (function(root){
 'use strict';
-const TAU=Math.PI*2;
+const TAU=Math.PI*2,backgrounds=new WeakMap();
+let fontRevision=0;root.document?.fonts?.addEventListener('loadingdone',()=>{fontRevision++;});
 function draw(ctx,w,{canvas,pull={x:-75,y:28},aim=false}={}){
  const c=w.layout.accent,t=w.time,view=canvas||ctx.canvas;
  ctx.setTransform(view.width/1000,0,0,view.height/700,0,0);
@@ -132,7 +133,19 @@ function draw(ctx,w,{canvas,pull={x:-75,y:28},aim=false}={}){
    if(!d.burst)brick(d.x,d.y,d.size,0,d.ammo);ctx.save();ctx.translate(x,y);ctx.rotate(-.3);ctx.fillStyle='#28343e';ctx.beginPath();ctx.moveTo(-31,-6);ctx.lineTo(20,-10);ctx.lineTo(40,0);ctx.lineTo(20,8);ctx.lineTo(-31,5);ctx.closePath();ctx.fill();line(-5,-3,-16,-24,'#b2c6c8',5);line(-5,3,-16,24,'#b2c6c8',5);circle(25,0,2,'#ff9d71');ctx.restore();
   }
  }
- background();airDefense();links();
+ function drawBackground(){
+  if(!root.document||root.document.fonts?.status==='loading'){background();return;}
+  let cache=backgrounds.get(view);
+  if(!cache||cache.width!==view.width||cache.height!==view.height||cache.layout!==w.layoutIndex||cache.accent!==c||cache.fontRevision!==fontRevision){
+   const layer=cache?.layer||root.document.createElement('canvas');layer.width=view.width;layer.height=view.height;
+   const target=ctx,buffer=layer.getContext('2d');if(!buffer){background();return;}
+   ctx=buffer;ctx.setTransform(view.width/1000,0,0,view.height/700,0,0);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='left';
+   try{background();}finally{ctx=target;}
+   cache={layer,width:view.width,height:view.height,layout:w.layoutIndex,accent:c,fontRevision};backgrounds.set(view,cache);
+  }
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(cache.layer,0,0);ctx.restore();
+ }
+ drawBackground();airDefense();links();
  for(const b of w.bodies)if(!b.dead&&b.kind==='block')block(b);
  // Connections remain visible in windows while cells draw over their own endpoints.
  for(const b of w.bodies)if(!b.dead&&b.kind==='neuron')neuron(b);

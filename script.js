@@ -468,12 +468,13 @@
     return save.inventory.reduce((sum, item) => sum + (item.resale || 0), 0);
   }
 
+  function isPhoneOpen() {
+    return !$('phoneOverlay').classList.contains('hidden');
+  }
+
   function updateUI() {
     const brick = brickTier();
-    const phone = phoneTier();
     const strength = strengthTier();
-    const avg = averageNmt();
-    const multiplier = nmtMultiplier(avg);
 
     $('deliveryReward').textContent = `+${money(finalReward())} UAH · ×${DELIVERY_LEVELS[save.deliveryLevel].multiplier}${window.BrukBindingBonus?.multiplier()===10?' · акаунт ×10':''}`;
     $('deliveryBalance').textContent = `${money(save.balance)} UAH`;
@@ -483,6 +484,14 @@
     $('brickCountBadge').textContent = `×${strength.carry}`;
     $('brukivka').style.background = 'transparent';
 
+    $('vodoBadge').classList.toggle('hidden',!save.waiterPenalty);
+    renderPcShop();
+    ensureOrder();
+    if (!isPhoneOpen()) return;
+
+    const phone = phoneTier();
+    const avg = averageNmt();
+    const multiplier = nmtMultiplier(avg);
     $('homePhoneModel').textContent = phone.name;
     $('homeAverageNmt').textContent = displayNmt(avg);
     $('homeSummary').textContent = `Загальний бонус ×${activityMultiplier().toFixed(2)} · NMT ×${multiplier.toFixed(1)}`;
@@ -519,7 +528,6 @@
     $('infoInventoryCount').textContent = String(save.inventory.length);
     $('infoInventoryValue').textContent = `${money(inventoryEstimatedValue())} UAH`;
 
-    ensureOrder();
     const order = save.order;
     if (!order) {
       $('infoOrderProgress').textContent = 'Немає';
@@ -549,7 +557,6 @@
     $('allBoost').textContent = `×${activityMultiplier().toFixed(2)}`;
     renderFopWallet();
 
-    $('vodoBadge').classList.toggle('hidden',!save.waiterPenalty);
     $('brickMaxLabel').textContent = brickTiers.length-1;
     $('infoBrickMax').textContent = brickTiers.length-1;
     $('pocketPower').textContent = `× до степеня ${pocketPower().toFixed(2)}`;
@@ -561,7 +568,6 @@
     renderSubjects();
     renderInventory();
     renderOrderPreview();
-    renderPcShop();
   }
 
   function buyUpgrade(type) {
@@ -607,6 +613,7 @@
     });
   }
   function renderFopWallet(){
+    if (!isPhoneOpen()) return;
     const net=Math.floor(save.fopBalance*.7);
     $('fopBalance').textContent=`${money(save.fopBalance)} UAH`;
     $('fopGross').textContent=`${money(save.fopBalance)} UAH`;
@@ -822,7 +829,7 @@
       $('deliveryLevels').append(button);
     });
     updateDeliveryButtons();
-    deliveryGame.setLevel(save.deliveryLevel>=2?save.deliveryLevel:2);
+    deliveryGame.setLevel(save.deliveryLevel>=2?save.deliveryLevel:2,save.deliveryLevel>=2);
   }
   function updateDeliveryButtons(){
     $('deliveryLevels').querySelectorAll('[data-route]').forEach(button=>{
@@ -2084,9 +2091,11 @@
     payIslands();
     setInterval(() => {
       updatePcClock();
-      updatePhoneTime();
-      if (!$('tgMarketPanel').classList.contains('hidden')) updateMarketRefreshButton();
-      if (!$('tgInventoryPanel').classList.contains('hidden')) renderInventory();
+      if (isPhoneOpen()) {
+        updatePhoneTime();
+        if (!$('tgMarketPanel').classList.contains('hidden')) updateMarketRefreshButton();
+        if (!$('tgInventoryPanel').classList.contains('hidden')) renderInventory();
+      }
       updateWaiterJob();payIslands();tickLaboratory();
     }, 1000);
   }
@@ -2232,7 +2241,7 @@
   $('siegeLayoutSelect').onchange=e=>{if(resetting){e.target.value=String(save.siege.stage);return;}deliveryGame.setSiegeLayout(Number(e.target.value));$('deliveryCanvas').focus({preventScroll:true});};
   let labSavedAt=0;
   function settleLaboratory(){save.lab=window.BrukLabCore.settle(save.lab).state;}
-  function tickLaboratory(){settleLaboratory();if(Date.now()-labSavedAt>5000&&Object.values(save.lab.facilities).some(Boolean)){labSavedAt=Date.now();persist();}if(!$('laboratoryScreen').classList.contains('hidden'))window.dispatchEvent(new Event('bruk-lab'));}
+  function tickLaboratory(){settleLaboratory();if(Date.now()-labSavedAt>5000&&Object.values(save.lab.facilities).some(Boolean)){labSavedAt=Date.now();persist();}if(isPhoneOpen()&&!$('laboratoryScreen').classList.contains('hidden'))window.dispatchEvent(new Event('bruk-lab'));}
   function commitLaboratory(result){if(!result.ok)return result;save.lab=result.state;if(result.balance!==undefined)save.balance=result.balance;if(result.reward)save.totalEarned=Math.min(MAX_BALANCE,save.totalEarned+result.reward);persist();updateUI();window.dispatchEvent(new Event('bruk-lab'));return result;}
   window.BrukLab={
     read:()=>{settleLaboratory();return {state:window.BrukLabCore.normalize(save.lab),balance:save.balance,rates:window.BrukLabCore.rates(save.lab),effects:window.BrukLabCore.effects(save.lab)};},
