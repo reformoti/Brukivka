@@ -90,14 +90,14 @@
   }catch{storageProblem='Не вдалося прочитати частину малюнків. Поточне полотно можна зберегти як PNG.';}
   function notice(text){$('pcPreviewNotice').textContent=text;}
   window.addEventListener('bruk-cloud-snapshot',persistDraft);
-  function persistDraft(){try{localStorage.setItem(DRAFT,JSON.stringify({name,fileId,dirty,document:doc}));return true;}catch{notice('Чернетку не збережено: у сховищі браузера бракує місця. Завантаж PNG або звільни місце в папці.');return false;}}
+  function persistDraft(){try{localStorage.setItem(DRAFT,JSON.stringify({name,fileId,dirty,document:doc}));window.BrukAppAchievements?.changed();return true;}catch{notice('Чернетку не збережено: у сховищі браузера бракує місця. Завантаж PNG або звільни місце в папці.');return false;}}
   function folderIcon(){
     const folder=$('paintFolderApp');if(!folder)return;
     folder.classList.remove('hidden');
     $('paintFolderCount').textContent=`${directory.files.length} зображень`;
   }
   function persistDirectory(next){
-    try{localStorage.setItem(FILES,JSON.stringify(next));directory=next;folderIcon();return true;}
+    try{localStorage.setItem(FILES,JSON.stringify(next));directory=next;folderIcon();window.BrukAppAchievements?.changed();return true;}
     catch{notice('Малюнок не збережено: бракує місця у браузері. Завантаж PNG або видали непотрібні роботи.');return false;}
   }
   function button(text,fn,id){const b=document.createElement('button');b.type='button';b.textContent=text;if(id)b.id=id;b.addEventListener('click',fn);return b;}

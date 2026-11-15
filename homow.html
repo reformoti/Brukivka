@@ -504,7 +504,7 @@ $('gameLocale').onchange=()=>O.set({locale:$('gameLocale').value});$('gameQualit
 <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png?v=6.22.3">
 <link rel="icon" type="image/svg+xml" href="icon/favicon.svg?v=6.22.3">
 <script>
-(()=>{'use strict';const KEY='brukivka_app_achievement_events_v1',MAX=1000000000;function read(){try{const v=JSON.parse(localStorage.getItem(KEY));return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch{return {}}}function record(key,value=1,mode='add'){if(!/^(visit\.[a-z]+|copy\.(appleiq|discord)|launch\.(appleiq|discord|game\.[a-z0-9]+)|fop\.transfer|design\.change|miner\.exchange|music\.(seconds|track\.\d{1,2})|history\.version\.[0-9_.]+|orbit\.(score|wins)|chess\.(moves|botWins)|homow\.(level|kills)|breakout\.wins|memory\.wins)$/.test(key)||!Number.isFinite(value)||value<0)return false;try{const lock=JSON.parse(localStorage.getItem('brukivka_cloud_restore_lock_v1')||'null');if(lock&&Date.now()-lock.at<30000)return false;const events=read(),old=Number.isFinite(events[key])?events[key]:0;events[key]=Math.min(MAX,mode==='max'?Math.max(old,value):old+value);if(events[key]===old)return true;localStorage.setItem(KEY,JSON.stringify(events));window.dispatchEvent(new Event('bruk-achievement-event'));return true;}catch{return false;}}window.BrukAchievementEvents=Object.freeze({KEY,read,record});})();
+(()=>{'use strict';const KEY='brukivka_app_achievement_events_v1',MAX=1000000000;function read(){try{const v=JSON.parse(localStorage.getItem(KEY));return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch{return {}}}function record(key,value=1,mode='add'){if(!/^(visit\.[a-z]+|copy\.(appleiq|discord)|launch\.(appleiq|discord|game\.[a-z0-9]+)|fop\.transfer|design\.change|miner\.exchange|music\.(seconds|track\.\d{1,2})|history\.version\.[0-9_.]+|orbit\.(score|wins)|chess\.(moves|botWins)|homow\.(level|kills)|breakout\.wins|memory\.wins|merge\.tile)$/.test(key)||!Number.isFinite(value)||value<0)return false;try{const lock=JSON.parse(localStorage.getItem('brukivka_cloud_restore_lock_v1')||'null');if(lock&&Date.now()-lock.at<30000)return false;const events=read(),old=Number.isFinite(events[key])?events[key]:0;events[key]=Math.min(MAX,mode==='max'?Math.max(old,value):old+value);if(events[key]===old)return true;localStorage.setItem(KEY,JSON.stringify(events));window.dispatchEvent(new Event('bruk-achievement-event'));return true;}catch{return false;}}window.BrukAchievementEvents=Object.freeze({KEY,read,record});})();
 
 </script></head>
 <body><header class="game-top"><div class="realms-brand"><span>⚔</span><div>HoMoW<small>HOLD MONSTERS WORLD</small></div></div><div class="music-tools"><span id="musicLabel">Bruk radio</span><button id="musicToggle" type="button">▶ Музика</button><button id="musicNext" type="button" aria-label="Наступний трек">↠</button><input id="musicVolume" type="range" min="0" max="100" value="35" aria-label="Гучність музики"></div></header>
@@ -520,7 +520,7 @@ $('gameLocale').onchange=()=>O.set({locale:$('gameLocale').value});$('gameQualit
   <script>
 (function(root){
   'use strict';
-  const release={version:'6.32.0',date:'2026-11-15',name:'Every App Achievements'};
+  const release={version:'6.32.1',date:'2026-11-15',name:'Every App Achievements'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

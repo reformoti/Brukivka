@@ -1,6 +1,6 @@
 (()=>{'use strict';if(window.BrukDevice?.blocked)return;const E=window.BrukAchievementEvents,D=window.BrukAppAchievementData,$=id=>document.getElementById(id);if(!E||!D)return;
 const views={bankScreen:'bank',znoScreen:'zno',legitScreen:'legit',telegramScreen:'telegram',reformotiChatScreen:'telegram',brukivkaScreen:'brukivka',infoScreen:'brukivka',pcShopScreen:'pcmarket',wallpaperScreen:'wallpapers',appleIqScreen:'appleiq',fopScreen:'fop',laboratoryScreen:'lab',designScreen:'design',accountScreen:'account',discordScreen:'discord',steam:'steam',soundcloud:'spotify',history:'history',miner:'miner',paint:'paint',gallery:'gallery',exchange:'exchange',dispatch:'dispatch'};
-const visit=id=>{const key=views[id];if(key)E.record('visit.'+key,1,'max');};window.BrukAppAchievements=Object.freeze({visit});
+const visit=id=>{const key=views[id];if(key)E.record('visit.'+key,1,'max');};window.BrukAppAchievements=Object.freeze({visit,changed:schedule});
 let queued=false;function sync(){queued=false;try{const raw=JSON.parse(localStorage.getItem('brukivka_kos_v4')||'{}');window.GameAchievements?.observe(raw);}catch{}}function schedule(){if(!queued){queued=true;queueMicrotask(sync);}}
 window.addEventListener('bruk-achievement-event',schedule);window.addEventListener('storage',event=>{if(event.key===E.KEY||Object.values(D.keys).includes(event.key))schedule();});window.addEventListener('focus',schedule);
 function phone(screen){document.querySelectorAll('.phone-screen').forEach(node=>node.classList.toggle('hidden',node!==screen));visit(screen.id);}

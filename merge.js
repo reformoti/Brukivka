@@ -29,7 +29,7 @@
   let state={board:Array(16).fill(0),score:0,best:0,continued:false},busy=false;
   function spawn() {const free=state.board.flatMap((v,i)=>v?[]:[i]);if(free.length)state.board[free[Math.floor(Math.random()*free.length)]]=Math.random()<.9?2:4;}
   window.addEventListener('bruk-cloud-snapshot',persist);
-  function persist() {try{localStorage.setItem(KEY,JSON.stringify(state));}catch{$('storageNote').textContent='Не вдалося зберегти гру. Прогрес залишиться до закриття сторінки.';}}
+  function persist() {window.BrukAchievementEvents?.record('merge.tile',Math.max(...state.board),'max');try{localStorage.setItem(KEY,JSON.stringify(state));}catch{$('storageNote').textContent='Не вдалося зберегти гру. Прогрес залишиться до закриття сторінки.';}}
   function fresh() {state={board:Array(16).fill(0),score:0,best:state.best,continued:false};spawn();spawn();persist();render();$('status').textContent='Новий майданчик готовий.';}
   function render() {
     $('board').replaceChildren();state.board.forEach(value=>{
