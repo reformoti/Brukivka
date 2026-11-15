@@ -142,6 +142,7 @@
     {name:'Ultra 4K',cost:0,resolution:'1920×1080'}];
   function pocketPower(){return save.pocketTier ? 1.01+(save.pocketTier-1)*.02:1;}
   function pocketCost(){return Math.round(1100000*Math.exp(.16*Math.pow(save.pocketTier,1.85))/1000)*1000;}
+  function achievementMultiplier(){const A=window.GameAchievementsCore;return A?A.bonus(A.read('Brukivka',localStorage)):1;}
   function incomeFactor(){return (save.waiterPenalty ? 0.1 : 1)*window.BrukLabCore.effects(save.lab).income;}
   function award(value){const amount=Math.max(0,Math.round(value*incomeFactor()));save.balance=clamp(save.balance+amount,-MAX_BALANCE,MAX_BALANCE);save.totalEarned=clamp(save.totalEarned+amount,0,MAX_BALANCE);return amount;}
   function islandIncome(){return ISLANDS.reduce((total,i)=>total+i.income*(save.islands[i.id]||0),0);}
@@ -443,7 +444,7 @@
   function strengthTier() { return strengthTiers[clamp(save.strength, 0, 5)]; }
   function finalReward() {
     const base=brickTier().reward*strengthTier().carry*nmtMultiplier()*activityMultiplier();
-    return clamp(Math.round(Math.pow(base,pocketPower())*incomeFactor()*DELIVERY_LEVELS[save.deliveryLevel].multiplier*(window.BrukBindingBonus?.multiplier()||1)),0,MAX_BALANCE);
+    return clamp(Math.round(Math.pow(base,pocketPower())*incomeFactor()*achievementMultiplier()*DELIVERY_LEVELS[save.deliveryLevel].multiplier*(window.BrukBindingBonus?.multiplier()||1)),0,MAX_BALANCE);
   }
   function displayNmt(score) { return score >= 100 ? String(score) : '—'; }
 
@@ -630,6 +631,7 @@
   }
   $('fopTransfer').addEventListener('click',()=>{
     payIslands();const net=Math.floor(save.fopBalance*.7);if(net<1)return;
+    window.BrukAchievementEvents?.record('fop.transfer');
     save.fopBalance=0;
     save.balance=clamp(save.balance+net,-MAX_BALANCE,MAX_BALANCE);
     save.totalEarned=clamp(save.totalEarned+net,0,MAX_BALANCE);
@@ -730,6 +732,7 @@
   function showScreen(id) {
     $$('.phone-screen').forEach(screen=>screen.classList.add('hidden'));
     $(id).classList.remove('hidden');
+    window.BrukAppAchievements?.visit(id);
     updateUI();
     if(id==='laboratoryScreen')window.BrukLabUI?.refresh();
     if(id==='fopScreen'){payIslands();renderFopWallet();}
@@ -1789,6 +1792,7 @@
   }
 
   function showPCProgram(name) {
+    window.BrukAppAchievements?.visit(name);
     if(name!=='previews')window.BrukPaint?.leave();
     if (csRun && name !== 'steam') finishCsRun(false, true);
     $('pcDesktop').classList.toggle('hidden', name !== 'desktop');
@@ -1864,6 +1868,7 @@
   }
 
   function startCsRun(mode) {
+    window.BrukAchievementEvents?.record('launch.game.cs2',1,'max');
     if (!save.pcOwned || !CS_MODES[mode]) return;
     if (csRun) finishCsRun(false, true);
     csLastMode = mode;
@@ -2194,7 +2199,7 @@
     snapshot:()=>({...save.mining,licenses:[...save.mining.licenses],gpu:save.pcUpgrades.gpu,pcOwned:save.pcOwned}),
     toggle:()=>{if(!save.pcOwned)return false;save.mining.running=!save.mining.running;persist();return save.mining.running;},
     unlock:id=>{const ok=window.BrukMining.unlock(save.mining,id);if(ok){persist();updateUI();}return ok;},
-    exchange:coins=>{if(!Number.isSafeInteger(coins)||coins<1||coins*window.BrukMining.UAH_PER_COIN>MAX_BALANCE-save.balance)return 0;const amount=window.BrukMining.exchange(save.mining,coins);if(amount){save.balance+=amount;persist();updateUI();}return amount;}
+    exchange:coins=>{if(!Number.isSafeInteger(coins)||coins<1||coins*window.BrukMining.UAH_PER_COIN>MAX_BALANCE-save.balance)return 0;const amount=window.BrukMining.exchange(save.mining,coins);if(amount){window.BrukAchievementEvents?.record('miner.exchange');save.balance+=amount;persist();updateUI();}return amount;}
   };
   let mineLast=performance.now(),mineSave=mineLast;
   setInterval(()=>{const now=performance.now(),dt=(now-mineLast)/1000;mineLast=now;if(document.hidden||!save.pcOwned)return;const earned=window.BrukMining.tick(save.mining,dt,save.pcUpgrades.gpu,save.pcOwned);if(earned&&now-mineSave>5000){persist();mineSave=now;}window.dispatchEvent(new Event('bruk-mining'));},1000);

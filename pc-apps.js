@@ -48,6 +48,6 @@
   const renderers={miner:root=>window.BrukMinerUI.mount(root),paint:renderPaint,gallery:renderGallery,exchange:renderExchange,dispatch:renderDispatch};
   const titles={miner:'BrukCoin Miner',paint:'BrukPaint',gallery:'Мої малюнки',exchange:'BrukExchange',dispatch:'BrukDispatch'};
   function render(){window.BrukPaint.leave();const root=$('pcPreviewContent');root.replaceChildren();$('pcPreviewBadge').textContent=selected==='miner'?'GPU / BRC':selected==='paint'?'СТУДІЯ':selected==='gallery'?'ПАПКА':selected==='exchange'?'TRADE HUB':selected==='workshop'?'ВИРОБНИЦТВО':'ЛОГІСТИКА';$('pcPreviewTitle').textContent=titles[selected];renderers[selected](root);window.BrukHelp?.fold(root);window.BrukWorkspace?.prepare(root,selected);}
-  window.BrukPcApps={open(id){if(!renderers[id])return;selected=id;notice('');render();}};
+  window.BrukPcApps={open(id){if(!renderers[id])return;window.BrukAppAchievements?.visit(id);selected=id;notice('');render();}};
   function frame(time){if(trip&&time-lastTick>60){lastTick=time;tickDispatch();}requestAnimationFrame(frame);}requestAnimationFrame(frame);
 })();

@@ -9,7 +9,7 @@
   new MutationObserver(placeReward).observe(deliveryBox,{attributes:true,attributeFilter:['class']});placeReward();
   // The phone remains an in-game app launcher on a desktop computer.
   const design=make('section','phone-screen hidden');design.id='designScreen';design.innerHTML='<div class="screen-header"><button class="icon-button" data-home type="button">‹</button><span>Стиль та оформлення</span><span>◈</span></div><div class="design-grid"></div><p class="design-note">Оформлення спільне для робочого столу, програм та ігор. Прогрес не змінюється.</p>';$('phoneShell').append(design);
-  function openPhoneScreen(screen){document.querySelectorAll('.phone-screen').forEach(s=>s.classList.toggle('hidden',s!==screen));}
+  function openPhoneScreen(screen){window.BrukAppAchievements?.visit(screen.id);document.querySelectorAll('.phone-screen').forEach(s=>s.classList.toggle('hidden',s!==screen));}
   design.querySelector('[data-home]').onclick=()=>openPhoneScreen($('phoneHome'));
   const app=make('button','app-icon');app.type='button';app.id='designApp';app.innerHTML='<span class="app-square design-icon">◈</span><small>Оформлення</small>';app.onclick=()=>openPhoneScreen(design);document.querySelector('.app-grid').prepend(app);
   for(const [id,t] of Object.entries(window.BrukDesign.themes)){const b=make('button','design-card');b.type='button';b.dataset.theme=id;b.innerHTML='<span class="design-preview"></span><strong></strong><small></small><b></b>';b.querySelector('strong').textContent=t.name;b.querySelector('small').textContent=t.description;b.onclick=()=>{window.BrukDesign.set(id);paintThemes();};design.querySelector('.design-grid').append(b);}

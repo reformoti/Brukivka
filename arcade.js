@@ -95,7 +95,7 @@
     function frame(time){const dt=previous===null?0:Math.min(.04,(time-previous)/1000);previous=time;
       if(!intro&&!paused&&world.phase==='running'){
         const direction=touchDirection+(keys.has('ArrowRight')||keys.has('KeyD')?1:0)-(keys.has('ArrowLeft')||keys.has('KeyA')?1:0);world.movePaddle(world.paddleX+direction*650*dt);
-        const before=world.phase;world.step(dt);if(world.phase!==before){record();$('pause').disabled=true;
+        const before=world.phase;world.step(dt);if(world.phase!==before){if(world.phase==='won')window.BrukAchievementEvents?.record('breakout.wins');record();$('pause').disabled=true;
           if(world.phase==='ready')overlay('Ще один м’яч',`Залишилось життів: ${world.lives}. Квартал уже частково розібраний.`,`Продовжити →`);
           else overlay(world.phase==='won'?'Квартал розібрано!':'М’ячі закінчилися',`Результат: ${world.score} очок. Рекорд: ${best}.`,'Новий забіг →');
         }
@@ -121,7 +121,7 @@
       if(result==='miss'){mismatch=.72;$('memoryStatus').textContent='Різна бруківка. Запам’ятай ці місця.';}
       else if(result==='match')$('memoryStatus').textContent='Пару знайдено!';else $('memoryStatus').textContent='Тепер знайди таку саму бруківку.';
       render();
-      if(world.won){const record=!best||world.moves<best.moves||(world.moves===best.moves&&elapsed<best.seconds);if(record){best={moves:world.moves,seconds:elapsed};write(KEY,best);}hud();$('pause').disabled=true;
+      if(world.won){window.BrukAchievementEvents?.record('memory.wins');const record=!best||world.moves<best.moves||(world.moves===best.moves&&elapsed<best.seconds);if(record){best={moves:world.moves,seconds:elapsed};write(KEY,best);}hud();$('pause').disabled=true;
         overlay(record?'Новий рекорд!':'Усі пари знайдено!',`${world.moves} ходів за ${clock(elapsed)}. Спробуй запам’ятати нову розкладку.`,'Зіграти знову →');}
     }
     function fresh(){

@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.31.0',date:'2026-11-14',name:'Cloud Achievements'};
+  const release={version:'6.32.0',date:'2026-11-15',name:'Every App Achievements'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);
