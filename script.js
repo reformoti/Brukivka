@@ -975,7 +975,7 @@
     save.order.progress += count;
     if (save.order.progress >= save.order.target) {
       save.order.progress = save.order.target;
-      save.order.completed = true;
+      save.order.completed = true;window.BrukAchievementEvents?.record('orders.completed');
       save.order.active = false;
       return award(save.order.reward);
     }

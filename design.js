@@ -4,7 +4,7 @@
   const normalize=value=>Object.hasOwn(themes,value)?value:'classic';
   if(typeof module==='object'&&module.exports){module.exports={themes,normalize};return;}
   let current='classic';try{current=normalize(localStorage.getItem('brukivka_design_v1'));}catch{}
-  function apply(value,persist=true){if(persist&&normalize(value)!==current)root.BrukAchievementEvents?.record('design.change');current=normalize(value);document.documentElement.dataset.design=current;if(persist)try{localStorage.setItem('brukivka_design_v1',current);}catch{}root.dispatchEvent(new CustomEvent('bruk-design',{detail:current}));}
+  function apply(value,persist=true){if(persist&&normalize(value)!==current){root.BrukAchievementEvents?.record('design.change');root.BrukAchievementEvents?.record('design.theme.'+normalize(value),1,'max');}current=normalize(value);document.documentElement.dataset.design=current;if(persist)try{localStorage.setItem('brukivka_design_v1',current);}catch{}root.dispatchEvent(new CustomEvent('bruk-design',{detail:current}));}
   root.BrukDesign={themes,get:()=>current,set:apply};apply(current,false);
   root.addEventListener('storage',e=>{if(e.key==='brukivka_design_v1')apply(e.newValue,false);});
 })(typeof window==='undefined'?globalThis:window);

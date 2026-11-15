@@ -1,11 +1,11 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),D=require('../app-achievements-data.js'),C=require('../achievements-core.js');
 function store(){const map=new Map();return {get length(){return map.size},key:i=>[...map.keys()][i],getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,String(v)),removeItem:k=>map.delete(k)}}
-test('every public program has exactly three unique achievements, with the old three preserved',()=>{
- assert.equal(D.groups.length,35);assert.equal(C.catalog.Brukivka.length,108);assert.equal(C.catalog.AppleIQ.length,3);assert.equal(new Set(C.catalog.Brukivka.map(d=>d.id)).size,108);for(const group of D.groups)assert.equal(D.definitions.filter(d=>d.group===group.id).length,3,group.name);
+test('every public program has exactly nine unique achievements, with the old three preserved',()=>{
+ assert.equal(D.groups.length,35);assert.equal(C.catalog.Brukivka.length,324);assert.equal(C.catalog.AppleIQ.length,3);assert.equal(new Set(C.catalog.Brukivka.map(d=>d.id)).size,324);for(const group of D.groups)assert.equal(D.definitions.filter(d=>d.group===group.id).length,9,group.name);
  assert.deepEqual(C.catalog.Brukivka.slice(0,3).map(d=>d.id),['first-income','new-route','own-pc']);for(const group of ['bank','zno','legit','telegram','brukivka','pcmarket','wallpapers','appleiq','discord','fop','estate','garage','design','account','lab','steam','spotify','miner','paint','gallery','exchange','dispatch','history','quarry','orbit','chess','homow','rally','stack','breakout','memory','runner','merge','cs2','minihoi'])assert(D.groups.some(g=>g.id===group),group);
 });
 test('bonuses are small, permanent, unique and never stack from duplicate or repeated events',()=>{
- const all={version:1,unlocked:C.catalog.Brukivka.map(d=>d.id)};assert.equal(C.bonus(null),1);assert.equal(C.bonus(all),1.054);assert.equal(C.bonus({unlocked:['first-income','first-income']}),1.0005);
+ const all={version:1,unlocked:C.catalog.Brukivka.map(d=>d.id)};assert.equal(C.bonus(null),1);assert.equal(C.bonus(all),1.0756);assert.equal(C.bonus({unlocked:['first-income','first-income']}),1.0005);
  let profile=C.merge('Brukivka',null,{$extra:{events:{'visit.discord':1,'copy.discord':1,'launch.discord':1}}});assert.equal(profile.unlocked.length,3);const bonus=C.bonus(profile);for(let i=0;i<100;i++)profile=C.merge('Brukivka',profile,{$extra:{events:{'visit.discord':100,'copy.discord':100,'launch.discord':100}}});assert.equal(C.bonus(profile),bonus);assert.equal(C.bonus(C.merge('Brukivka',profile,{})),bonus);
 });
 test('real program milestones migrate from their saved formats and snapshots retain events',()=>{
