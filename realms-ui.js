@@ -61,6 +61,9 @@
   window.BrukRealmsMetrics={totalStatic:staticObjects.length,visible:0,cached:0,padding:110};
   function drawTerrain(view){const size=512;for(let y=Math.floor(view.y/size);y<=Math.floor((view.y+view.height)/size);y++)for(let x=Math.floor(view.x/size);x<=Math.floor((view.x+view.width)/size);x++){const tile=terrainTiles.get(x+','+y,()=>{const image=document.createElement('canvas');image.width=image.height=size;const c=image.getContext('2d');c.translate(-x*size,-y*size);let tileSeed=41911;paintGround(c,()=>{tileSeed=(Math.imul(tileSeed,1664525)+1013904223)>>>0;return tileSeed/4294967296;},{x:x*size,y:y*size,width:size,height:size});return image;});ctx.drawImage(tile,x*size,y*size);}}
   const frameClock=new V.FrameClock(),renderRecords=new WeakMap();let staticCacheIDs=new Set();
+  const frameProbe=new URLSearchParams(location.search).get('perf')==='1'?new V.FrameStats():null;
+  let probeOutput=null,lastProbe=0;
+  if(frameProbe){probeOutput=document.createElement('output');probeOutput.id='homowPerformance';probeOutput.hidden=true;document.body.append(probeOutput);document.addEventListener('visibilitychange',()=>frameProbe.reset());}
   for(const object of staticObjects)object.draw=()=>staticCacheIDs.has(object.id)?staticSprite(object):object.render(ctx);
   const playerRecord={x:0,y:0,draw:player};
   function renderRecord(object,type){let record=renderRecords.get(object);if(!record){record={draw:()=>{if(type==='monster')monster(object);else if(type==='node')A.drawNode(ctx,object,world);else M.drop(ctx,object);}};renderRecords.set(object,record);}record.x=object.x;record.y=object.y;return record;}
@@ -115,7 +118,7 @@
       if(event.type==='victory'){save();journey.openEnding();}if(event.type==='recall'){save();notice('Ти повернувся до табору. Ресурси збережено.');}
       if(event.type==='death'){announce('Повернення до табору');notice('Втрачено '+event.lost+' срібла. Спорядження й ресурси збережено.');save();}
     }
-    if(frameClock.due(time,running?(gfx.quality==='low'?30:gfx.quality==='medium'?45:60):4)){draw(running?dt:0);lastDraw=time;}if(time-lastHud>90){hud();lastHud=time;}if(time-lastSave>3000){save();lastSave=time;}scheduleFrame();
+    if(frameClock.due(time,running?(gfx.quality==='low'?30:gfx.quality==='medium'?45:60):4)){const drawStarted=frameProbe?performance.now():0;draw(running?dt:0);if(frameProbe){if(running&&(!network||network.connected))frameProbe.frame(time,performance.now()-drawStarted);else frameProbe.reset();}lastDraw=time;}if(frameProbe&&time-lastProbe>=1000){network?.probeLatency();probeOutput.dataset.stats=JSON.stringify({...frameProbe.report(),quality:gfx.quality,width:canvas.width,height:canvas.height,pingMs:network?.latency??null});lastProbe=time;}if(time-lastHud>90){hud();lastHud=time;}if(time-lastSave>3000){save();lastSave=time;}scheduleFrame();
   }
   window.addEventListener('pagehide',()=>{disposed=true;if(frameId!==null){cancelAnimationFrame(frameId);frameId=null;}save();clearTimeout(zoneTimer);});window.addEventListener('pageshow',event=>{if(event.persisted){disposed=false;last=0;scheduleFrame();}});hud();if(world.nearCamp())announce('Кузня та рубежі · обери свій шлях');scheduleFrame();
 })();
