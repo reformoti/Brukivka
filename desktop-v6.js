@@ -16,14 +16,68 @@
   function paintThemes(){design.querySelectorAll('[data-theme]').forEach(b=>{const on=b.dataset.theme===window.BrukDesign.get();b.setAttribute('aria-pressed',String(on));b.querySelector('b').textContent=on?'✓ Активне':'Застосувати';});}window.addEventListener('bruk-design',paintThemes);paintThemes();window.BrukFit.pages(design.querySelector('.design-grid'),':scope>.design-card',1);
   // Keep original launch targets and listeners, but only the preview's Play control launches them.
   const library=$('steamLibrary'),list=library.querySelector('.steam-games'),entries=[...list.children];library.querySelectorAll(':scope>h2,:scope>p,:scope>details').forEach(n=>n.remove());library.classList.add('library-layout');list.classList.add('library-list');const preview=make('section','library-preview');preview.innerHTML='<div class="library-art"></div><div class="library-copy"><small>У ТВОЇЙ БІБЛІОТЕЦІ</small><h2></h2><p></p><div class="library-tags"><span>Клавіатура</span><span>Одиночна / локальна гра</span></div><div class="library-start"></div></div>';library.append(preview);
-  let selected=null;const selectionButtons=[];
+  const selectionButtons=[];
   entries.forEach((target,i)=>{const title=target.querySelector('strong').textContent,description=target.querySelector('small').textContent,art=target.querySelector('.steam-game-art'),row=make('button','library-entry');row.type='button';row.innerHTML='<span class="library-entry-icon"></span><span></span>';row.querySelector('span:last-child').textContent=title;row.querySelector('.library-entry-icon').innerHTML=art.innerHTML;target.classList.add('library-launch-target');target.hidden=true;const play=target.cloneNode(false);play.removeAttribute('id');play.hidden=false;play.className='library-play';play.textContent='▶ Грати';if(target.tagName==='BUTTON'){play.addEventListener('click',()=>target.click());}target.before(row);selectionButtons.push(row);row.addEventListener('click',()=>select(i));target.dataset.libraryIndex=i;
     if(/HoMoW|HOLD MONSTERS/i.test(title))play.addEventListener('click',e=>{if(e.button||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;e.preventDefault();window.BrukHoMoWLaunch.open();});
     const previewName=/HoMoW|HOLD MONSTERS/i.test(title)?'homow':target.tagName==='A'?target.getAttribute('href').split('?')[0].replace('.html',''):target.id==='steamSelectCs'?'cs2':'minihoi';target._preview={title,description,art:art.cloneNode(true),play,previewSrc:'assets/previews/'+({homow:'homow.jpg',runner:'runner-v61.jpg',merge:'merge-v62.jpg',memory:'memory-v62.jpg',minihoi:'minihoi-v62.jpg',quarry:'quarry-v62.jpg',orbit:'orbit.svg'}[previewName]||previewName+'.png')};
   });
-  function select(i){selected=i;selectionButtons.forEach((b,j)=>{b.classList.toggle('selected',j===i);b.setAttribute('aria-pressed',String(j===i));});const data=entries[i]._preview;preview.querySelector('h2').textContent=data.title;preview.querySelector('p').textContent=data.description;const art=preview.querySelector('.library-art');const screenshot=make('img','library-game-preview');screenshot.src=data.previewSrc;screenshot.alt='Кадр із гри '+data.title;screenshot.onerror=()=>screenshot.replaceWith(data.art);art.replaceChildren(screenshot);preview.querySelector('.library-tags span:last-child').textContent=/HoMoW|HOLD MONSTERS/i.test(data.title)?'Одиночна · прогрес у браузері':data.title.includes('CHESS')?'Бот або друг на одному ПК':'Одиночна гра';preview.querySelector('.library-start').replaceChildren(data.play);}
+  function select(i){selectionButtons.forEach((b,j)=>{b.classList.toggle('selected',j===i);b.setAttribute('aria-pressed',String(j===i));});const data=entries[i]._preview;preview.querySelector('h2').textContent=data.title;preview.querySelector('p').textContent=data.description;const art=preview.querySelector('.library-art');const screenshot=make('img','library-game-preview');screenshot.src=data.previewSrc;screenshot.alt='Кадр із гри '+data.title;screenshot.onerror=()=>screenshot.replaceWith(data.art);art.replaceChildren(screenshot);preview.querySelector('.library-tags span:last-child').textContent=/HoMoW|HOLD MONSTERS/i.test(data.title)?'Одиночна · прогрес у браузері':data.title.includes('CHESS')?'Бот або друг на одному ПК':'Одиночна гра';preview.querySelector('.library-start').replaceChildren(data.play);}
   // Real file links bubble into the existing Steam iframe launcher.
   select(Math.max(0,entries.findIndex(e=>/HoMoW|HOLD MONSTERS/i.test(e._preview.title))));
-  let pending=false;function reconcile(){pending=false;document.querySelectorAll('.offers-list').forEach(n=>window.BrukFit.pages(n,':scope>.offer-card',2));document.querySelectorAll('.inventory-list').forEach(n=>window.BrukFit.pages(n,':scope>.inventory-item',3));}
-  const schedule=()=>{if(!pending){pending=true;requestAnimationFrame(reconcile);}};new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});reconcile();
+  // The list containers are permanent in index.html. Only direct card
+  // additions, removals and moves can change their pagination.
+  const paginatedLists = new Map();
+  const dirtyLists = new Set();
+  let paginationFrame = null;
+
+  function reconcileLists() {
+    paginationFrame = null;
+    const lists = [...dirtyLists];
+    dirtyLists.clear();
+
+    for (const root of lists) {
+      const config = paginatedLists.get(root);
+      window.BrukFit.pages(root, config.selector, config.size);
+    }
+  }
+
+  function hasCard(nodes, className) {
+    for (const node of nodes) {
+      if (node.nodeType === 1 && node.classList.contains(className)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  const paginationObserver = new MutationObserver(records => {
+    for (const record of records) {
+      const config = paginatedLists.get(record.target);
+      if (!config) continue;
+
+      if (
+        hasCard(record.addedNodes, config.className) ||
+        hasCard(record.removedNodes, config.className)
+      ) {
+        dirtyLists.add(record.target);
+      }
+    }
+
+    if (dirtyLists.size && paginationFrame === null) {
+      paginationFrame = requestAnimationFrame(reconcileLists);
+    }
+  });
+
+  for (const root of document.querySelectorAll('.offers-list, .inventory-list')) {
+    const inventory = root.classList.contains('inventory-list');
+    paginatedLists.set(root, {
+      className: inventory ? 'inventory-item' : 'offer-card',
+      selector: inventory ? ':scope>.inventory-item' : ':scope>.offer-card',
+      size: inventory ? 3 : 2
+    });
+    paginationObserver.observe(root, { childList: true });
+    dirtyLists.add(root);
+  }
+
+  reconcileLists();
 })();
