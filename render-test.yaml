@@ -1,0 +1,27 @@
+# Separate test project. This does not modify the existing homow-online service.
+# Create a new Blueprint using THIS file, not render.yaml.
+projects:
+  - name: HoMoW Test 2026-11-15
+    environments:
+      - name: Testing
+        services:
+          - type: web
+            name: homow-test-20261115
+            runtime: node
+            plan: free
+            region: frankfurt
+            repo: https://github.com/reformoti/Brukivka
+            branch: main
+            autoDeployTrigger: "off"
+            buildCommand: npm ci && npm run build
+            startCommand: npm start
+            healthCheckPath: /health
+            envVars:
+              - key: NODE_VERSION
+                value: "24"
+              - key: NODE_ENV
+                value: production
+              # Supply the NEW test project's Neon pooled connection string.
+              # PUBLIC_ORIGIN is inferred from RENDER_EXTERNAL_URL on Render.
+              - key: DATABASE_URL_POOLED
+                sync: false
