@@ -1,0 +1,4 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),{FrameClock}=require('../realms-viewport.js');
+test('render clock keeps 60 FPS on slightly jittering 60Hz displays without changing simulation',()=>{const c=new FrameClock();let draws=0;for(let i=1;i<=600;i++)if(c.due(i*1000/60+(i%2?.001:-.001),60))draws++;assert.equal(draws,600);});
+test('render clock respects 30/45/60 caps on 60/120/144Hz displays without drift',()=>{for(const hz of [60,120,144])for(const fps of [30,45,60]){const c=new FrameClock();let frames=0;for(let i=1;i<=hz*10;i++)if(c.due(i*1000/hz,fps))frames++;assert.equal(frames,fps*10,`${hz}Hz / ${fps}FPS`);}});
+test('render clock renders only once after a long pause and preserves paused display cadence',()=>{const c=new FrameClock();assert(c.due(10000,4));assert(!c.due(10001,4));assert(c.due(10250,4));assert(!c.due(10251,4));});

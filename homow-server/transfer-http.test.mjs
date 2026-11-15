@@ -1,0 +1,14 @@
+import test from 'node:test';import assert from 'node:assert/strict';import http from 'node:http';import {EventEmitter} from 'node:events';import {newDb} from 'pg-mem';import {brotliDecompressSync,gunzipSync} from 'node:zlib';import {readFile} from 'node:fs/promises';import {createGameServer} from './server.mjs';
+test('actual public routes support compression/304/HEAD while auth/API/config remain no-store',async t=>{
+ let handler;const original=http.createServer;http.createServer=fn=>{handler=fn;const server=new EventEmitter();server.close=done=>done();return server;};
+ const db=newDb({noAstCoverageCheck:true}),{Pool}=db.adapters.createPg(),pool=new Pool();let app;try{app=await createGameServer(pool,'https://game.example');}finally{http.createServer=original;}
+ t.after(()=>app.stop());const call=async(url,headers={},method='GET')=>{const values=new Map(),res={statusCode:200,setHeader(k,v){values.set(k.toLowerCase(),String(v));},getHeader(k){return values.get(k.toLowerCase());},writeHead(s,h){this.statusCode=s;for(const[k,v]of Object.entries(h||{}))this.setHeader(k,v);},end(body){this.body=Buffer.from(body||'');}};await handler({url,headers,method},res);res.headers=values;return res;};
+ const version=(await readFile(new URL('../release.js',import.meta.url),'utf8')).match(/version:'([^']+)'/)[1];
+ for(const path of ['/','/homow.html','/realms.html']){const r=await call(path,{'accept-encoding':'br'});assert.equal(r.statusCode,200);assert.equal(r.headers.get('content-encoding'),'br');assert(brotliDecompressSync(r.body).toString().includes('<script src="/online-config.js"></script>'));const cached=await call(path,{'accept-encoding':'br','if-none-match':r.headers.get('etag')});assert.equal(cached.statusCode,304);assert.equal(cached.body.length,0);}
+ const js=await call('/realms-ui.js?v='+version,{'accept-encoding':'gzip'});assert.equal(js.headers.get('content-encoding'),'gzip');assert.match(js.headers.get('cache-control'),/immutable/);assert.deepEqual(gunzipSync(js.body),await readFile(new URL('../realms-ui.js',import.meta.url)));
+ const unversioned=await call('/realms-ui.js');assert(!unversioned.headers.get('cache-control').includes('immutable'));
+ const head=await call('/realms-ui.js',{},'HEAD');assert.equal(head.body.length,0);assert(Number(head.headers.get('content-length'))>0);
+ const file=await call('/download/homow.html',{'accept-encoding':'br'});assert.deepEqual(brotliDecompressSync(file.body),await readFile(new URL('../homow.html',import.meta.url)));assert.match(file.headers.get('content-disposition'),/attachment/);
+ for(const path of ['/api/leaderboard','/online-config.js','/config','/health']){const r=await call(path,{'accept-encoding':'br'});assert.equal(r.headers.get('cache-control'),'no-store');assert.equal(r.headers.get('content-encoding'),undefined);}
+ const denied=await call('/.env');assert.equal(denied.statusCode,404);
+});

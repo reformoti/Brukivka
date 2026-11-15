@@ -1,0 +1,9 @@
+# Replace the standalone /, /homow.html and /realms.html locations with this block.
+# The Node route injects online-config.js. Serving the raw monolith here would
+# silently select local play instead of the authenticated online world.
+location ~ ^/(?:realms\.html|homow\.html)?$ {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    # Node supplies ETag, Vary and cache headers for this public, invariant shell.
+}

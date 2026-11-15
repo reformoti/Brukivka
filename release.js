@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.33.2',date:'2026-11-15',name:'Performance Update'};
+  const release={version:'6.33.3',date:'2026-11-15',name:'HoMoW Performance'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

@@ -9,7 +9,8 @@
     "build": "node scripts/build-release-history.mjs && node scripts/build-online.mjs",
     "start": "node --env-file-if-exists=.env --env-file-if-exists=.env.local homow-server/server.mjs",
     "test:online": "node --test homow-server/*.test.mjs homow-server/test.mjs",
-    "test:db": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/verify-online-db.mjs"
+    "test:db": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/verify-online-db.mjs",
+    "build:transfer": "node scripts/precompress-homow.mjs"
   },
   "workspaces": [
     "homow-server"

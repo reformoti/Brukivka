@@ -10,5 +10,9 @@
     constructor(limit=48){this.limit=limit;this.items=new Map();}
     get(key,make){if(this.items.has(key)){const value=this.items.get(key);this.items.delete(key);this.items.set(key,value);return value;}const value=make();this.items.set(key,value);while(this.items.size>this.limit)this.items.delete(this.items.keys().next().value);return value;}
   }
-  return {inside,Grid,Cache};
+  class FrameClock{
+    constructor(){this.last=0;}
+    due(time,fps){const interval=1000/fps,elapsed=time-this.last;if(elapsed+.01<interval)return false;this.last+=Math.max(1,Math.floor((elapsed+.01)/interval))*interval;return true;}
+  }
+  return {inside,Grid,Cache,FrameClock};
 });

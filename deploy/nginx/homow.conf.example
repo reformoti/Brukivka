@@ -1,0 +1,84 @@
+# Install inside nginx's http {} context (normally /etc/nginx/conf.d/homow.conf).
+# Replace game.example.com, certificate paths, and /var/www/brukivka.
+# Select ONE mode below. Default: standalone HTML, same gameplay as GitHub Pages.
+map $arg_v $homow_cache_control {
+    default "public, max-age=0, must-revalidate";
+    ~^[0-9]+[.][0-9]+[.][0-9]+$ "public, max-age=31536000, immutable";
+}
+map $http_upgrade $homow_connection_upgrade {
+    default upgrade;
+    '' close;
+}
+server {
+    listen 80;
+    server_name game.example.com;
+    return 301 https://$host$request_uri;
+}
+server {
+    listen 443 ssl;
+    http2 on; # nginx >= 1.25.1; older builds: listen 443 ssl http2; remove this line.
+    server_name game.example.com;
+    ssl_certificate /etc/letsencrypt/live/game.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/game.example.com/privkey.pem;
+    root /var/www/brukivka;
+    charset utf-8;
+    sendfile on;
+    tcp_nopush on;
+    keepalive_timeout 65;
+    etag on;
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_comp_level 5;
+    gzip_types text/css text/javascript application/javascript application/json image/svg+xml application/wasm font/ttf;
+    # Requires --with-http_gzip_static_module. Precompute with npm run build:transfer.
+    gzip_static on;
+    # Optional ngx_brotli module: uncomment only after installing/loading it.
+    # brotli_static on;
+    # Static Brotli needs no per-request compression and never compresses API data.
+
+    # Default STANDALONE mode: no Node process or database needed for this HTML.
+    location = / { add_header Cache-Control "public, max-age=0, must-revalidate"; try_files /homow.html =404; }
+    location = /homow.html { add_header Cache-Control "public, max-age=0, must-revalidate"; try_files $uri =404; }
+    location = /realms.html { add_header Cache-Control "public, max-age=0, must-revalidate"; try_files $uri =404; }
+
+    # ONLINE mode: replace the three locations above with the contents of
+    # deploy/nginx/homow-online.locations.conf.example. Keep the /ws and /api
+    # locations below. Set PUBLIC_ORIGIN=https://game.example.com in Node.
+    location = /ws {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $homow_connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header Origin $http_origin;
+        proxy_read_timeout 75s;
+        proxy_buffering off;
+    }
+    location ^~ /api/ {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+        gzip off;
+        add_header Cache-Control "no-store" always;
+    }
+    location = /online-config.js {
+        proxy_pass http://127.0.0.1:3000;
+        add_header Cache-Control "no-store" always;
+    }
+    location = /health { proxy_pass http://127.0.0.1:3000; }
+    location = /config { proxy_pass http://127.0.0.1:3000; }
+    location = /download/homow.html {
+        alias /var/www/brukivka/homow.html;
+        default_type application/octet-stream;
+        add_header Content-Disposition 'attachment; filename="HoMoW.html"';
+        add_header Cache-Control "public, max-age=0, must-revalidate";
+    }
+    location ~ '^/(?:[a-z0-9-]+\.(?:js|css)|fonts/[A-Za-z0-9_-]+\.(?:ttf|woff2)|(?:assets|icon|favicon|music)/[A-Za-z0-9_(). /-]+\.(?:svg|png|webp|jpe?g|ico|mp3|ogg|woff2|ttf))$' {
+        add_header Cache-Control $homow_cache_control;
+        try_files $uri =404;
+    }
+    # No repository metadata, environment files, backend sources or directories.
+    location / { return 404; }
+}
