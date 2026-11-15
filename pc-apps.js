@@ -18,7 +18,7 @@
       if(Array.isArray(s.prices)&&s.prices.length===3)state.prices=s.prices.map((v,i)=>Math.max(1,Math.min(goods[i].base*3,integer(v,goods[i].base))));
     }
   }catch{}
-  let selected='paint',color=COLORS[1],trip=null,lastTick=-1;
+  let selected='paint',trip=null,lastTick=-1,dispatchFrame=null;
   function notice(text){$('pcPreviewNotice').textContent=text;}
   window.addEventListener('bruk-cloud-snapshot',persist);
   function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));window.BrukAppAchievements?.changed();return true;}catch{notice('Не вдалося зберегти прогрес у браузері.');return false;}}
@@ -32,22 +32,28 @@
     root.append(heading('BrukDispatch','Обери маршрут і відправ фургон з бруківкою. Довші маршрути дають більше очок логістики.'));
     const summary=document.createElement('div');summary.className='preview-stats';summary.append(stat('ДОСТАВОК',state.deliveries),stat('ОЧКИ ЛОГІСТИКИ',state.points));root.append(summary);
     const map=document.createElement('div');map.className='dispatch-map';map.innerHTML='<span class="dispatch-depot">▤<small>СКЛАД</small></span><div class="dispatch-route"><span id="demoVan">▰➜</span></div><span class="dispatch-destination">⌂<small>ОТРИМУВАЧ</small></span>';root.append(map);
+    map.querySelector('#demoVan').style.transition='transform .1s linear';
     const label=document.createElement('p');label.id='dispatchStatus';label.className='preview-caption';root.append(label);
     const list=document.createElement('div');list.className='dispatch-routes';
-    routes.forEach((r,i)=>list.append(button(`${r.icon} ${r.name} · ${r.seconds} с · +${r.points} оч.`,()=>{if(trip)return;trip={...r,index:i,started:performance.now()};render();},!!trip)));root.append(list);
+    routes.forEach((r,i)=>list.append(button(`${r.icon} ${r.name} · ${r.seconds} с · +${r.points} оч.`,()=>{if(trip)return;trip={...r,index:i,started:performance.now()};render();scheduleFrame();},!!trip)));root.append(list);
     const p=document.createElement('p');p.className='preview-caption';p.textContent='Очки логістики обмінюються на фарбування, арматуру та збільшення офлайн-доходу ФОП.';root.append(p);mountShop(root,'dispatch','points');tickDispatch();
   }
   function tickDispatch(){
     const van=$('demoVan'),label=$('dispatchStatus');
     if(!trip){if(label)label.textContent='Фургон готовий. Обери маршрут.';return;}
     const p=Math.min(1,(performance.now()-trip.started)/(trip.seconds*1000));
-    if(van)van.style.left=`${p*86}%`;if(label)label.textContent=`${trip.name} · ${Math.floor(p*100)}%`;
-    if(p>=1){state.deliveries++;state.points+=trip.points;const name=trip.name;trip=null;persist();if(selected==='dispatch'&&!$('pcPreviewPanel').classList.contains('hidden'))render();notice(`Доставлено: ${name}!`);}
+    if(van){
+      const routeWidth=parseFloat(getComputedStyle(van.parentElement).width);
+      van.style.transform=`translate3d(${p*0.86*routeWidth}px,0,0)`;
+    }
+    if(label)label.textContent=`${trip.name} · ${Math.floor(p*100)}%`;
+    if(p>=1){state.deliveries++;state.points+=trip.points;const name=trip.name;trip=null;if(dispatchFrame!==null){cancelAnimationFrame(dispatchFrame);dispatchFrame=null;}persist();if(selected==='dispatch'&&!$('pcPreviewPanel').classList.contains('hidden'))render();notice(`Доставлено: ${name}!`);}
   }
   function mountShop(root,source,field){window.BrukRewardShop.mount(root,source,{balance:()=>state[field],snapshot:()=>JSON.stringify(state),debit:cost=>{if(state[field]<cost)return false;state[field]-=cost;return persist();},restore:snapshot=>{state=JSON.parse(snapshot);persist();}},render);}
   const renderers={miner:root=>window.BrukMinerUI.mount(root),paint:renderPaint,gallery:renderGallery,exchange:renderExchange,dispatch:renderDispatch};
   const titles={miner:'BrukCoin Miner',paint:'BrukPaint',gallery:'Мої малюнки',exchange:'BrukExchange',dispatch:'BrukDispatch'};
-  function render(){window.BrukPaint.leave();const root=$('pcPreviewContent');root.replaceChildren();$('pcPreviewBadge').textContent=selected==='miner'?'GPU / BRC':selected==='paint'?'СТУДІЯ':selected==='gallery'?'ПАПКА':selected==='exchange'?'TRADE HUB':selected==='workshop'?'ВИРОБНИЦТВО':'ЛОГІСТИКА';$('pcPreviewTitle').textContent=titles[selected];renderers[selected](root);window.BrukHelp?.fold(root);window.BrukWorkspace?.prepare(root,selected);}
+  function render(){window.BrukPaint.leave();const root=$('pcPreviewContent');root.replaceChildren();$('pcPreviewBadge').textContent=selected==='miner'?'GPU / BRC':selected==='paint'?'СТУДІЯ':selected==='gallery'?'ПАПКА':selected==='exchange'?'TRADE HUB':'ЛОГІСТИКА';$('pcPreviewTitle').textContent=titles[selected];renderers[selected](root);window.BrukHelp?.fold(root);window.BrukWorkspace?.prepare(root,selected);}
   window.BrukPcApps={open(id){if(!renderers[id])return;window.BrukAppAchievements?.visit(id);selected=id;notice('');render();}};
-  function frame(time){if(trip&&time-lastTick>60){lastTick=time;tickDispatch();}requestAnimationFrame(frame);}requestAnimationFrame(frame);
+  function scheduleFrame(){if(trip&&dispatchFrame===null)dispatchFrame=requestAnimationFrame(frame);}
+  function frame(time){dispatchFrame=null;if(trip&&time-lastTick>60){lastTick=time;tickDispatch();}scheduleFrame();}
 })();
