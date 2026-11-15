@@ -12,14 +12,15 @@
   }
   class FrameClock{
     constructor(){this.last=0;}
-    due(time,fps){const interval=1000/fps,elapsed=time-this.last;if(elapsed+.01<interval)return false;this.last+=Math.max(1,Math.floor((elapsed+.01)/interval))*interval;return true;}
+    due(time,fps){const interval=1000/fps,elapsed=time-this.last,tolerance=Math.min(2,interval*.12);if(elapsed+tolerance<interval)return false;this.last+=Math.max(1,Math.floor((elapsed+tolerance)/interval))*interval;return true;}
   }
   // Opt-in diagnostic storage is bounded to one minute at 60 FPS.
   class FrameStats{
     constructor(limit=3600){this.limit=limit;this.times=new Float64Array(limit);this.costs=new Float64Array(limit);this.reset();}
-    reset(){this.count=0;this.next=0;}
+    reset(){this.count=0;this.next=0;this.callbacks=0;this.callbackFirst=0;this.callbackLast=0;}
+    tick(time){if(!this.callbacks)this.callbackFirst=time;this.callbackLast=time;this.callbacks++;}
     frame(time,cost){this.times[this.next]=time;this.costs[this.next]=cost;this.next=(this.next+1)%this.limit;this.count=Math.min(this.limit,this.count+1);}
-    report(){const gaps=[],costs=[],start=(this.next-this.count+this.limit)%this.limit;let previous=null,first=0,last=0;for(let i=0;i<this.count;i++){const index=(start+i)%this.limit,time=this.times[index];if(previous!==null)gaps.push(time-previous);else first=time;previous=time;last=time;costs.push(this.costs[index]);}gaps.sort((a,b)=>a-b);costs.sort((a,b)=>a-b);const percentile=(values,p)=>values.length?values[Math.ceil(values.length*p)-1]:0;return {frames:this.count,durationMs:last-first,fps:last>first?(this.count-1)*1000/(last-first):0,frameP95Ms:percentile(gaps,.95),drawP95Ms:percentile(costs,.95),stallsOver50Ms:gaps.filter(x=>x>50.01).length};}
+    report(){const gaps=[],costs=[],start=(this.next-this.count+this.limit)%this.limit;let previous=null,first=0,last=0;for(let i=0;i<this.count;i++){const index=(start+i)%this.limit,time=this.times[index];if(previous!==null)gaps.push(time-previous);else first=time;previous=time;last=time;costs.push(this.costs[index]);}gaps.sort((a,b)=>a-b);costs.sort((a,b)=>a-b);const percentile=(values,p)=>values.length?values[Math.ceil(values.length*p)-1]:0;return {frames:this.count,durationMs:last-first,fps:last>first?(this.count-1)*1000/(last-first):0,rafFps:this.callbackLast>this.callbackFirst?(this.callbacks-1)*1000/(this.callbackLast-this.callbackFirst):0,frameP95Ms:percentile(gaps,.95),drawP95Ms:percentile(costs,.95),stallsOver50Ms:gaps.filter(x=>x>50.01).length};}
   }
   return {inside,Grid,Cache,FrameClock,FrameStats};
 });

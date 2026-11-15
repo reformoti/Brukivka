@@ -118,6 +118,7 @@
       if(event.type==='victory'){save();journey.openEnding();}if(event.type==='recall'){save();notice('Ти повернувся до табору. Ресурси збережено.');}
       if(event.type==='death'){announce('Повернення до табору');notice('Втрачено '+event.lost+' срібла. Спорядження й ресурси збережено.');save();}
     }
+    if(frameProbe&&running&&(!network||network.connected))frameProbe.tick(time);
     if(frameClock.due(time,running?(gfx.quality==='low'?30:gfx.quality==='medium'?45:60):4)){const drawStarted=frameProbe?performance.now():0;draw(running?dt:0);if(frameProbe){if(running&&(!network||network.connected))frameProbe.frame(time,performance.now()-drawStarted);else frameProbe.reset();}lastDraw=time;}if(frameProbe&&time-lastProbe>=1000){network?.probeLatency();probeOutput.dataset.stats=JSON.stringify({...frameProbe.report(),quality:gfx.quality,width:canvas.width,height:canvas.height,pingMs:network?.latency??null});lastProbe=time;}if(time-lastHud>90){hud();lastHud=time;}if(time-lastSave>3000){save();lastSave=time;}scheduleFrame();
   }
   window.addEventListener('pagehide',()=>{disposed=true;if(frameId!==null){cancelAnimationFrame(frameId);frameId=null;}save();clearTimeout(zoneTimer);});window.addEventListener('pageshow',event=>{if(event.persisted){disposed=false;last=0;scheduleFrame();}});hud();if(world.nearCamp())announce('Кузня та рубежі · обери свій шлях');scheduleFrame();
