@@ -1,0 +1,11 @@
+.git
+**/node_modules
+**/.env
+**/.env.*
+.neon
+**/.neon
+*.gz
+*.br
+fonts/*.gz
+fonts/*.br
+npm-debug.log*
