@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const release={version:'6.33.6',date:'2026-11-15',name:'HoMoW Frame Pacing'};
+  const release={version:'6.33.7',date:'2026-11-15',name:'HoMoW Online Motion'};
   root.BrukRelease=Object.freeze(release);
   if(root.document){
     document.querySelectorAll('[data-game-version]').forEach(el=>el.textContent='v'+release.version);

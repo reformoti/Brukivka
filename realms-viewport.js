@@ -22,5 +22,10 @@
     frame(time,cost){this.times[this.next]=time;this.costs[this.next]=cost;this.next=(this.next+1)%this.limit;this.count=Math.min(this.limit,this.count+1);}
     report(){const gaps=[],costs=[],start=(this.next-this.count+this.limit)%this.limit;let previous=null,first=0,last=0;for(let i=0;i<this.count;i++){const index=(start+i)%this.limit,time=this.times[index];if(previous!==null)gaps.push(time-previous);else first=time;previous=time;last=time;costs.push(this.costs[index]);}gaps.sort((a,b)=>a-b);costs.sort((a,b)=>a-b);const percentile=(values,p)=>values.length?values[Math.ceil(values.length*p)-1]:0;return {frames:this.count,durationMs:last-first,fps:last>first?(this.count-1)*1000/(last-first):0,rafFps:this.callbackLast>this.callbackFirst?(this.callbacks-1)*1000/(this.callbackLast-this.callbackFirst):0,frameP95Ms:percentile(gaps,.95),drawP95Ms:percentile(costs,.95),stallsOver50Ms:gaps.filter(x=>x>50.01).length};}
   }
-  return {inside,Grid,Cache,FrameClock,FrameStats};
+  class Motion{
+    constructor(){this.value={x:0,y:0};this.ready=false;}
+    push(x,y,time){if(!this.ready||Math.hypot(x-this.x,y-this.y)>160){this.fromX=this.x=x;this.fromY=this.y=y;this.duration=50;this.ready=true;}else{const p=this.sample(time);this.fromX=p.x;this.fromY=p.y;this.duration=Math.max(30,Math.min(100,time-this.at));this.x=x;this.y=y;}this.at=time;}
+    sample(time){if(!this.ready)return this.value;const t=Math.max(0,Math.min(1,(time-this.at)/this.duration));this.value.x=this.fromX+(this.x-this.fromX)*t;this.value.y=this.fromY+(this.y-this.fromY)*t;return this.value;}
+  }
+  return {inside,Grid,Cache,FrameClock,FrameStats,Motion};
 });
